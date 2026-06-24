@@ -7,7 +7,7 @@ const config = {
   tagline: 'Collective Data Exchange Platform — System Documentation',
   favicon: 'img/favicon.ico',
   url: 'https://datakaveri.github.io',
-  baseUrl: '/',
+  baseUrl: '/cdpg-docs/',
   organizationName: 'datakaveri',
   projectName: 'cdpg-docs',
   onBrokenLinks: 'warn',
