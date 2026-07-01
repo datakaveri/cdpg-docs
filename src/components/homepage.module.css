@@ -1,0 +1,235 @@
+/* Shared homepage section styles — CDPG palette */
+.section {
+  padding: 4.5rem 0;
+}
+.sectionAlt {
+  background: var(--cdpg-surface);
+}
+
+.sectionHead {
+  max-width: 760px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+.kicker {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cdpg-orange);
+}
+.sectionTitle {
+  font-family: var(--ifm-heading-font-family);
+  font-size: clamp(1.45rem, 2.5vw, 1.95rem);
+  color: var(--cdpg-navy);
+  margin: 0.5rem 0 0.8rem;
+}
+[data-theme='dark'] .sectionTitle {
+  color: #c3d0ee;
+}
+.sectionLede {
+  font-size: 0.98rem;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+}
+
+/* Card grid */
+.grid {
+  display: grid;
+  gap: 1.4rem;
+}
+.grid2 { grid-template-columns: repeat(2, 1fr); }
+.grid3 { grid-template-columns: repeat(3, 1fr); }
+.grid4 { grid-template-columns: repeat(4, 1fr); }
+
+.card {
+  background: var(--ifm-background-color);
+  border: 1px solid var(--cdpg-border);
+  border-radius: 14px;
+  padding: 1.6rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(31, 53, 105, 0.12);
+  border-color: var(--cdpg-navy);
+}
+
+/* CDPG iconography: solid circular badges, single-colour glyphs, accent-coded */
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  margin-bottom: 1rem;
+  background: var(--cdpg-navy);
+  color: #fff;
+}
+/* accent-coded cycling across the feature grid */
+.grid4 > .card:nth-child(6n + 1) .cardIcon { background: var(--cdpg-navy); }
+.grid4 > .card:nth-child(6n + 2) .cardIcon { background: var(--cdpg-teal); }
+.grid4 > .card:nth-child(6n + 3) .cardIcon { background: var(--cdpg-green); }
+.grid4 > .card:nth-child(6n + 4) .cardIcon { background: var(--cdpg-orange); }
+.grid4 > .card:nth-child(6n + 5) .cardIcon { background: var(--cdpg-berry); }
+.grid4 > .card:nth-child(6n + 6) .cardIcon { background: var(--cdpg-slate); }
+
+.cardTitle {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  font-size: 1.12rem;
+  color: var(--cdpg-navy);
+  margin: 0 0 0.5rem;
+}
+[data-theme='dark'] .cardTitle {
+  color: #c3d0ee;
+}
+.cardText {
+  font-size: 0.95rem;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+  line-height: 1.55;
+}
+.cardTag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cdpg-teal);
+  margin-bottom: 0.6rem;
+}
+
+/* Differentiators */
+.diffGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+}
+.diffItem {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 1.2rem 1.3rem;
+  border-radius: 12px;
+  background: var(--ifm-background-color);
+  border: 1px solid var(--cdpg-border);
+}
+.diffMark {
+  flex: 0 0 auto;
+  color: var(--cdpg-orange);
+  font-weight: 700;
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+/* Access models */
+.modelRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+.model {
+  border: 1px solid var(--cdpg-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ifm-background-color);
+}
+.modelHead {
+  padding: 1rem 1.2rem;
+  color: #fff;
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+}
+.modelBody {
+  padding: 1.1rem 1.2rem;
+  font-size: 0.92rem;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.55;
+}
+.m1 { background: var(--cdpg-green); }
+.m2 { background: var(--cdpg-navy); }
+.m3 { background: var(--cdpg-teal); }
+.m4 { background: var(--cdpg-berry); }
+
+/* Use cases */
+.useGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.3rem;
+}
+.useCard {
+  border: 1px solid var(--cdpg-border);
+  border-left: 4px solid var(--cdpg-teal);
+  border-radius: 10px;
+  padding: 1.3rem 1.4rem;
+  background: var(--ifm-background-color);
+}
+.useSector {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cdpg-teal);
+}
+.useTitle {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  margin: 0.4rem 0 0.4rem;
+  color: var(--ifm-heading-color);
+}
+.useText {
+  font-size: 0.92rem;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+}
+
+/* Benefits */
+.benefitGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.4rem;
+}
+.benefit {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.benefitNum {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  color: #fff;
+  background: var(--cdpg-navy);
+}
+.benefitTitle {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  margin: 0.25rem 0 0.35rem;
+  color: var(--ifm-heading-color);
+}
+.benefitText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* CTA */
+.cta {
+  text-align: center;
+}
+
+@media screen and (max-width: 996px) {
+  .grid3, .grid4, .modelRow, .useGrid { grid-template-columns: repeat(2, 1fr); }
+  .benefitGrid, .diffGrid { grid-template-columns: 1fr; }
+}
+@media screen and (max-width: 600px) {
+  .grid2, .grid3, .grid4, .modelRow, .useGrid { grid-template-columns: 1fr; }
+}
