@@ -13,8 +13,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://novo.iudx.org.in',
-  baseUrl: '/',
+  url: 'https://datakaveri.github.io',
+  baseUrl: '/cdpg-docs/',
 
   organizationName: 'datakaveri',
   projectName: 'iudx-novo-docs',
