@@ -1,9 +1,11 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 /**
- * Documentation structure modelled on the MOSIP 1.2.0 docs:
- *   Get Started → Architecture & Technology → Core Servers →
- *   Data Exchange → Develop → Adoption → Resources.
+ * Documentation structure modelled on the MOSIP 1.2.0 docs (carried over from
+ * the original IUDX site):
+ *   Get Started → Architecture & Technology → Platform Components →
+ *   Platform Flows → Data Exchange → Develop → API Reference → Guides →
+ *   Operations → Migration → Adoption → Resources.
  * Each top-level area has a generated landing page.
  */
 const sidebars: SidebarsConfig = {
@@ -15,13 +17,14 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       link: {
         type: 'generated-index',
-        title: 'Get Started with IUDX',
+        title: 'Get Started',
         description:
-          'Understand what IUDX is, the principles behind it, its capabilities, and how it is licensed.',
+          'Understand what the Data Exchange is, the principles behind it, its core concepts and capabilities, and how it is licensed.',
         slug: '/category/get-started',
       },
       items: [
         'platform/key-features',
+        'concepts/core-concepts',
         'technical/design-principles',
         'platform/licensing',
       ],
@@ -34,7 +37,7 @@ const sidebars: SidebarsConfig = {
         type: 'generated-index',
         title: 'Architecture & Technology',
         description:
-          'The architecture of IUDX — its interfaces, control and data planes, technology stack, and the open standards it is built on.',
+          'The architecture of the Data Exchange — its interfaces, control and data planes, microservices, technology stack, deployment shapes, and the open standards it is built on.',
         slug: '/category/technology',
       },
       items: [
@@ -44,34 +47,61 @@ const sidebars: SidebarsConfig = {
         'technical/data-plane',
         'technical/technology-stack',
         'platform/standards',
+        'technical/deployment',
       ],
     },
     {
       type: 'category',
-      label: 'Core Servers',
-      collapsed: false,
+      label: 'Platform Components',
+      collapsed: true,
       link: {
         type: 'generated-index',
-        title: 'Core Servers',
+        title: 'Platform Components',
         description:
-          'The three microservices that make up IUDX — the Catalogue Server, the Authorization Server, and the Resource Server(s).',
-        slug: '/category/servers',
+          'Every service that makes up the Data Exchange — what it does, how it enforces access, and what it talks to.',
+        slug: '/category/components',
       },
       items: [
-        'technical/catalogue-server',
-        'technical/authorization-server',
-        'technical/resource-server',
+        'components/api-gateway',
+        'components/identity-provider',
+        'components/authorization-service',
+        'components/policy-service',
+        'components/user-service',
+        'components/catalogue',
+        'components/data-plane',
+        'components/file-exchange',
+        'components/community-layer',
+        'components/marketplace',
+        'components/supporting-services',
+        'components/messaging-backbone',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Platform Flows',
+      collapsed: true,
+      link: {
+        type: 'generated-index',
+        title: 'Platform Flows',
+        description:
+          'End-to-end walkthroughs of the key journeys — authentication, consuming data, and the lifecycle of an access policy.',
+        slug: '/category/flows',
+      },
+      items: [
+        'flows/authentication',
+        'flows/data-consumption',
+        'flows/policy-lifecycle',
       ],
     },
     {
       type: 'category',
       label: 'Data Exchange',
-      collapsed: false,
+      collapsed: true,
       link: {
         type: 'generated-index',
         title: 'Data Exchange',
         description:
-          'How data moves through IUDX — onboarding and ingestion, discovery, and the ways consumers access data.',
+          'How data moves through the platform — onboarding and ingestion, discovery, and the ways consumers access data.',
         slug: '/category/data-exchange',
       },
       items: ['develop/data-ingestion', 'platform/data-access-models'],
@@ -84,10 +114,83 @@ const sidebars: SidebarsConfig = {
         type: 'generated-index',
         title: 'Developer Guides',
         description:
-          'Build against IUDX — getting started, the API surface, and the standards behind them.',
+          'Build against the Data Exchange — getting started, running the platform locally, configuration, API standards, and the shared libraries.',
         slug: '/category/develop',
       },
-      items: ['develop/getting-started', 'develop/apis', 'develop/endpoints'],
+      items: [
+        'develop/getting-started',
+        'develop/local-development',
+        'develop/configuration',
+        'develop/api-standards',
+        'develop/endpoints',
+        'develop/sdks-libraries',
+        'develop/testing',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'API Reference',
+      collapsed: true,
+      link: {
+        type: 'generated-index',
+        title: 'API Reference',
+        description:
+          'Authentication, endpoint documentation, and the platform-wide error contract.',
+        slug: '/category/api-reference',
+      },
+      items: [
+        'api-reference/auth-flow',
+        'api-reference/acl-endpoints',
+        'api-reference/error-responses',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Guides',
+      collapsed: true,
+      link: {
+        type: 'generated-index',
+        title: 'Guides',
+        description:
+          'Task-oriented guides for debugging and understanding the platform in depth.',
+        slug: '/category/guides',
+      },
+      items: [
+        'guides/jwt-validation',
+        'guides/fga-authorization',
+        'guides/debugging-policy-creation',
+        'guides/troubleshooting',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Operations',
+      collapsed: true,
+      link: {
+        type: 'generated-index',
+        title: 'Operations',
+        description:
+          'Running the Data Exchange in production — GitOps deployment, monitoring and health, and security practices.',
+        slug: '/category/operations',
+      },
+      items: [
+        'operations/deployment-gitops',
+        'operations/monitoring',
+        'operations/security',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Migration',
+      collapsed: true,
+      link: {
+        type: 'generated-index',
+        title: 'Migration',
+        description:
+          'Moving from the legacy platform to the current Data Exchange — what changed, what is preserved, and how to migrate a client.',
+        slug: '/category/migration',
+      },
+      items: ['migration/overview', 'migration/client-guide'],
     },
     {
       type: 'category',
@@ -97,7 +200,7 @@ const sidebars: SidebarsConfig = {
         type: 'generated-index',
         title: 'Adoption',
         description:
-          'Proven deployments, detailed case studies, and how IUDX compares to other data-exchange platforms.',
+          'Proven deployments, detailed case studies, and how the platform compares to other data exchanges.',
         slug: '/category/adoption',
       },
       items: [
@@ -113,10 +216,15 @@ const sidebars: SidebarsConfig = {
       link: {
         type: 'generated-index',
         title: 'Resources',
-        description: 'Deployment guidance and a glossary of key terms.',
+        description: 'FAQs, glossary, release notes, and how to contribute.',
         slug: '/category/resources',
       },
-      items: ['technical/deployment', 'technical/definitions'],
+      items: [
+        'resources/faq',
+        'resources/glossary',
+        'resources/release-notes',
+        'resources/contributing',
+      ],
     },
   ],
 };

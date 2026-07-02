@@ -1,53 +1,49 @@
 ---
 id: control-plane
-title: Control Plane — Data Discovery
+title: Control Plane — Discovery & Governance
 sidebar_label: Control Plane
-description: The IUDX Control Plane — the central API layer for securely managing, discovering, and accessing data across the ecosystem.
+description: The Data Exchange Control Plane — the services that manage discovery, identity, policy, and authorization decisions.
 ---
 
-# Control Plane: The API Interface for Data Discovery
+# Control Plane: Who May Access What
 
-The **Control Plane** is the central API layer that securely manages, discovers, and governs access to data across the ecosystem. It is the home of IUDX's Central Directory Services.
+The **Control Plane** is the set of services that securely manage, discover, and govern access to data across the ecosystem. Nothing on the control side ever serves resource data — it decides, records, and describes.
 
-![IUDX Control Plane — core services architecture (Data Discovery, Identity, Auditing, AAA), interfaces, control-plane components, and the consent-validator flow](/img/technical/control-plane.png)
-*Figure: Control Plane — the API interface for data discovery*
+## Core services
 
-## Core Services Architecture
-
-The Control Plane is organized around four cooperating services:
-
-- **Data Discovery Service** — lets consumers discover data, and publish and search data and metadata.
-- **Identity Service** — handles user registration, authentication, and profile management; authenticates users and manages identities.
-- **AAA Service** — authorizes access and enforces policies and account usage.
-- **Auditing Service** — monitors and audits all access events and actions.
-
-## Interfaces (APIs)
-
-| Interface | Purpose |
+| Service | Responsibility |
 | --- | --- |
-| **Data Discovery (D)** | Publish and search data and metadata |
-| **Identity (I)** | User registration, authentication, and profile management |
-| **Authorization (A)** | Token management, consent, policies, and access control |
-| **Monitoring (M)** | Audit logs, monitoring events, and usage |
+| [Catalogue](../components/catalogue.md) | Resource metadata in **JSON-LD**; geo-spatial, attribute, and text discovery |
+| [User Service](../components/user-service.md) | User profiles, organisations and membership, delegations, app credentials |
+| [Identity Provider](../components/identity-provider.md) | Authentication (OIDC) — the platform never stores passwords |
+| [Policy Service](../components/policy-service.md) | The system of record for access grants — create, list, revoke, verify |
+| [Authorization Service](../components/authorization-service.md) | Real-time permission checks from a relationship graph (ReBAC/OpenFGA) |
+| [Supporting services](../components/supporting-services.md) | Server registry, credits ledger, audit trail, notifications |
 
-## Control Plane Components
+## How a decision is made
 
-- **AAA Server** — security, authentication, and authorization; audit logs. *(Interfaces: I, A, M)*
-- **Catalogue Server** — resource metadata in **JSON-LD**; powers data discovery. *(Interface: D)*
-- **Data Explorer** — a UI to discover and explore data resources and their metadata. *(User interface)*
-- **Consent Validator** — consent management for PII, including revocation and access control. *(Interface: C)*
+The control plane splits **policy administration** from **policy decisions**:
 
-## Consent Validator Flow
+- The **Policy Service (PAP — policy administration point)** owns the authoritative ledger of grants. Every grant names a consumer (or group), a resource, the permitted access types, and an expiry.
+- The **Authorization Service (PDP — policy decision point)** holds a projection of those grants as relationship tuples, optimised for one thing: answering *"may this subject perform this action on this resource?"* in milliseconds.
+- The two are synchronised **asynchronously and reliably** — every policy change is written to a transactional outbox in the same database transaction as the grant, then relayed over the [messaging backbone](../components/messaging-backbone.md). A committed grant cannot fail to become enforceable.
 
-For personal data, the consent validator coordinates a clear sequence: the **Data Principal** gives consent, a **consent artefact** is created, the **consent validator** verifies it, and the **data provider** stores the consent. It validates the availability of PII data with the data provider before storing consent, supporting two integration styles:
+The **API Gateway** acts as the **policy enforcement point (PEP)**: it authenticates every request at the edge and — together with the data-side services — consults the PDP before content is served.
 
-- **APIs** for create, update, delete, and view of consent records.
-- **Custom integration** with each data provider (for example, using a Jan Aadhar member id, or a PDS/ration number for Rythu Bharosa-style schemes).
+```mermaid
+flowchart LR
+    P[Provider] -->|grant / revoke| PAP[Policy Service<br/>PAP]
+    PAP -->|outbox → events| MQ[(Messaging backbone)]
+    MQ --> PDP[Authorization Service<br/>PDP]
+    GW[API Gateway<br/>PEP] -->|/v1/check| PDP
+    DP[Data-side services] -->|/v1/check| PDP
+```
 
-## Ecosystem Participants
+## Ecosystem participants
 
-- **Data Providers** — publish data and metadata, and set policies and access via consent.
-- **Application Developers / Data Consumers** — discover, request, and use data securely via APIs.
-- **Data Principals (Citizens)** — provide consent for the use of their personal data.
+- **Data Providers** — publish resources and metadata, and control access via policies.
+- **Data Consumers / application developers** — discover, request, and use data securely via APIs.
+- **Organisation admins** — manage access on behalf of all providers in their organisation.
+- **Platform admins (cos_admin)** — operate the exchange itself.
 
 For the data-access side of the platform, see the [Data Plane](./data-plane.md).

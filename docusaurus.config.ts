@@ -17,15 +17,18 @@ const config: Config = {
   baseUrl: '/cdpg-docs/',
 
   organizationName: 'datakaveri',
-  projectName: 'iudx-novo-docs',
+  projectName: 'cdpg-docs',
 
   onBrokenLinks: 'throw',
 
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
   },
+
+  themes: ['@docusaurus/theme-mermaid'],
 
   i18n: {
     defaultLocale: 'en',
@@ -38,7 +41,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/datakaveri/iudx-novo-docs/tree/main/',
+          editUrl: 'https://github.com/datakaveri/cdpg-docs/tree/main/',
         },
         blog: false,
         theme: {
@@ -68,7 +71,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {to: '/docs/category/technology', label: 'Architecture', position: 'left'},
-        {to: '/docs/category/servers', label: 'Core Servers', position: 'left'},
+        {to: '/docs/category/components', label: 'Components', position: 'left'},
         {to: '/docs/develop/getting-started', label: 'For Developers', position: 'left'},
         {
           href: 'https://dataforpublicgood.org.in',

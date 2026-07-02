@@ -1,16 +1,21 @@
+---
+title: ACL Endpoints
+description: The Policy Service (ACL) REST API — creating, listing, revoking, and verifying access policies.
+---
+
 # ACL Endpoints
 
-The Access Control List (ACL) service provides a RESTful API for managing policy grants in CDPG.
+The [Policy Service](../components/policy-service.md) provides a RESTful API for managing access policies.
 
 ## Base URL
 
 ```
-https://api.example.com/iudx/acl/apd/v2
+https://<gateway>/iudx/acl/apd/v2
 ```
 
 ## Authentication
 
-All endpoints require a valid JWT token in the `Authorization: Bearer <token>` header, or Basic auth for appID/secret.
+All endpoints require a valid JWT in the `Authorization: Bearer <token>` header (or app credentials via Basic auth). See the [Authentication Flow](./auth-flow.md).
 
 ## Endpoints
 
@@ -18,12 +23,10 @@ All endpoints require a valid JWT token in the `Authorization: Bearer <token>` h
 
 **POST** `/policy`
 
-Creates one or more policy grants.
-
-#### Request
+Creates one or more policy grants. Caller must be the item's owner or an org admin of its organisation.
 
 ```bash
-curl -X POST https://api.example.com/iudx/acl/apd/v2/policy \
+curl -X POST https://<gateway>/iudx/acl/apd/v2/policy \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -44,7 +47,7 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/policy \
   }'
 ```
 
-#### Response
+Response — `201 Created`:
 
 ```json
 {
@@ -52,18 +55,16 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/policy \
   "title": "Policy created",
   "detail": "Successfully created 1 policy",
   "results": [
-    {
-      "policyId": "550e8400-e29b-41d4-a716-446655440000"
-    }
+    { "policyId": "550e8400-e29b-41d4-a716-446655440000" }
   ]
 }
 ```
 
-#### Error Cases
+Error cases:
 
-- **409 Conflict** — Policy already exists for this user/item/accessType combo
-- **403 Forbidden** — Caller is not the item owner or org_admin
-- **400 Bad Request** — Invalid request format or missing required fields
+- **409 Conflict** — an active policy already exists for this user/item/accessType combination
+- **403 Forbidden** — caller is not the item owner or org admin
+- **400 Bad Request** — invalid request format or missing required fields
 
 ---
 
@@ -71,9 +72,24 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/policy \
 
 **DELETE** `/policy?id=<policyId>`
 
-Revokes (soft-deletes) a policy.
+Revokes (soft-deletes) a policy. Caller must be the policy's issuer, the item owner, or an org admin of the item's organisation.
 
-#### [HAND-CURATE] Add example request/response
+```bash
+curl -X DELETE "https://<gateway>/iudx/acl/apd/v2/policy?id=550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer <token>"
+```
+
+Response — `200 OK`:
+
+```json
+{
+  "type": "urn:dx:acl:Success",
+  "title": "Policy deleted",
+  "detail": "Successfully deleted 1 policy"
+}
+```
+
+The policy's status becomes `DELETED` (it remains queryable for audit) and the corresponding enforcement relationships are removed within moments.
 
 ---
 
@@ -83,7 +99,31 @@ Revokes (soft-deletes) a policy.
 
 Returns policies usable by the authenticated user.
 
-#### [HAND-CURATE] Add example request/response
+```bash
+curl "https://<gateway>/iudx/acl/apd/v2/policy/consumer?status=ACTIVE" \
+  -H "Authorization: Bearer <token>"
+```
+
+Response — `200 OK`:
+
+```json
+{
+  "type": "urn:dx:acl:Success",
+  "title": "Success",
+  "results": [
+    {
+      "policyId": "550e8400-e29b-41d4-a716-446655440000",
+      "itemId": "urn:datakaveri:resource:abc123",
+      "itemType": "DATABANK",
+      "ownerId": "00000000-0000-0000-0000-000000000001",
+      "status": "ACTIVE",
+      "constraints": {"access": [{"accessType": "api"}]},
+      "expiryAt": "2027-12-31T23:59:59Z"
+    }
+  ],
+  "paginationInfo": {"offset": 0, "limit": 50, "totalHits": 1}
+}
+```
 
 ---
 
@@ -91,9 +131,7 @@ Returns policies usable by the authenticated user.
 
 **GET** `/policy/provider?status=ACTIVE&limit=50&offset=0`
 
-Returns policies issued by the authenticated user.
-
-#### [HAND-CURATE] Add example request/response
+Returns policies **issued by** the authenticated user (as provider). Same response shape as the consumer listing, with each row additionally naming the `consumerId` the grant was issued to.
 
 ---
 
@@ -101,9 +139,7 @@ Returns policies issued by the authenticated user.
 
 **GET** `/policy/organisation?limit=50&offset=0`
 
-Returns policies on items owned by the caller's organisation (org_admin only).
-
-#### [HAND-CURATE] Add example request/response
+Returns policies on items owned by the caller's organisation. Requires the `org_admin` role; callers without it receive `403 Forbidden`.
 
 ---
 
@@ -111,9 +147,7 @@ Returns policies on items owned by the caller's organisation (org_admin only).
 
 **GET** `/policy/platform?limit=50&offset=0`
 
-Returns all policies (cos_admin only).
-
-#### [HAND-CURATE] Add example request/response
+Returns all policies on the platform. Requires the `cos_admin` role.
 
 ---
 
@@ -121,12 +155,10 @@ Returns all policies (cos_admin only).
 
 **POST** `/verify`
 
-Checks whether a policy grant exists and is active.
-
-#### Request
+Checks whether an active policy grant exists for a user/item pair. Used by platform components at access time; also callable for diagnostics.
 
 ```bash
-curl -X POST https://api.example.com/iudx/acl/apd/v2/verify \
+curl -X POST https://<gateway>/iudx/acl/apd/v2/verify \
   -H "Content-Type: application/json" \
   -d '{
     "user": {"id": "00000000-0000-0000-0000-000000000002"},
@@ -134,7 +166,7 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/verify \
   }'
 ```
 
-#### Response (Success)
+Response — success:
 
 ```json
 {
@@ -144,7 +176,7 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/verify \
 }
 ```
 
-#### Response (No Access)
+Response — no access:
 
 ```json
 {
@@ -156,62 +188,43 @@ curl -X POST https://api.example.com/iudx/acl/apd/v2/verify \
 
 ---
 
-## Common Patterns
+## Common patterns
 
-### Constraint Examples
+### Constraint examples
 
-#### Single Access Type
+Single access type:
+
+```json
+{ "access": [ {"accessType": "api"} ] }
+```
+
+Multiple access types:
+
+```json
+{ "access": [ {"accessType": "api"}, {"accessType": "file"}, {"accessType": "sub"} ] }
+```
+
+GROUP policy with organisation access:
+
 ```json
 {
-  "access": [
-    {"accessType": "api"}
-  ]
+  "access": [ {"accessType": "api"} ],
+  "subjects": { "allowedOrgIds": ["00000000-0000-0000-0000-000000000010"] }
 }
 ```
 
-#### Multiple Access Types
-```json
-{
-  "access": [
-    {"accessType": "api"},
-    {"accessType": "file"},
-    {"accessType": "sub"}
-  ]
-}
-```
+### Pagination
 
-#### GROUP Policy with Org Access
-```json
-{
-  "access": [
-    {"accessType": "api"}
-  ],
-  "subjects": {
-    "allowedOrgIds": ["00000000-0000-0000-0000-000000000010"]
-  }
-}
-```
+All list endpoints support `limit` (1–1000, default 50) and `offset` (default 0). Responses include `paginationInfo.totalHits` for building pagination UI.
+
+### Rate limiting
+
+Requests are rate-limited **at the gateway**, per authenticated subject. Exceeding the limit returns `429` with `type: urn:dx:acl:TooManyRequests` — honour any `Retry-After` header and back off exponentially. Limits are deployment-specific; contact your platform operator for the configured values.
 
 ---
 
-## Rate Limiting
+## See also
 
-[HAND-CURATE: Document rate limits, quotas, and backoff strategies]
-
----
-
-## Pagination
-
-All list endpoints support:
-- `limit` (1-1000, default 50)
-- `offset` (default 0)
-
-Response includes `totalHits` for building pagination UI.
-
----
-
-## See Also
-
-- [Error Responses](./error-responses) — Error codes and meanings
-- [Auth Flow](./auth-flow) — How authentication works
-- [Troubleshooting](../guides/debugging-policy-creation) — Common issues
+- [Error Responses](./error-responses.md) — error codes and meanings
+- [Auth Flow](./auth-flow.md) — how authentication works
+- [Debugging Policy Creation](../guides/debugging-policy-creation.md) — common issues

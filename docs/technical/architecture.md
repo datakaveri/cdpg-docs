@@ -1,64 +1,116 @@
 ---
 id: architecture
-title: Service Architecture & Components
-sidebar_label: Service Architecture
-description: The microservices architecture of IUDX and a component-by-component breakdown of the control and data planes.
+title: System Architecture
+sidebar_label: System Architecture
+description: The microservices architecture of the Data Exchange — the API gateway, control-side and data-side services, and how they interact.
 ---
 
-# Service Architecture & Components
+# System Architecture
 
-IUDX employs a **cloud-universal, microservices-based architecture** that separates responsibilities across a **Control Plane** and a **Data Plane**. This modular design lets data providers and consumers interact securely and efficiently, in accordance with policy and consent, while individual high-load services scale independently.
+The Data Exchange is a **cloud-native, microservices-based platform**. Deciding *who may access what* is handled by the control-side components (catalogue, user, policy, authorization), while the data-side components (data plane, file exchange) serve the actual content once access is proven. Every request enters through a single **API Gateway**.
 
-![IUDX service components — the Catalogue, Authorization, and Resource Server(s) between consumer applications and data providers](/img/technical/arch-service-components.svg)
-*Figure: IUDX service components*
+## System diagram
 
-A brief explanation of the core components follows.
+```mermaid
+flowchart TB
+    subgraph Clients
+        U[Users / Web Apps]
+        M[Applications M2M]
+    end
 
-### Authorization Server (AAA)
+    subgraph Edge
+        GW[API Gateway]
+        KC[Identity Provider<br/>Keycloak]
+    end
 
-The Authorization Server provides identity, authentication, authorization (access control), and audit-log management. Identity services are based on the **Keycloak** open-source identity provider, and authentication uses the **OpenID Connect** framework. Access control to private and protected non-personal data is managed via **JSON Web Tokens (JWT)**: the server specifies APIs for token management (request, revoke, audit) and consent/policy-management APIs that let a provider set, update, and list access-control policies for its resources. See the [Authorization Server](./authorization-server.md) page for detail.
+    subgraph Control["Control Side — who may access what"]
+        CAT[Catalogue<br/>resource metadata]
+        USR[User Service<br/>accounts · organisations]
+        ACL[Policy Service<br/>grants & revocations]
+        AZ[Authorization Service<br/>ReBAC checks · OpenFGA]
+    end
 
-### Catalogue Server
+    subgraph Data["Data Side — the content itself"]
+        DP[Data Plane<br/>NGSI-LD · OGC · subscriptions]
+        FX[File Exchange<br/>bulk upload/download]
+        CL[Community Layer<br/>discussions · challenges]
+        MP[Marketplace<br/>products · orders]
+    end
 
-The Catalogue Server provides resource discovery and search. It stores resource metadata as linked-data (**JSON-LD**) objects, with APIs for creating, updating, and deleting metadata, plus powerful search APIs to discover data sources using geo-spatial, attribute, and text queries. See the [Catalogue Server](./catalogue-server.md) page for detail.
+    MQ[(Messaging Backbone)]
 
-### Resource Server
+    U -->|OIDC login| KC
+    U --> GW
+    M -->|app credentials| GW
+    GW --> CAT
+    GW --> USR
+    GW --> ACL
+    GW --> DP
+    GW --> FX
+    GW --> CL
+    GW --> MP
+    ACL -->|policy events| MQ
+    USR -->|membership events| MQ
+    MQ --> AZ
+    DP -->|access check| AZ
+    FX -->|access check| AZ
+```
 
-The Resource Server is the key component of the data plane. It provides data access via standard REST APIs (harmonized with **ETSI NGSI-LD**) and serves as the policy-enforcement point for resource access control, with logging and audit. Every resource server can be deployed in two modes:
+## Design principles
 
-- **Data Ingestion Mode** — providers push their existing datasets using data adaptors.
-- **API Gateway Mode** — the server fetches data from the provider "on the fly" as requested by the consumer.
+1. **Single entry point** — every request enters through the API Gateway, which authenticates it once and propagates a **cryptographically signed identity** (HMAC-signed headers) to all internal services. Internal services never re-validate user credentials.
 
-See the [Resource Server](./resource-server.md) page for detail.
+2. **Policy as the source of truth** — access grants live in the Policy Service as explicit, auditable records (who granted what, to whom, until when). The Authorization Service holds a *projection* of those grants optimised for millisecond permission checks.
 
-#### Data Ingestion Adaptors
+3. **Asynchronous synchronisation** — when a policy is created or revoked, the change is propagated to the Authorization Service through the messaging backbone using a **transactional outbox**, so the two can never silently diverge: a committed grant is always eventually enforced.
 
-An adaptor is a specialized software module developed for each ingestion pipeline, ensuring continuous data flow between the provider and the platform. Adaptors securely access data from the provider, remove any Personally Identifiable Information (PII), handle duplicates, and transform data to fit the platform's data model. Each adaptor either pulls data via a provider API or lets the provider push data into the IUDX message broker using the **AMQPS** streaming protocol.
+4. **Control/data separation** — components that decide access never sit in the hot path of serving data. The Data Plane asks one fast question ("may this subject do this action on this resource?") and streams the content itself.
 
-#### API Gateway Connectors
+5. **Unbundled and independently deployable** — each capability is its own service communicating only through well-defined contracts (REST, gRPC, events), so services scale and evolve independently.
 
-An API Gateway connector connects to a Data Provider — via API, database, JDBC connector, etc. — to fetch data when a consumer makes an access request. Each connector securely accesses data, removes PII where applicable, transforms data to the platform's model, and encrypts where applicable.
+## The service fleet
 
-### Specialized Resource Servers
+| Service | Role | Plane |
+| --- | --- | --- |
+| [API Gateway](../components/api-gateway.md) | Edge — JWT validation, authorization enforcement, signed identity, routing | Edge |
+| [Identity Provider](../components/identity-provider.md) (Keycloak) | User and machine identity (OIDC) | Edge |
+| [Authorization Service](../components/authorization-service.md) | Decision point — real-time ReBAC checks (OpenFGA) | Control |
+| [Policy Service](../components/policy-service.md) | System of record for access grants | Control |
+| [User Service](../components/user-service.md) | Profiles, organisations, membership, delegations, app credentials | Control |
+| [Catalogue](../components/catalogue.md) | Registry and discovery of resources (JSON-LD, search) | Control |
+| [Data Plane](../components/data-plane.md) | NGSI-LD queries, OGC API Features, subscriptions | Data |
+| [File Exchange](../components/file-exchange.md) | Bulk file upload/download with object storage | Data |
+| [Community Layer](../components/community-layer.md) | Discussions and data challenges | Data |
+| [Marketplace](../components/marketplace.md) | Monetisable datasets — products, orders, payments | Data |
+| [Supporting services](../components/supporting-services.md) | Registry, credits, audit, notifications | Control |
+| [Messaging Backbone](../components/messaging-backbone.md) (RabbitMQ) | Asynchronous events connecting the components | Both |
 
-In addition to the standard Resource Server, IUDX provides resource-server variants for different data shapes:
+## Component interactions
 
-- **OGC Server** — serves geospatial data via Open Geospatial Consortium (OGC) standard APIs, fed by dedicated OGC adaptors.
-- **Streaming Server** — delivers real-time and time-series data streams using streaming protocols.
-- **Files Server** — hosts file-based assets, including ZIP archives and individual files, for direct download.
+| From → To | Channel | Purpose |
+| --- | --- | --- |
+| Gateway → all services | HTTP + signed identity headers | Forward authenticated requests |
+| Gateway / services → User service | gRPC | Verify app credentials, resolve delegations |
+| Policy Service → Catalogue | gRPC | Validate the resource being granted (owner, organisation, allowed access types) |
+| Policy / User service → Authorization Service | Events (messaging backbone) | Project grants, revocations, and membership changes into the authorization graph |
+| Data Plane / File Exchange → Authorization Service | HTTP `/v1/check` | Real-time permission checks before serving data |
+| Any service → Notification service | Events | Outbound email to users |
+| Any mutating endpoint → Audit service | Events | Immutable audit trail |
 
-### API Security
+## Every service, the same shape
 
-All API-based services follow relevant **OWASP API Security** guidelines — secure TLS-based communications, API gateways to analyze, authenticate, and control API traffic, limited port exposure, and rate limiting. Logging for all API usage and metering is stored in an immutable database such as **ImmuDB**. See [Deployment & Security](./deployment.md).
+Each service follows a common skeleton and exposes the same operational surface:
 
-### Load Balancing
+- `GET /healthz/live` — liveness · `GET /healthz/ready` — readiness (real dependency checks)
+- `GET /metrics` — Prometheus metrics
+- `GET /docs` — embedded Swagger UI (the OpenAPI spec is compiled into the binary)
 
-Each API server is front-ended with an API gateway that reduces the risk of attacks such as DDoS, limits requests per second and parallel connections, and distributes requests evenly across available services to ensure stability.
+Configuration is environment-driven with baked development defaults — see [Configuration](../develop/configuration.md). Responses follow the platform-wide envelope — see [API Standards](../develop/api-standards.md).
 
-### Monitoring and Logging
+## Shared infrastructure
 
-For full system observability, IUDX captures developer-defined log messages and runtime system and service metrics:
+All components run as containers behind the gateway. Shared infrastructure: **PostgreSQL** (policies, accounts, service data), **Elasticsearch** (catalogue discovery and NGSI-LD search), an **S3-compatible object store** (file exchange), **Redis** (caching), and **RabbitMQ** (the messaging backbone). Identity is delegated entirely to **Keycloak**.
 
-- **Prometheus**-based VM system metrics (CPU, memory, network, etc.)
-- **Prometheus**-based service metrics (API calls, event-bus metrics, JVM metrics, etc.)
-- **Loki**-based developer log aggregation for runtime debugging and validation.
+:::tip Deployment shapes
+The same images support a **central** topology (everything in one cluster) and a **federated** topology (a data plane inside each provider's network, connected to the central control plane). See [Deployment Architecture](./deployment.md).
+:::

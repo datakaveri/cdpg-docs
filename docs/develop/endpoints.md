@@ -1,52 +1,45 @@
 ---
 id: endpoints
-title: Platform Endpoints & API Reference
-sidebar_label: Endpoints & APIs
-description: Component-to-endpoint mapping for an IUDX deployment, with links to each component's API documentation.
+title: Platform Endpoints
+sidebar_label: Endpoints
+description: The gateway route map — every public path prefix and the component that serves it.
 ---
 
-# Platform Endpoints & API Reference
+# Platform Endpoints
 
-This page maps each IUDX platform component to its mapped domain (and sub-path) and, where available, its API documentation. The URLs below point to the reference deployment at **`platform.iudx.io`** — on your own deployment, substitute your host while keeping the same sub-paths.
+All public traffic enters through the **API Gateway**. The table below maps each public path prefix to the component that serves it. On your own deployment, prepend your gateway host (locally: `http://localhost:8000`).
 
-:::note
-A blank in the **API docs** column means interactive API documentation is not separately published for that component (it is an internal or third-party service).
+The route table is **configuration, not code** — deployments can enable, disable, or re-map routes without rebuilding anything.
+
+## Route map
+
+| Path prefix | Component | Auth at gateway | Notes |
+| --- | --- | --- | --- |
+| `/iudx/v2/cat` | [Catalogue](../components/catalogue.md) | pass-through | Reads are public; writes identity-checked in-service |
+| `/iudx/v2/auth` | [User Service](../components/user-service.md) | pass-through | Profiles, orgs, delegations, app credentials; public JWKS lives here |
+| `/acl` | [Policy Service](../components/policy-service.md) | required | Policy CRUD + verify (`/iudx/acl/apd/v2/…` service path) |
+| `/authz` | [Authorization Service](../components/authorization-service.md) | required | `POST /v1/check` relationship checks |
+| `/ngsi-ld/v1` | [Data Plane](../components/data-plane.md) | required | Entity, temporal, and geo queries |
+| `/ogc` | Data Plane (OGC) | required | OGC API Features — collections, items |
+| `/iudx/v2/subscriptions` | Data Plane (subscriptions) | required | Subscription CRUD, user-scoped |
+| `/files` | [File Exchange](../components/file-exchange.md) | required | Uploads, downloads, processing (`/files/v1/…`) |
+| `/community` | [Community Layer](../components/community-layer.md) | required | Discussions and challenges |
+| `/marketplace` | [Marketplace](../components/marketplace.md) | required | Products and orders |
+| `/marketplace-webhook` | Marketplace | none | Payment-gateway callbacks — signature verified in-service |
+| `/audit` | [Audit](../components/supporting-services.md#audit) | required | Query + CSV export; admin/consumer split in-service |
+| `/iudx/v2/resource_servers` | [Registry](../components/supporting-services.md#registry) | pass-through | Reads public; writes platform-admin-gated |
+| `/iudx/v2/acl_servers` | Registry | pass-through | As above |
+| `/healthz` | Gateway itself | none | Gateway liveness |
+
+**Two routing patterns:**
+
+- **Authenticated + stripped** (`/files`, `/acl`, `/audit`, …) — the gateway authenticates, strips the prefix, and forwards with signed identity headers. The upstream sees a clean path and trusts the headers.
+- **Pass-through** (`/iudx/v2/cat`, `/iudx/v2/auth`, registry) — the path is forwarded verbatim and the service enforces identity itself, which allows anonymous reads on public data.
+
+:::note Legacy services
+Endpoints of the previous-generation platform that have not yet migrated (see [Migration](../migration/overview.md)) are reached on the legacy hosts directly — the gateway routes only to the current services.
 :::
 
-## Core data exchange
+## Per-service API documentation
 
-These are the services that make up the IUDX [Control Plane](../technical/control-plane.md) and [Data Plane](../technical/data-plane.md).
-
-| Component | Role in IUDX | Endpoint | API docs |
-| --- | --- | --- | --- |
-| **Control Plane** | Catalogue, discovery & management | [`/controlplane`](https://platform.iudx.io/controlplane) | [API docs](https://platform.iudx.io/controlplane/apis) |
-| **ACL** (Access Control List) | Authorization & access policies | [`/controlplane/acl`](https://platform.iudx.io/controlplane/acl) | [API docs](https://platform.iudx.io/controlplane/acl/apis) |
-| **Auditing Server** | Audit & metering of access | — | — |
-| **Data Plane Server** | Resource server — data access | [`/dataplane`](https://platform.iudx.io/dataplane) | [API docs](https://platform.iudx.io/dataplane/apis) |
-| **Resource Server Proxy** | Federated resource access | [`/dataplane/rsp`](https://platform.iudx.io/dataplane/rsp) | [API docs](https://platform.iudx.io/dataplane/rsp/apis) |
-| **GeoServer** | Geospatial (OGC) data | [`/geoserver`](https://platform.iudx.io/geoserver) | — |
-| **File Server** | File-based assets (Files Connect) | [`/files-connect-api`](https://platform.iudx.io/files-connect-api) | [API docs](https://platform.iudx.io/files-connect-api/apis) |
-
-## Platform services
-
-Supporting services for messaging, identity, observability, and community.
-
-| Component | Role in IUDX | Endpoint | API docs |
-| --- | --- | --- | --- |
-| **RabbitMQ** | Data broker — streaming / pub-sub | [`/databroker`](https://platform.iudx.io/databroker) | — |
-| **Keycloak** | Identity & authentication | [`/auth`](https://platform.iudx.io/auth) | — |
-| **Kibana** | Logs & search visualization | [`/kibana`](https://platform.iudx.io/kibana) | — |
-| **osTicket** | Help desk / support | [`/help-desk`](https://platform.iudx.io/help-desk) | — |
-| **Community Layer** | Community portal | [`/community`](https://platform.iudx.io/community) | [Docs](https://platform.iudx.io/community/docs) |
-
-## Sandbox & tooling
-
-| Component | Role in IUDX | Endpoint | API docs |
-| --- | --- | --- | --- |
-| **Sandbox Connect API** | Sandbox access API | [`/sandbox-connect-api/api`](https://platform.iudx.io/sandbox-connect-api/api) | [API docs](https://platform.iudx.io/sandbox-connect-api/v1/apis/) |
-| **User Docs** | Sandbox user documentation | [`/sandbox-connect-api/user-docs`](https://platform.iudx.io/sandbox-connect-api/user-docs) | [Docs](https://platform.iudx.io/sandbox-connect-api/user-docs/docs/intro) |
-| **MCP Server** | Model Context Protocol server | [`/mcp-server`](https://platform.iudx.io/mcp-server) | — |
-
----
-
-For the conceptual API surface behind these endpoints — catalogue, exchange, authorization, and consent — see [APIs & Standards](./apis.md).
+Every service serves its own interactive OpenAPI documentation at its `/docs` endpoint. For the request/response conventions shared by all of them, see [API Standards](./api-standards.md); for worked examples, see the [API Reference](/docs/category/api-reference).

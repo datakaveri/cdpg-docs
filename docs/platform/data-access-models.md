@@ -40,7 +40,7 @@ Real-time updates streamed to subscribed consumers via the data broker.
 
 ## Data classes
 
-Access also depends on a dataset's class. IUDX supports **public** data (openly accessible), **restricted** data (access granted by the provider on request, per policy), and **monetisable** data models. Restricted access is governed by the provider's policies in the [Authorization Server](../technical/authorization-server.md).
+Access also depends on a dataset's class. The platform supports **public** data (openly accessible), **restricted** data (access granted by the provider on request, per policy), and **monetisable** data models (sold through the [Marketplace](../components/marketplace.md)). Restricted access is governed by the provider's policies in the [Policy Service](../components/policy-service.md).
 
 :::note Emerging: privacy-preserving compute
 For sensitive data, CDPG is developing privacy-enhancing techniques — including computation inside secure enclaves so that analysis can run without the raw data leaving the provider's control. These build on the same consent and policy foundation.

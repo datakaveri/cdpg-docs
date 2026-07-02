@@ -28,7 +28,7 @@ IUDX adheres to the following design principles, which serve as guidelines for t
 
 ## Services architecture
 
-IUDX is a platform made of an aggregation of different services — for example, the Resource Server Database, Resource Server Databroker, and Catalogue Server Database. Following the **unbundling** and **service orientation** principles, each capability is implemented as an independent microservice within a service-mesh architecture, so high-load services can scale independently. The three core services are the [Catalogue Server](./catalogue-server.md), the [Authorization Server](./authorization-server.md), and one or more [Resource Servers](./resource-server.md).
+Following the **unbundling** and **service orientation** principles, each platform capability is implemented as an independent microservice, so high-load services can scale independently. The full fleet — gateway, catalogue, policy, authorization, data plane, file exchange, and more — is described in the [System Architecture](./architecture.md) and the [Platform Components](/docs/category/components) section.
 
 ## Alignment with NUIS and IndEA
 
