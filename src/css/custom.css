@@ -245,3 +245,29 @@ article a {
 .breadcrumbs__item {
   font-size: 0.82rem;
 }
+
+/* ── Mermaid dark-mode adjustments ─────────────────────────────
+   Mermaid runs with one 'base' theme tuned for light mode (see
+   docusaurus.config.ts); node/actor boxes stay light panels in dark
+   mode (fine), but free-standing text needs to brighten. */
+[data-theme='dark'] .docusaurus-mermaid-container .messageText,
+[data-theme='dark'] .docusaurus-mermaid-container .loopText,
+[data-theme='dark'] .docusaurus-mermaid-container .loopText tspan,
+[data-theme='dark'] .docusaurus-mermaid-container .sequenceNumber,
+[data-theme='dark'] .docusaurus-mermaid-container .stateGroup text,
+[data-theme='dark'] .docusaurus-mermaid-container g.stateGroup .state-title ~ text {
+  fill: #cfd8ea !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel,
+[data-theme='dark'] .docusaurus-mermaid-container .edgeLabel p {
+  color: #cfd8ea;
+  background: #101728 !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .cluster rect {
+  fill: #15244a !important;
+  stroke: #2b3b66 !important;
+}
+[data-theme='dark'] .docusaurus-mermaid-container .cluster-label,
+[data-theme='dark'] .docusaurus-mermaid-container .cluster-label span {
+  color: #cfd8ea !important;
+}

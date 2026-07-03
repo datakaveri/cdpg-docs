@@ -29,4 +29,4 @@ Components never call the Identity Provider on the request path. The [API Gatewa
 | `cos_admin` | Platform-wide visibility and administration |
 | `delegate` | Act on behalf of another user within a recorded delegation |
 
-See [Flow: Authentication](../flows/authentication.md) for the full login and token journey, and the [JWT Validation guide](../guides/jwt-validation.md) for debugging.
+See [Flow: Authentication](../flows/authentication.mdx) for the full login and token journey, and the [JWT Validation guide](../guides/jwt-validation.md) for debugging.

@@ -5,6 +5,9 @@ sidebar_label: Control Plane
 description: The Data Exchange Control Plane — the services that manage discovery, identity, policy, and authorization decisions.
 ---
 
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import ControlPlaneSvg from '@site/src/components/Diagram/svg/control-plane.svg';
+
 # Control Plane: Who May Access What
 
 The **Control Plane** is the set of services that securely manage, discover, and govern access to data across the ecosystem. Nothing on the control side ever serves resource data — it decides, records, and describes.
@@ -30,14 +33,14 @@ The control plane splits **policy administration** from **policy decisions**:
 
 The **API Gateway** acts as the **policy enforcement point (PEP)**: it authenticates every request at the edge and — together with the data-side services — consults the PDP before content is served.
 
-```mermaid
-flowchart LR
-    P[Provider] -->|grant / revoke| PAP[Policy Service<br/>PAP]
-    PAP -->|outbox → events| MQ[(Messaging backbone)]
-    MQ --> PDP[Authorization Service<br/>PDP]
-    GW[API Gateway<br/>PEP] -->|/v1/check| PDP
-    DP[Data-side services] -->|/v1/check| PDP
-```
+<DiagramFrame
+  svg={ControlPlaneSvg}
+  label="control_plane · administration vs decision"
+  legend={[
+    {color: 'navy', label: 'requests & stores'},
+    {color: 'teal', label: 'event pipeline'},
+  ]}
+/>
 
 ## Ecosystem participants
 

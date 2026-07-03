@@ -28,7 +28,7 @@ Everything a client does enters through one **API Gateway**, which authenticates
 - The **Control Plane** decides *who may access what* — the **Catalogue** (discovery), the **User service** (accounts, organisations), the **Policy service** (explicit, time-bound access grants), and the **Authorization service** (real-time permission checks backed by a relationship graph).
 - The **Data Plane** serves *the content itself* — NGSI-LD queries, OGC geospatial APIs, streaming subscriptions, and bulk file exchange — asking the Authorization service one fast question per request.
 
-The design is **federated**: a data plane can run inside a provider's own network while connecting to a central control plane, so data never has to leave the provider's custody. See the [System Architecture](./technical/architecture.md) for the full picture.
+The design is **federated**: a data plane can run inside a provider's own network while connecting to a central control plane, so data never has to leave the provider's custody. See the [System Architecture](./technical/architecture.mdx) for the full picture.
 
 ## Who it is for
 
@@ -39,7 +39,7 @@ The platform is designed to be deployed and operated by **governments, public ag
 | If you are a… | Start here |
 | --- | --- |
 | **Newcomer** — what is this platform? | [Key Features](./platform/key-features.md) · [Core Concepts](./concepts/core-concepts.md) |
-| **Architect** — how is it built? | [System Architecture](./technical/architecture.md) · [Platform Components](/docs/category/components) |
+| **Architect** — how is it built? | [System Architecture](./technical/architecture.mdx) · [Platform Components](/docs/category/components) |
 | **Developer** — build against it | [Getting Started](./develop/getting-started.md) · [API Standards](./develop/api-standards.md) |
 | **API consumer** — call the APIs | [Platform Endpoints](./develop/endpoints.md) · [API Reference](/docs/category/api-reference) |
 | **DevOps / operator** — run it | [Local Development](./develop/local-development.md) · [Operations](/docs/category/operations) |

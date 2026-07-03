@@ -76,5 +76,5 @@ flowchart LR
 
 ## Next steps
 
-- See the concepts in motion: [Consuming Data](../flows/data-consumption.md) and the [Policy Lifecycle](../flows/policy-lifecycle.md).
+- See the concepts in motion: [Consuming Data](../flows/data-consumption.mdx) and the [Policy Lifecycle](../flows/policy-lifecycle.mdx).
 - The full term list lives in the [Glossary](../resources/glossary.md).

@@ -1,0 +1,93 @@
+<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="Two planes: providers and consumers interact with the control plane to discover, grant and govern; consumers fetch content from the data plane, which enforces the control plane's decisions.">
+  <defs>
+    <marker id="pi-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
+    </marker>
+    <marker id="pi-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
+    </marker>
+    <marker id="pi-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
+    </marker>
+  </defs>
+
+  <!-- zones -->
+  <text class="dxz-lbl" x="34" y="34">actors</text>
+  <rect class="dxz navy" x="230" y="30" width="500" height="160" rx="16"/>
+  <text class="dxz-lbl navy" x="250" y="53">control plane · discover, grant, govern</text>
+  <rect class="dxz green" x="230" y="230" width="500" height="140" rx="16"/>
+  <text class="dxz-lbl green" x="250" y="253">data plane · serve, meter, audit</text>
+
+  <!-- flows -->
+  <path class="dxf orange calm" marker-end="url(#pi-o)" d="M160,84 C200,80 210,76 228,70"/>
+  <text class="dxe" x="168" y="66">publish · grant (m)</text>
+  <path class="dxf orange calm" marker-end="url(#pi-o)" d="M160,190 C200,175 215,140 228,120"/>
+  <text class="dxe" x="150" y="150">discover · request (d)</text>
+  <path class="dxf green calm" marker-end="url(#pi-g)" d="M160,204 C200,225 215,265 228,290"/>
+  <text class="dxe" x="146" y="260">query · download (r)</text>
+  <path class="dxf orange dashed calm" marker-end="url(#pi-o)" d="M160,308 C200,310 215,150 228,102"/>
+  <path class="dxf navy dashed calm" marker-end="url(#pi-n)" d="M480,190 C480,205 480,215 480,228"/>
+  <text class="dxe" x="494" y="212">decisions enforced (a)</text>
+
+  <!-- actors -->
+  <g id="pi-provider" class="dxn orange">
+    <rect class="dxn-box" x="30" y="60" width="130" height="48" rx="12"/>
+    <text class="dxn-t" x="95" y="81">Provider</text>
+    <text class="dxn-s" x="95" y="96">publish · grant</text>
+  </g>
+  <g id="pi-consumer" class="dxn orange">
+    <rect class="dxn-box" x="30" y="172" width="130" height="48" rx="12"/>
+    <text class="dxn-t" x="95" y="193">Consumer</text>
+    <text class="dxn-s" x="95" y="208">discover · consume</text>
+  </g>
+  <g id="pi-admin" class="dxn orange">
+    <rect class="dxn-box" x="30" y="284" width="130" height="48" rx="12"/>
+    <text class="dxn-t" x="95" y="305">Operator</text>
+    <text class="dxn-s" x="95" y="320">platform admin</text>
+  </g>
+
+  <!-- control plane -->
+  <g id="pi-cat" class="dxn navy">
+    <rect class="dxn-box" x="252" y="68" width="140" height="44" rx="12"/>
+    <text class="dxn-t" x="322" y="87">Catalogue</text>
+    <text class="dxn-s" x="322" y="101">discovery (d)</text>
+  </g>
+  <g id="pi-usr" class="dxn navy">
+    <rect class="dxn-box" x="412" y="68" width="140" height="44" rx="12"/>
+    <text class="dxn-t" x="482" y="87">User &amp; Orgs</text>
+    <text class="dxn-s" x="482" y="101">identity (i)</text>
+  </g>
+  <g id="pi-acl" class="dxn navy">
+    <rect class="dxn-box" x="252" y="128" width="140" height="44" rx="12"/>
+    <text class="dxn-t" x="322" y="147">Policy</text>
+    <text class="dxn-s" x="322" y="161">management (m)</text>
+  </g>
+  <g id="pi-az" class="dxn navy">
+    <rect class="dxn-box" x="412" y="128" width="140" height="44" rx="12"/>
+    <text class="dxn-t" x="482" y="147">Authorization</text>
+    <text class="dxn-s" x="482" y="161">access (a)</text>
+  </g>
+  <g id="pi-aud" class="dxn navy">
+    <rect class="dxn-box" x="572" y="98" width="138" height="44" rx="12"/>
+    <text class="dxn-t" x="641" y="117">Audit</text>
+    <text class="dxn-s" x="641" y="131">every access logged</text>
+  </g>
+
+  <!-- data plane -->
+  <g id="pi-q" class="dxn green">
+    <rect class="dxn-box" x="252" y="272" width="150" height="48" rx="12"/>
+    <text class="dxn-t" x="327" y="293">Query APIs</text>
+    <text class="dxn-s" x="327" y="308">ngsi-ld · ogc (r)</text>
+  </g>
+  <g id="pi-sub" class="dxn green">
+    <rect class="dxn-box" x="422" y="272" width="140" height="48" rx="12"/>
+    <text class="dxn-t" x="492" y="293">Subscriptions</text>
+    <text class="dxn-s" x="492" y="308">streams (r)</text>
+  </g>
+  <g id="pi-files" class="dxn green">
+    <rect class="dxn-box" x="582" y="272" width="128" height="48" rx="12"/>
+    <text class="dxn-t" x="646" y="293">Files</text>
+    <text class="dxn-s" x="646" y="308">presigned (r)</text>
+  </g>
+</svg>

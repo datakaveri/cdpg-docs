@@ -47,6 +47,20 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        // Keep element ids in inlined SVGs — the interactive StepFlow
+        // diagrams address paths/nodes by id, which SVGO would strip.
+        svgr: {
+          svgrConfig: {
+            svgoConfig: {
+              plugins: [
+                {
+                  name: 'preset-default',
+                  params: {overrides: {cleanupIds: false, removeViewBox: false}},
+                },
+              ],
+            },
+          },
+        },
       } satisfies Preset.Options,
     ],
   ],
@@ -56,6 +70,42 @@ const config: Config = {
     colorMode: {
       defaultMode: 'light',
       respectPrefersColorScheme: true,
+    },
+    // Mermaid restyled to the CDPG palette so the remaining sequence/state
+    // diagrams share the design language of the hand-crafted SVG diagrams.
+    // (Values chosen to stay readable on the dark background too; dark-only
+    // text tweaks live in custom.css.)
+    mermaid: {
+      theme: {light: 'base', dark: 'base'},
+      options: {
+        fontFamily: "Poppins, 'Segoe UI', system-ui, sans-serif",
+        themeVariables: {
+          fontSize: '14px',
+          primaryColor: '#eef1f8',
+          primaryTextColor: '#1f3569',
+          primaryBorderColor: '#8794b8',
+          secondaryColor: '#fdf0e3',
+          tertiaryColor: '#f5f6f9',
+          lineColor: '#8794b8',
+          signalColor: '#8794b8',
+          signalTextColor: '#5a6680',
+          actorBkg: '#eef1f8',
+          actorBorder: '#1f3569',
+          actorTextColor: '#1f3569',
+          labelBoxBkgColor: '#fdf0e3',
+          labelBoxBorderColor: '#f57e20',
+          labelTextColor: '#1f3569',
+          loopTextColor: '#6a7488',
+          noteBkgColor: '#fff4e8',
+          noteBorderColor: '#f57e20',
+          noteTextColor: '#1f3569',
+          activationBkgColor: '#fdf0e3',
+          activationBorderColor: '#f57e20',
+          clusterBkg: '#f5f6f9',
+          clusterBorder: '#d9deeb',
+          edgeLabelBackground: '#ffffff',
+        },
+      },
     },
     navbar: {
       logo: {

@@ -1,0 +1,59 @@
+<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="Authentication flow: a user signs in with the identity provider, receives a JWT, and calls the gateway; the gateway validates the token against cached JWKS keys, strips it, and forwards HMAC-signed identity headers to the service. Applications and delegation ride the same pipeline.">
+  <defs>
+    <marker id="fa-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
+    </marker>
+    <marker id="fa-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
+    </marker>
+  </defs>
+
+  <!-- paths -->
+  <path id="p-login" class="dxf orange dim" marker-end="url(#fa-o)" d="M170,58 C230,52 250,52 298,58"/>
+  <text id="lbl-login" class="dxe orange dim" x="200" y="42">oidc + pkce</text>
+  <path id="p-token" class="dxf orange dashed dim" marker-end="url(#fa-o)" d="M298,76 C250,82 230,82 172,76"/>
+  <text id="lbl-token" class="dxe orange dim" x="192" y="98">jwt · roles · org</text>
+  <path id="p-req" class="dxf orange dim" marker-end="url(#fa-o)" d="M120,90 C140,150 220,185 296,194"/>
+  <text id="lbl-req" class="dxe orange dim" x="160" y="162">bearer jwt</text>
+  <path id="p-jwks" class="dxf navy dashed dim" d="M382,168 C384,130 382,120 380,92"/>
+  <text id="lbl-jwks" class="dxe navy dim" x="396" y="130">jwks · cached</text>
+  <path id="p-fwd" class="dxf navy dim" marker-end="url(#fa-n)" d="M452,198 H586"/>
+  <text id="lbl-fwd" class="dxe navy dim" x="466" y="188">x-subject-* · hmac signed</text>
+  <path id="p-m2m" class="dxf orange dim" marker-end="url(#fa-o)" d="M170,320 C230,302 260,252 300,228"/>
+  <text id="lbl-m2m" class="dxe orange dim" x="182" y="286">app id + secret</text>
+  <path id="p-deleg" class="dxf navy dashed dim" d="M376,228 C375,260 375,268 376,296"/>
+  <text id="lbl-deleg" class="dxe navy dim" x="390" y="266">delegation scope</text>
+
+  <!-- nodes -->
+  <g id="n-user" class="dxn orange">
+    <rect class="dxn-box" x="30" y="40" width="140" height="50" rx="12"/>
+    <text class="dxn-t" x="100" y="62">User</text>
+    <text class="dxn-s" x="100" y="77">browser · mobile</text>
+  </g>
+  <g id="n-app" class="dxn orange">
+    <rect class="dxn-box" x="30" y="300" width="140" height="50" rx="12"/>
+    <text class="dxn-t" x="100" y="322">Application</text>
+    <text class="dxn-s" x="100" y="337">m2m</text>
+  </g>
+  <g id="n-idp" class="dxn navy">
+    <rect class="dxn-box" x="300" y="36" width="155" height="56" rx="12"/>
+    <text class="dxn-t" x="377" y="60">Identity Provider</text>
+    <text class="dxn-s" x="377" y="76">keycloak · oidc</text>
+  </g>
+  <g id="n-gw" class="dxn navy">
+    <rect class="dxn-box" x="300" y="170" width="155" height="58" rx="12"/>
+    <text class="dxn-t" x="377" y="194">API Gateway</text>
+    <text class="dxn-s" x="377" y="210">validate · strip · sign</text>
+  </g>
+  <g id="n-usr" class="dxn navy">
+    <rect class="dxn-box" x="300" y="298" width="155" height="52" rx="12"/>
+    <text class="dxn-t" x="377" y="320">User Service</text>
+    <text class="dxn-s" x="377" y="336">delegations · app creds</text>
+  </g>
+  <g id="n-svc" class="dxn green">
+    <rect class="dxn-box" x="588" y="170" width="142" height="58" rx="12"/>
+    <text class="dxn-t" x="659" y="194">Any Service</text>
+    <text class="dxn-s" x="659" y="210">verifies one signature</text>
+  </g>
+</svg>

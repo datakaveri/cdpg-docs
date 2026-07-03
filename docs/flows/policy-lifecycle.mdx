@@ -1,0 +1,70 @@
+---
+sidebar_position: 3
+title: "Flow: Policy Lifecycle"
+description: What happens to an access grant from creation to revocation or expiry.
+---
+
+import StepFlow from '@site/src/components/Diagram/StepFlow';
+import PolicySvg from '@site/src/components/Diagram/svg/flow-policy-lifecycle.svg';
+
+# Flow: Policy Lifecycle
+
+What happens to a grant from creation to revocation — including the event pipeline that makes a policy *enforced* rather than merely *recorded*.
+
+<StepFlow
+  svg={PolicySvg}
+  label="policy_lifecycle · record → project → enforce"
+  legend={[
+    {color: 'orange', label: 'admin & consumer'},
+    {color: 'teal', label: 'event pipeline'},
+    {color: 'navy', label: 'access check'},
+    {color: 'green', label: 'data'},
+    {color: 'berry', label: 'revoke / deny'},
+  ]}
+  steps={[
+    {
+      title: 'A grant is created',
+      body: 'The provider or org admin creates a policy. It is accepted only after validation: the resource exists, the granter owns it (or administers its organisation), the access types are supported, no active grant overlaps, and the expiry is bounded.',
+      lights: ['p-create', 'lbl-create', 'n-provider', 'n-acl'],
+    },
+    {
+      title: 'Stored with its event — atomically',
+      body: 'The policy row and its outbox event are written in the same database transaction. Either both exist or neither does — the ledger and the event stream cannot diverge.',
+      lights: ['p-outbox', 'lbl-outbox', 'n-acl', 'n-outbox'],
+    },
+    {
+      title: 'Published to the backbone',
+      body: 'A relay drains the outbox to RabbitMQ as policy.created / policy.deleted events. If the broker is down, events wait in the outbox and are delivered when it returns.',
+      lights: ['p-pub', 'lbl-pub', 'n-outbox', 'n-mq'],
+    },
+    {
+      title: 'Projected into the graph',
+      body: 'The Authorization Service consumes the event (idempotently — replays are harmless) and writes the relationship tuple that makes the grant checkable in milliseconds.',
+      lights: ['p-consume', 'lbl-consume', 'n-mq', 'n-az'],
+    },
+    {
+      title: 'Enforced on every request',
+      body: 'While active, every data request triggers a real-time check against the graph before anything is served. The grant also appears in the consumer’s, provider’s, and organisation’s policy listings.',
+      lights: ['p-serve', 'lbl-serve', 'p-check', 'lbl-check', 'p-data', 'lbl-data', 'n-consumer', 'n-dp', 'n-az'],
+    },
+    {
+      title: 'Revocation — or expiry',
+      body: 'Revocation soft-deletes the policy (the audit record survives) and rides the same pipeline; enforcement flips to 403 within moments. Expiry needs no action at all — checks fail automatically once the timestamp passes.',
+      lights: ['p-revoke', 'lbl-revoke', 'p-deny', 'lbl-deny', 'n-provider', 'n-dp'],
+    },
+  ]}
+/>
+
+## Validation at creation
+
+| Check | Enforced against |
+| --- | --- |
+| The resource exists | [Catalogue](../components/catalogue.md) |
+| The granter owns it, or is org admin of its organisation | Catalogue ownership + token roles |
+| Requested access types are supported by the resource | Catalogue access-type list |
+| No overlapping active grant exists | Policy records |
+| Expiry is in the future (and bounded) | Policy rules |
+
+## After it ends
+
+Either way a policy ends — revocation or expiry — the full history of who had access, granted by whom, and when remains queryable. See the [Audit service](../components/supporting-services.md#audit).

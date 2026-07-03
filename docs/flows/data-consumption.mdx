@@ -1,0 +1,66 @@
+---
+sidebar_position: 2
+title: "Flow: Consuming Data"
+description: The complete journey from discovering a dataset to receiving its data.
+---
+
+import StepFlow from '@site/src/components/Diagram/StepFlow';
+import ConsumeSvg from '@site/src/components/Diagram/svg/flow-data-consumption.svg';
+
+# Flow: Consuming Data
+
+The complete journey from discovering a dataset to receiving its data. Step through it below.
+
+<StepFlow
+  svg={ConsumeSvg}
+  label="data_consumption · discover → grant → consume"
+  legend={[
+    {color: 'orange', label: 'people & requests'},
+    {color: 'teal', label: 'event pipeline'},
+    {color: 'navy', label: 'access check'},
+    {color: 'green', label: 'data'},
+  ]}
+  steps={[
+    {
+      title: 'Discover',
+      body: 'The consumer searches the Catalogue — geo-spatial, attribute, or free-text. Metadata is public; the data itself is not.',
+      lights: ['p-disc', 'lbl-disc', 'n-consumer', 'n-cat'],
+    },
+    {
+      title: 'Request access',
+      body: 'The consumer raises an access request for the dataset (or buys it on the Marketplace, which automates the rest of this flow).',
+      lights: ['p-reqacc', 'lbl-reqacc', 'n-consumer', 'n-acl'],
+    },
+    {
+      title: 'The provider grants',
+      body: 'The provider — or their org admin — approves: a policy naming the consumer, the dataset, the permitted access types (api / file / sub), and an expiry. The consumer is notified by email.',
+      lights: ['p-grant', 'lbl-grant', 'n-provider', 'n-acl'],
+    },
+    {
+      title: 'The grant is recorded — and announced',
+      body: 'The Policy Service stores the grant and its event in one database transaction (transactional outbox), then publishes policy.created to the messaging backbone. A committed grant cannot fail to propagate.',
+      lights: ['p-event', 'lbl-event', 'n-acl', 'n-mq'],
+    },
+    {
+      title: 'The authorization graph updates',
+      body: "The Authorization Service consumes the event and writes a relationship tuple: consumer —api→ dataset. From this moment the grant is enforceable — no manual sync, nothing to deploy.",
+      lights: ['p-write', 'lbl-write', 'n-mq', 'n-az'],
+    },
+    {
+      title: 'Query the data',
+      body: 'The consumer calls the Data Plane through the gateway — NGSI-LD queries, OGC features, subscriptions, or file downloads.',
+      lights: ['p-query', 'lbl-query', 'n-consumer', 'n-dp'],
+    },
+    {
+      title: 'Checked on every request, then delivered',
+      body: 'The Data Plane asks the Authorization Service "may this subject api-access this dataset?" on every single request, then streams the results. Every access is audited. Revoke the policy, and the next request gets 403.',
+      lights: ['p-check', 'lbl-check', 'p-resp', 'lbl-resp', 'n-dp', 'n-az', 'n-consumer'],
+    },
+  ]}
+/>
+
+## Notes
+
+- **Grants can also come from the [Marketplace](../components/marketplace.md)** — a successful purchase creates the same policy automatically (steps 2–4 collapse into the order flow).
+- **Propagation is asynchronous but fast** — typically well under a second. If access is denied right after a grant, see [Troubleshooting](../guides/troubleshooting.md#policy-created-but-access-still-denied-403).
+- **Expiry needs no action** — enforcement stops at the expiry timestamp automatically ([Policy Lifecycle](./policy-lifecycle.mdx)).

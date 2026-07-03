@@ -1,0 +1,323 @@
+/**
+ * DX diagram design language.
+ * One design system for every hand-crafted SVG diagram in the docs:
+ * node cards, zone shells, semantic flow colors, mono micro-labels,
+ * frame bar, legend, and the interactive step panel.
+ *
+ * Colors are CSS variables so inlined SVGs (SVGR) adapt to light/dark
+ * automatically. Semantic palette (keep consistent across all diagrams):
+ *   orange = caller / auth traffic     navy  = control-plane calls
+ *   teal   = events / async            green = data delivery
+ *   berry  = deny / revoke
+ */
+
+:root {
+  --dx-orange: #f57e20;
+  --dx-navy: #1f3569;
+  --dx-teal: #0e7c86;
+  --dx-green: #1e8e5a;
+  --dx-berry: #b23a48;
+
+  --dx-node-bg: #ffffff;
+  --dx-node-border: #d9deeb;
+  --dx-title: #1f3569;
+  --dx-sub: #6a7488;
+  --dx-zone-lbl: #6a7488;
+  --dx-frame-line: #e2e5ee;
+  --dx-mono: var(--ifm-font-family-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  --dx-dim-opacity: 0.16;
+}
+
+[data-theme='dark'] {
+  --dx-orange: #f9a45e;
+  --dx-navy: #8aa2d8;
+  --dx-teal: #4cc3cf;
+  --dx-green: #4fc48e;
+  --dx-berry: #e0798a;
+
+  --dx-node-bg: #15244a;
+  --dx-node-border: #2b3b66;
+  --dx-title: #dfe7fa;
+  --dx-sub: #93a0b8;
+  --dx-zone-lbl: #93a0b8;
+  --dx-frame-line: #25335a;
+  --dx-dim-opacity: 0.22;
+}
+
+/* ── Wrapper & frame bar ─────────────────────────────────────── */
+.dx-diagram {
+  margin: 1.4rem 0 1.8rem;
+}
+.dx-frame {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0 2px 7px;
+  border-bottom: 1px solid var(--dx-frame-line);
+  margin-bottom: 12px;
+}
+.dx-frame .dx-frame-lbl {
+  font-family: var(--dx-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dx-sub);
+}
+.dx-frame .dx-frame-ctr {
+  font-family: var(--dx-mono);
+  font-size: 10px;
+  color: var(--dx-orange);
+}
+.dx-frame .dx-frame-dots {
+  display: flex;
+  gap: 5px;
+}
+.dx-frame .dx-frame-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dx-frame-line);
+  display: block;
+}
+
+.dx-diagram svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.dx-legend {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--dx-frame-line);
+  font-family: var(--dx-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--dx-sub);
+}
+.dx-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.dx-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dx-legend .lg-orange i { background: var(--dx-orange); }
+.dx-legend .lg-navy i   { background: var(--dx-navy); }
+.dx-legend .lg-teal i   { background: var(--dx-teal); }
+.dx-legend .lg-green i  { background: var(--dx-green); }
+.dx-legend .lg-berry i  { background: var(--dx-berry); }
+
+/* ── Node cards (SVG) ───────────────────────────────────────── */
+.dxn-box {
+  fill: var(--dx-node-bg);
+  stroke: var(--dx-node-border);
+  stroke-width: 1.5;
+  transition: stroke 0.3s, filter 0.3s;
+}
+.dxn-t {
+  font-family: var(--ifm-font-family-base, Poppins, sans-serif);
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--dx-title);
+  text-anchor: middle;
+  transition: fill 0.3s;
+}
+.dxn-s {
+  font-family: var(--dx-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  fill: var(--dx-sub);
+  text-anchor: middle;
+}
+/* Store / datastore variant (cylinder-ish): same tokens, dashed edge */
+.dxn-store .dxn-box {
+  stroke-dasharray: 3 4;
+}
+
+/* Node accent + lit states (color class sits on the .dxn group) */
+.dxn.orange .dxn-box { stroke: color-mix(in srgb, var(--dx-orange) 45%, var(--dx-node-border)); }
+.dxn.navy   .dxn-box { stroke: color-mix(in srgb, var(--dx-navy) 45%, var(--dx-node-border)); }
+.dxn.teal   .dxn-box { stroke: color-mix(in srgb, var(--dx-teal) 45%, var(--dx-node-border)); }
+.dxn.green  .dxn-box { stroke: color-mix(in srgb, var(--dx-green) 45%, var(--dx-node-border)); }
+.dxn.berry  .dxn-box { stroke: color-mix(in srgb, var(--dx-berry) 45%, var(--dx-node-border)); }
+
+.dxn.lit .dxn-box { stroke-width: 2; }
+.dxn.orange.lit .dxn-box { stroke: var(--dx-orange); filter: drop-shadow(0 0 7px color-mix(in srgb, var(--dx-orange) 45%, transparent)); }
+.dxn.navy.lit   .dxn-box { stroke: var(--dx-navy);   filter: drop-shadow(0 0 7px color-mix(in srgb, var(--dx-navy) 45%, transparent)); }
+.dxn.teal.lit   .dxn-box { stroke: var(--dx-teal);   filter: drop-shadow(0 0 7px color-mix(in srgb, var(--dx-teal) 45%, transparent)); }
+.dxn.green.lit  .dxn-box { stroke: var(--dx-green);  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--dx-green) 45%, transparent)); }
+.dxn.berry.lit  .dxn-box { stroke: var(--dx-berry);  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--dx-berry) 45%, transparent)); }
+
+/* ── Zone shells ────────────────────────────────────────────── */
+.dxz {
+  fill: transparent;
+  stroke-width: 1.25;
+  stroke-dasharray: 4 6;
+}
+.dxz.orange { stroke: color-mix(in srgb, var(--dx-orange) 55%, transparent); fill: color-mix(in srgb, var(--dx-orange) 4%, transparent); }
+.dxz.navy   { stroke: color-mix(in srgb, var(--dx-navy) 45%, transparent);   fill: color-mix(in srgb, var(--dx-navy) 4%, transparent); }
+.dxz.teal   { stroke: color-mix(in srgb, var(--dx-teal) 50%, transparent);   fill: color-mix(in srgb, var(--dx-teal) 4%, transparent); }
+.dxz.green  { stroke: color-mix(in srgb, var(--dx-green) 50%, transparent);  fill: color-mix(in srgb, var(--dx-green) 4%, transparent); }
+.dxz.berry  { stroke: color-mix(in srgb, var(--dx-berry) 50%, transparent);  fill: color-mix(in srgb, var(--dx-berry) 5%, transparent); }
+.dxz.plain  { stroke: var(--dx-node-border); }
+
+.dxz-lbl {
+  font-family: var(--dx-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  fill: var(--dx-zone-lbl);
+}
+.dxz-lbl.orange { fill: var(--dx-orange); }
+.dxz-lbl.navy   { fill: var(--dx-navy); }
+.dxz-lbl.teal   { fill: var(--dx-teal); }
+.dxz-lbl.green  { fill: var(--dx-green); }
+.dxz-lbl.berry  { fill: var(--dx-berry); }
+
+/* ── Flow paths ─────────────────────────────────────────────── */
+.dxf {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 0.3s, stroke-width 0.3s;
+}
+.dxf.orange { stroke: var(--dx-orange); }
+.dxf.navy   { stroke: var(--dx-navy); }
+.dxf.teal   { stroke: var(--dx-teal); }
+.dxf.green  { stroke: var(--dx-green); }
+.dxf.berry  { stroke: var(--dx-berry); }
+.dxf.dashed { stroke-dasharray: 4 5; }
+
+/* Static diagrams: gentle presence */
+.dxf.calm { opacity: 0.55; }
+
+/* Interactive diagrams: everything sleeps until its step */
+.dxf.dim { opacity: var(--dx-dim-opacity); }
+.dxf.dim.lit {
+  opacity: 1;
+  stroke-width: 2.4;
+}
+.dxf.dim.lit:not(.dashed) {
+  stroke-dasharray: 7 9;
+  animation: dx-march 0.9s linear infinite;
+}
+@keyframes dx-march {
+  to { stroke-dashoffset: -16; }
+}
+
+/* Edge micro-labels */
+.dxe {
+  font-family: var(--dx-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  fill: var(--dx-sub);
+  transition: fill 0.3s, opacity 0.3s;
+}
+.dxe.dim { opacity: 0.45; }
+.dxe.dim.lit { opacity: 1; }
+.dxe.orange.lit { fill: var(--dx-orange); }
+.dxe.navy.lit   { fill: var(--dx-navy); }
+.dxe.teal.lit   { fill: var(--dx-teal); }
+.dxe.green.lit  { fill: var(--dx-green); }
+.dxe.berry.lit  { fill: var(--dx-berry); }
+
+/* Arrowheads inherit currentColor per marker defined in each SVG */
+.dx-arr-orange { fill: var(--dx-orange); }
+.dx-arr-navy   { fill: var(--dx-navy); }
+.dx-arr-teal   { fill: var(--dx-teal); }
+.dx-arr-green  { fill: var(--dx-green); }
+.dx-arr-berry  { fill: var(--dx-berry); }
+
+/* ── Step panel (interactive flows) ─────────────────────────── */
+.dx-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.dx-step {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.3s, border-color 0.3s, background 0.3s;
+  font-family: var(--ifm-font-family-base);
+}
+.dx-step:hover { opacity: 0.85; }
+.dx-step.is-active {
+  opacity: 1;
+  border-left-color: var(--dx-orange);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--dx-orange) 7%, transparent), transparent 60%);
+}
+.dx-step .dx-step-num {
+  font-family: var(--dx-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--dx-orange);
+  padding-top: 0.22rem;
+  min-width: 2.2rem;
+}
+.dx-step h4 {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+  color: var(--dx-title);
+}
+.dx-step p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.dx-stepnav {
+  display: inline-flex;
+  gap: 6px;
+}
+.dx-stepnav button {
+  font-family: var(--dx-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--dx-frame-line);
+  background: transparent;
+  color: var(--dx-sub);
+  cursor: pointer;
+}
+.dx-stepnav button:hover:not(:disabled) {
+  border-color: var(--dx-orange);
+  color: var(--dx-orange);
+}
+.dx-stepnav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dxf.dim.lit:not(.dashed) {
+    animation: none;
+    stroke-dasharray: none;
+  }
+  .dxf, .dxn-box, .dxe, .dx-step { transition: none; }
+}

@@ -28,7 +28,7 @@ IUDX adheres to the following design principles, which serve as guidelines for t
 
 ## Services architecture
 
-Following the **unbundling** and **service orientation** principles, each platform capability is implemented as an independent microservice, so high-load services can scale independently. The full fleet — gateway, catalogue, policy, authorization, data plane, file exchange, and more — is described in the [System Architecture](./architecture.md) and the [Platform Components](/docs/category/components) section.
+Following the **unbundling** and **service orientation** principles, each platform capability is implemented as an independent microservice, so high-load services can scale independently. The full fleet — gateway, catalogue, policy, authorization, data plane, file exchange, and more — is described in the [System Architecture](./architecture.mdx) and the [Platform Components](/docs/category/components) section.
 
 ## Alignment with NUIS and IndEA
 

@@ -28,4 +28,4 @@ How tokens are validated across the stack, and how to debug 401s.
 ## See also
 
 - [Auth Flow](../api-reference/auth-flow.md) — claims and identity headers
-- [Flow: Authentication & Identity](../flows/authentication.md)
+- [Flow: Authentication & Identity](../flows/authentication.mdx)

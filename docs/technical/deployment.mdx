@@ -5,29 +5,29 @@ sidebar_label: Deployment Architecture
 description: How the Data Exchange is deployed — central and federated topologies, network zones, and the production environment shape.
 ---
 
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import TopologySvg from '@site/src/components/Diagram/svg/deployment-topology.svg';
+
 # Deployment Architecture
 
 All platform components run as containers behind the API Gateway. The same container images support two deployment configurations, selected purely by which services a deployment includes — nothing is forked.
 
+<DiagramFrame
+  svg={TopologySvg}
+  label="deployment_topology · central + federated"
+  legend={[
+    {color: 'teal', label: 'gitops & federation'},
+    {color: 'orange', label: 'client traffic'},
+    {color: 'navy', label: 'control link'},
+    {color: 'green', label: 'data'},
+  ]}
+/>
+
+The diagram shows both shapes at once: the **central platform** (one Kubernetes cluster, reconciled from Git by ArgoCD) and a **federated provider network** running its own data plane. A central-only deployment simply has no federated zone.
+
 ## Central topology
 
 Everything behind one gateway in one Kubernetes cluster — suitable for a single-organization exchange or a state/national deployment operated by one team.
-
-```mermaid
-flowchart TB
-    C[Clients] -->|HTTPS| LB[NGINX / load balancer + WAF]
-    LB --> GW[API Gateway]
-    subgraph Cluster["Kubernetes cluster (private network)"]
-        GW --> CTRL[Control-plane services<br/>catalogue · user · policy · authz]
-        GW --> DATA[Data-plane services<br/>NGSI-LD · OGC · files · community]
-        CTRL --> ST[(PostgreSQL · Elasticsearch<br/>Redis · MinIO)]
-        DATA --> ST
-        CTRL <--> MQ[(RabbitMQ)]
-        DATA <--> MQ
-        KC[Keycloak]
-    end
-    C -.->|OIDC login| KC
-```
 
 ## Federated topology
 

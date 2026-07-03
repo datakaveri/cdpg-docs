@@ -41,4 +41,4 @@ The **system of record for access grants (PAP)**. Every "user X may access resou
 | Messaging Backbone | Publish grant/revocation events for the [Authorization Service](./authorization-service.md) |
 | Notification service (events) | Email the consumer when access is granted |
 
-See the [ACL API Reference](../api-reference/acl-endpoints.md) for endpoints and the [Policy Lifecycle flow](../flows/policy-lifecycle.md) for the full journey of a grant.
+See the [ACL API Reference](../api-reference/acl-endpoints.md) for endpoints and the [Policy Lifecycle flow](../flows/policy-lifecycle.mdx) for the full journey of a grant.

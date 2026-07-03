@@ -5,56 +5,25 @@ sidebar_label: System Architecture
 description: The microservices architecture of the Data Exchange — the API gateway, control-side and data-side services, and how they interact.
 ---
 
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import SystemArch from '@site/src/components/Diagram/svg/system-architecture.svg';
+
 # System Architecture
 
 The Data Exchange is a **cloud-native, microservices-based platform**. Deciding *who may access what* is handled by the control-side components (catalogue, user, policy, authorization), while the data-side components (data plane, file exchange) serve the actual content once access is proven. Every request enters through a single **API Gateway**.
 
 ## System diagram
 
-```mermaid
-flowchart TB
-    subgraph Clients
-        U[Users / Web Apps]
-        M[Applications M2M]
-    end
-
-    subgraph Edge
-        GW[API Gateway]
-        KC[Identity Provider<br/>Keycloak]
-    end
-
-    subgraph Control["Control Side — who may access what"]
-        CAT[Catalogue<br/>resource metadata]
-        USR[User Service<br/>accounts · organisations]
-        ACL[Policy Service<br/>grants & revocations]
-        AZ[Authorization Service<br/>ReBAC checks · OpenFGA]
-    end
-
-    subgraph Data["Data Side — the content itself"]
-        DP[Data Plane<br/>NGSI-LD · OGC · subscriptions]
-        FX[File Exchange<br/>bulk upload/download]
-        CL[Community Layer<br/>discussions · challenges]
-        MP[Marketplace<br/>products · orders]
-    end
-
-    MQ[(Messaging Backbone)]
-
-    U -->|OIDC login| KC
-    U --> GW
-    M -->|app credentials| GW
-    GW --> CAT
-    GW --> USR
-    GW --> ACL
-    GW --> DP
-    GW --> FX
-    GW --> CL
-    GW --> MP
-    ACL -->|policy events| MQ
-    USR -->|membership events| MQ
-    MQ --> AZ
-    DP -->|access check| AZ
-    FX -->|access check| AZ
-```
+<DiagramFrame
+  svg={SystemArch}
+  label="system_architecture · one gateway, two sides"
+  legend={[
+    {color: 'orange', label: 'callers & auth'},
+    {color: 'navy', label: 'control calls'},
+    {color: 'teal', label: 'events'},
+    {color: 'green', label: 'data services'},
+  ]}
+/>
 
 ## Design principles
 
@@ -112,5 +81,5 @@ Configuration is environment-driven with baked development defaults — see [Con
 All components run as containers behind the gateway. Shared infrastructure: **PostgreSQL** (policies, accounts, service data), **Elasticsearch** (catalogue discovery and NGSI-LD search), an **S3-compatible object store** (file exchange), **Redis** (caching), and **RabbitMQ** (the messaging backbone). Identity is delegated entirely to **Keycloak**.
 
 :::tip Deployment shapes
-The same images support a **central** topology (everything in one cluster) and a **federated** topology (a data plane inside each provider's network, connected to the central control plane). See [Deployment Architecture](./deployment.md).
+The same images support a **central** topology (everything in one cluster) and a **federated** topology (a data plane inside each provider's network, connected to the central control plane). See [Deployment Architecture](./deployment.mdx).
 :::

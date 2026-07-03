@@ -46,4 +46,4 @@ The result: better-targeted farmer loans while keeping sensitive data under the 
 
 ## From departmental to national scale
 
-Because IUDX is cloud-native and portable to on-premises infrastructure, the same platform scales from a single department to a national deployment — see the [Architecture](../technical/architecture.md).
+Because IUDX is cloud-native and portable to on-premises infrastructure, the same platform scales from a single department to a national deployment — see the [Architecture](../technical/architecture.mdx).

@@ -1,0 +1,91 @@
+<svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="Control plane internals: the gateway fronts the catalogue, user, policy and authorization services; the policy service's outbox publishes events through RabbitMQ, which the authorization service consumes into its OpenFGA graph.">
+  <defs>
+    <marker id="cp-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
+    </marker>
+    <marker id="cp-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
+    </marker>
+  </defs>
+
+  <!-- request fan-out -->
+  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M330,66 C220,80 150,100 112,128"/>
+  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M355,72 C330,90 310,105 296,128"/>
+  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M405,72 C430,90 450,105 464,128"/>
+  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M430,66 C540,80 610,100 648,128"/>
+  <text class="dxe" x="330" y="108">signed identity headers</text>
+
+  <!-- service → store verticals -->
+  <path class="dxf navy dashed calm" d="M110,180 V248"/>
+  <path class="dxf navy dashed calm" d="M295,180 V248"/>
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M480,180 V248"/>
+  <text class="dxe teal" x="492" y="218">same transaction</text>
+  <path class="dxf navy dashed calm" d="M660,180 V248"/>
+
+  <!-- event chain -->
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M480,294 C470,330 450,355 428,368"/>
+  <text class="dxe" x="330" y="342">relay · policy.*</text>
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M232,182 C168,265 220,355 326,384"/>
+  <text class="dxe" x="140" y="322">org.member.*</text>
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M512,384 C590,370 640,330 658,298"/>
+  <text class="dxe" x="580" y="356">consume · idempotent</text>
+
+  <!-- gateway -->
+  <g id="cpn-gw" class="dxn navy">
+    <rect class="dxn-box" x="305" y="22" width="150" height="46" rx="12"/>
+    <text class="dxn-t" x="380" y="42">API Gateway</text>
+    <text class="dxn-s" x="380" y="57">single entry</text>
+  </g>
+
+  <!-- services -->
+  <g id="cpn-cat" class="dxn navy">
+    <rect class="dxn-box" x="30" y="130" width="160" height="50" rx="12"/>
+    <text class="dxn-t" x="110" y="152">Catalogue</text>
+    <text class="dxn-s" x="110" y="167">json-ld · search</text>
+  </g>
+  <g id="cpn-usr" class="dxn navy">
+    <rect class="dxn-box" x="215" y="130" width="160" height="50" rx="12"/>
+    <text class="dxn-t" x="295" y="152">User Service</text>
+    <text class="dxn-s" x="295" y="167">users · orgs · apps</text>
+  </g>
+  <g id="cpn-acl" class="dxn navy">
+    <rect class="dxn-box" x="400" y="130" width="160" height="50" rx="12"/>
+    <text class="dxn-t" x="480" y="152">Policy Service</text>
+    <text class="dxn-s" x="480" y="167">pap · grants</text>
+  </g>
+  <g id="cpn-az" class="dxn navy">
+    <rect class="dxn-box" x="585" y="130" width="150" height="50" rx="12"/>
+    <text class="dxn-t" x="660" y="152">Authorization</text>
+    <text class="dxn-s" x="660" y="167">pdp · /check</text>
+  </g>
+
+  <!-- stores -->
+  <g id="cpn-search" class="dxn navy dxn-store">
+    <rect class="dxn-box" x="30" y="250" width="160" height="44" rx="12"/>
+    <text class="dxn-t" x="110" y="269">Search Index</text>
+    <text class="dxn-s" x="110" y="283">elasticsearch</text>
+  </g>
+  <g id="cpn-pg" class="dxn navy dxn-store">
+    <rect class="dxn-box" x="215" y="250" width="160" height="44" rx="12"/>
+    <text class="dxn-t" x="295" y="269">PostgreSQL</text>
+    <text class="dxn-s" x="295" y="283">shared legacy schema</text>
+  </g>
+  <g id="cpn-outbox" class="dxn teal dxn-store">
+    <rect class="dxn-box" x="400" y="250" width="160" height="44" rx="12"/>
+    <text class="dxn-t" x="480" y="269">Outbox</text>
+    <text class="dxn-s" x="480" y="283">event rows</text>
+  </g>
+  <g id="cpn-fga" class="dxn navy dxn-store">
+    <rect class="dxn-box" x="585" y="250" width="150" height="44" rx="12"/>
+    <text class="dxn-t" x="660" y="269">OpenFGA</text>
+    <text class="dxn-s" x="660" y="283">relationship graph</text>
+  </g>
+
+  <!-- backbone -->
+  <g id="cpn-mq" class="dxn teal dxn-store">
+    <rect class="dxn-box" x="330" y="366" width="180" height="50" rx="14"/>
+    <text class="dxn-t" x="420" y="388">RabbitMQ</text>
+    <text class="dxn-s" x="420" y="403">authz exchange</text>
+  </g>
+</svg>

@@ -1,0 +1,68 @@
+---
+sidebar_position: 1
+title: "Flow: Authentication & Identity"
+description: How users and applications prove who they are — once, at the edge.
+---
+
+import StepFlow from '@site/src/components/Diagram/StepFlow';
+import AuthSvg from '@site/src/components/Diagram/svg/flow-authentication.svg';
+
+# Flow: Authentication & Identity
+
+How callers prove who they are — once, at the edge. Step through the flow below; each step lights up the part of the system it touches.
+
+<StepFlow
+  svg={AuthSvg}
+  label="auth_flow · identity once, at the edge"
+  legend={[
+    {color: 'orange', label: 'caller & credentials'},
+    {color: 'navy', label: 'identity plumbing'},
+    {color: 'green', label: 'the service'},
+  ]}
+  steps={[
+    {
+      title: 'Sign in once',
+      body: 'The user authenticates against the Identity Provider (Keycloak) using OIDC with PKCE. The platform itself never sees or stores a password.',
+      lights: ['p-login', 'lbl-login', 'n-user', 'n-idp'],
+    },
+    {
+      title: 'A token is issued',
+      body: 'The JWT carries everything a service will ever need to know about the caller: identity, roles, and organisation membership.',
+      lights: ['p-token', 'lbl-token', 'n-user', 'n-idp'],
+    },
+    {
+      title: 'The request hits the edge',
+      body: 'Every call — from any client, to any service — enters through the API Gateway with the token as a bearer credential.',
+      lights: ['p-req', 'lbl-req', 'n-user', 'n-gw'],
+    },
+    {
+      title: 'The gateway validates … and strips',
+      body: "Signature, issuer, and expiry are checked against the Identity Provider's published keys (JWKS, cached). The token goes no further than the edge.",
+      lights: ['p-jwks', 'lbl-jwks', 'n-gw', 'n-idp'],
+    },
+    {
+      title: 'Identity is forwarded, signed',
+      body: 'The gateway forwards HMAC-signed identity headers (X-Subject-Id, roles, organisation, issued-at). The service verifies one signature — it contains no credential-handling logic at all.',
+      lights: ['p-fwd', 'lbl-fwd', 'n-gw', 'n-svc'],
+    },
+    {
+      title: 'Machines & delegation ride the same rails',
+      body: "Applications authenticate with app credentials, and can act on behalf of a user within a recorded delegation's scope — verified against the User Service. Downstream, services can't tell the difference.",
+      lights: ['p-m2m', 'lbl-m2m', 'p-deleg', 'lbl-deleg', 'n-app', 'n-usr', 'n-gw'],
+    },
+  ]}
+/>
+
+## Why identity is centralised at the gateway
+
+Internal components receive identity as trusted, signed headers and contain **no credential-handling logic at all**. Adding a new authentication method (or rotating keys) touches only the edge. An invalid header signature is always a hard `401` — it never falls back to another path — and the issued-at timestamp bounds replay.
+
+## Delegation in detail
+
+An application acting for a user can never do more than *either* the delegating user *or* the delegation itself allows:
+
+1. The user records a delegation to the app (scoped: which resources, which actions).
+2. The app calls the platform identifying both itself and the user it represents.
+3. The gateway verifies the delegation with the [User Service](../components/user-service.md) and forwards the **user's** identity, narrowed to the intersection of the user's rights and the delegation's scope.
+
+See the [Auth Flow API reference](../api-reference/auth-flow.md) for the exact claims and headers, and the [JWT Validation guide](../guides/jwt-validation.md) for debugging.

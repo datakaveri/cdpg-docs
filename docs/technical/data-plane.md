@@ -52,4 +52,4 @@ The data-side services never interpret policies themselves. On each request they
 All data access is **policy-based** and requires an authenticated identity. Every access attempt is **logged and audited**, ensuring compliance and traceability.
 :::
 
-See the [Control Plane](./control-plane.md) for discovery, identity, and policy.
+See the [Control Plane](./control-plane.mdx) for discovery, identity, and policy.

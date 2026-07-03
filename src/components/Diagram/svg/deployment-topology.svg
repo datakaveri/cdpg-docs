@@ -1,0 +1,102 @@
+<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="Deployment topology: Git and ArgoCD reconcile the central Kubernetes platform; consumers enter through the gateway; a federated provider network runs its own data plane so provider data never leaves it.">
+  <defs>
+    <marker id="dt-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
+    </marker>
+    <marker id="dt-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
+    </marker>
+    <marker id="dt-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
+    </marker>
+    <marker id="dt-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
+    </marker>
+  </defs>
+
+  <!-- zones -->
+  <rect class="dxz navy" x="200" y="30" width="330" height="440" rx="16"/>
+  <text class="dxz-lbl navy" x="220" y="53">central platform · kubernetes</text>
+  <rect class="dxz teal" x="555" y="30" width="185" height="440" rx="16"/>
+  <text class="dxz-lbl teal" x="573" y="53">provider network</text>
+
+  <!-- gitops -->
+  <path class="dxf teal calm" marker-end="url(#dt-t)" d="M95,74 V116"/>
+  <path class="dxf teal calm" marker-end="url(#dt-t)" d="M160,145 C180,148 185,150 198,155"/>
+  <text class="dxe" x="150" y="132">sync · reconcile</text>
+
+  <!-- traffic -->
+  <path class="dxf orange calm" marker-end="url(#dt-o)" d="M160,254 C180,200 200,130 238,100"/>
+  <text class="dxe" x="150" y="180">https · jwt</text>
+
+  <!-- federation links -->
+  <path class="dxf navy dashed calm" marker-end="url(#dt-n)" d="M490,94 C520,96 535,100 578,108"/>
+  <text class="dxe" x="480" y="82">identity + policy only</text>
+  <path class="dxf green calm" marker-end="url(#dt-g)" d="M645,286 V254"/>
+  <path class="dxf green calm" marker-end="url(#dt-g)" d="M645,186 V152"/>
+  <path class="dxf green calm" marker-end="url(#dt-g)" d="M578,124 C540,120 520,116 492,110"/>
+  <text class="dxe" x="500" y="140">data served on request</text>
+  <text class="dxe teal" x="580" y="392">data never leaves</text>
+
+  <!-- gitops nodes -->
+  <g class="dxn teal">
+    <rect class="dxn-box" x="30" y="30" width="130" height="44" rx="12"/>
+    <text class="dxn-t" x="95" y="49">Git</text>
+    <text class="dxn-s" x="95" y="63">desired state</text>
+  </g>
+  <g class="dxn teal">
+    <rect class="dxn-box" x="30" y="118" width="130" height="44" rx="12"/>
+    <text class="dxn-t" x="95" y="137">ArgoCD</text>
+    <text class="dxn-s" x="95" y="151">gitops controller</text>
+  </g>
+  <g class="dxn orange">
+    <rect class="dxn-box" x="30" y="256" width="130" height="44" rx="12"/>
+    <text class="dxn-t" x="95" y="275">Consumers</text>
+    <text class="dxn-s" x="95" y="289">users · apps</text>
+  </g>
+
+  <!-- central platform -->
+  <g class="dxn navy">
+    <rect class="dxn-box" x="240" y="74" width="250" height="46" rx="12"/>
+    <text class="dxn-t" x="365" y="94">API Gateway</text>
+    <text class="dxn-s" x="365" y="109">tls · jwt at the edge</text>
+  </g>
+  <g class="dxn navy">
+    <rect class="dxn-box" x="240" y="154" width="250" height="46" rx="12"/>
+    <text class="dxn-t" x="365" y="174">Control services</text>
+    <text class="dxn-s" x="365" y="189">catalogue · user · policy · authz</text>
+  </g>
+  <g class="dxn green">
+    <rect class="dxn-box" x="240" y="234" width="250" height="46" rx="12"/>
+    <text class="dxn-t" x="365" y="254">Data services</text>
+    <text class="dxn-s" x="365" y="269">data plane · files · community</text>
+  </g>
+  <g class="dxn navy dxn-store">
+    <rect class="dxn-box" x="240" y="314" width="250" height="46" rx="12"/>
+    <text class="dxn-t" x="365" y="334">Shared infrastructure</text>
+    <text class="dxn-s" x="365" y="349">postgres · rabbitmq · s3 · keycloak</text>
+  </g>
+  <g class="dxn navy">
+    <rect class="dxn-box" x="240" y="394" width="250" height="46" rx="12"/>
+    <text class="dxn-t" x="365" y="414">Observability</text>
+    <text class="dxn-s" x="365" y="429">metrics · logs · health</text>
+  </g>
+
+  <!-- federated -->
+  <g class="dxn teal">
+    <rect class="dxn-box" x="578" y="86" width="140" height="46" rx="12"/>
+    <text class="dxn-t" x="648" y="106">DP Proxy</text>
+    <text class="dxn-s" x="648" y="121">federated edge</text>
+  </g>
+  <g class="dxn green">
+    <rect class="dxn-box" x="578" y="188" width="140" height="46" rx="12"/>
+    <text class="dxn-t" x="648" y="208">Local Data Plane</text>
+    <text class="dxn-s" x="648" y="223">provider-run</text>
+  </g>
+  <g class="dxn green dxn-store">
+    <rect class="dxn-box" x="578" y="288" width="140" height="46" rx="12"/>
+    <text class="dxn-t" x="648" y="308">Provider data</text>
+    <text class="dxn-s" x="648" y="323">stays in-network</text>
+  </g>
+</svg>

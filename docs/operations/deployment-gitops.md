@@ -30,7 +30,7 @@ Promotion from staging to production is a pull request that changes an image tag
 
 ## Deployment topologies
 
-The same charts deploy both shapes described in [Deployment Architecture](../technical/deployment.md):
+The same charts deploy both shapes described in [Deployment Architecture](../technical/deployment.mdx):
 
 - **Central** — all services in one cluster behind one gateway.
 - **Federated** — a data-plane bundle (gateway + data services + local authorization replica) deployed into a provider's cluster, configured to trust the central identity provider and consume the central policy-event stream.

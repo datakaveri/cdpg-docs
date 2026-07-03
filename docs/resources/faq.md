@@ -27,7 +27,7 @@ Across 50+ Indian smart cities, plus agriculture (ADeX), e-governance (IPeG), an
 Yes — catalogue **metadata is public**. The data itself requires an access grant.
 
 **How do I get access to a dataset?**
-Request access from the provider (or buy it on the [Marketplace](../components/marketplace.md) if it's monetised). The provider's grant takes effect within moments — no manual sync. See [Flow: Consuming Data](../flows/data-consumption.md).
+Request access from the provider (or buy it on the [Marketplace](../components/marketplace.md) if it's monetised). The provider's grant takes effect within moments — no manual sync. See [Flow: Consuming Data](../flows/data-consumption.mdx).
 
 **How quickly does a revocation take effect?**
 Within moments. Enforcement is checked on **every** request against the authorization graph, which is updated as soon as the revocation event propagates.
@@ -39,7 +39,7 @@ Almost always event-propagation lag or a stalled event pipeline — see [Trouble
 Every service publishes an OpenAPI spec you can generate typed clients from; a first-party SDK is on the roadmap. See [SDKs & Libraries](../develop/sdks-libraries.md).
 
 **Can my application act on behalf of a user?**
-Yes — via **delegation**: the user records what the app may do for them, and the platform narrows the app's effective identity to that intersection. See [Flow: Authentication](../flows/authentication.md).
+Yes — via **delegation**: the user records what the app may do for them, and the platform narrows the app's effective identity to that intersection. See [Flow: Authentication](../flows/authentication.mdx).
 
 ## For providers
 

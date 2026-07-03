@@ -60,4 +60,4 @@ Internal services calling each other's gRPC interfaces use Keycloak **client-cre
 
 - [Error Responses](error-responses.md) — the `401`/`403` contract
 - [JWT Validation guide](../guides/jwt-validation.md) — debugging 401s
-- [Flow: Authentication & Identity](../flows/authentication.md) — the conceptual walkthrough
+- [Flow: Authentication & Identity](../flows/authentication.mdx) — the conceptual walkthrough
