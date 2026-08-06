@@ -1,0 +1,121 @@
+---
+id: agentic-plane
+title: Agentic Plane
+sidebar_label: Agentic Plane
+description: How AI agents act on the Data Exchange under revocable delegation — two identities, two authorization checks, governed tools, and human approval for consequential actions.
+---
+
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import AgenticSvg from '@site/src/components/Diagram/svg/agentic-plane.svg';
+
+# Agentic Plane
+
+The **Agentic Plane** lets an AI agent act on the exchange on a user's behalf.
+
+It exists because the obvious alternative — handing an agent a user's credential and letting it call APIs as that user — breaks the two properties the platform is built on. You can no longer tell who acted, and you cannot give an agent *less* authority than the person who deployed it.
+
+The governing rule is **delegation, never impersonation**.
+
+The plane is **optional**. A deployment that does not enable it is unaffected: human users and conventional applications use the control and data planes exactly as before, and nothing in those planes depends on the agent services existing.
+
+## Plane diagram
+
+<DiagramFrame
+  svg={AgenticSvg}
+  label="agentic_plane · delegation, never impersonation"
+  legend={[
+    {color: 'orange', label: 'the human'},
+    {color: 'berry', label: 'agent plane'},
+    {color: 'navy', label: 'platform decision'},
+    {color: 'teal', label: 'events'},
+    {color: 'green', label: 'data services'},
+  ]}
+/>
+
+## The three services
+
+| Service | Role |
+| --- | --- |
+| **Agent Registry** | The control plane for agents — agent records and versioned templates, an identity for each agent in the identity provider, delegation grants recorded through the [Policy Service](../components/policy-service.md), and the kill switch. |
+| **MCP Gateway** | The tool boundary. Publishes the tools an agent may use and applies a fixed pipeline to every call before anything reaches the exchange. It is the agent's **only** egress. |
+| **Agent Runtime** | Sessions, the planning loop, and streaming. Exchanges the user's token for a delegated token and executes approved tools through the MCP Gateway. |
+
+Notice what the diagram shows about the shape of this: **no agent service talks to a data plane directly**. Every agent request leaves the MCP Gateway and enters the platform through the same [API Gateway](../components/api-gateway.md) that serves human traffic. An agent therefore cannot bypass a control that applies to everyone else — not because the agent path is careful, but because there is no second path to be careless with.
+
+## Two identities on every request
+
+An agent's token names the **user as the subject** and the **agent as the actor**. One credential answers both questions the platform needs to ask:
+
+| Question | Answered by |
+| --- | --- |
+| On whose behalf is this? | the subject — the delegating user |
+| Who is actually calling? | the actor — the agent, and the delegation that authorized it |
+
+The gateway signs both identities onto the upstream request, so the service, the data plane, and the audit trail all see the same pair. **An action taken by an agent is never recorded as though the user did it by hand** — which is the whole point of not handing over the user's credential.
+
+## Two checks, not one
+
+An agent request must satisfy **both** relationship checks:
+
+```text
+the user's own permission on the resource
+  AND the agent's delegated permission on that same resource
+  AND the delegation is active and unexpired
+  AND the kill switch permits this agent
+```
+
+The delegated permission is a **separate relationship**, granted per resource and per access type. That separation is what makes an agent strictly narrower than its user rather than equal to it:
+
+- Revoking the delegation removes the agent's access and leaves the user's untouched.
+- An agent granted access to one dataset gains nothing on any other.
+- An agent can never acquire something its user does not have, because the user's own check still has to pass.
+
+See [Authorization Service](../components/authorization-service.md) for the relationship model these checks run against.
+
+## Governed tools
+
+Agents do not get an open API surface. They get **tools** — declared, schema-bound operations published by the MCP Gateway — and every call passes the same four stages:
+
+1. **Schema** — arguments are validated against the tool's declared schema. Malformed calls never reach the exchange.
+2. **Scope** — the tool and its target must fall inside the delegation grant.
+3. **Risk** — tools are classified; high-risk operations are parked for human approval instead of executing.
+4. **Credential** — the delegated token is attached here, at the boundary. **The agent's reasoning layer never handles a raw credential.**
+
+Data returned to the model is wrapped and marked as untrusted content, so text retrieved from the exchange is treated as material to summarise rather than as instructions to obey. This matters more than it sounds: without it, a dataset description becomes an injection vector.
+
+### Human approval
+
+Operations with real-world consequence — a marketplace purchase, a subscription that incurs cost — do not execute on the agent's judgement. They are parked, the user is notified, and they proceed only on explicit approval. An approval executes **exactly once**, and an unanswered request expires harmlessly.
+
+There is no automatic approval path. An operator can classify *more* tools as high-risk; no configuration makes a high-risk tool self-approve.
+
+## Revocation, at three speeds
+
+Agent authority can be withdrawn three ways, and the plane needs all three because the slowest alone would not be acceptable:
+
+| Mechanism | Effect | Speed |
+| --- | --- | --- |
+| **Token expiry** | Delegated tokens are short-lived by design | bounded by token lifetime |
+| **Delegation revoke** | The delegated relationships are removed — the agent loses the resource, the user keeps it | seconds |
+| **Kill switch** | The agent is suspended platform-wide; the gateway rejects even a currently valid token | immediate |
+
+The kill switch exists because token expiry is the wrong instrument for an agent misbehaving *right now*. Suspension is enforced at the gateway, so it waits for neither a token to age out nor a policy change to propagate.
+
+## Audit
+
+Every agent action is recorded with both identities, the delegation that permitted it, the tool invoked, the approval decision where one applied, and the outcome. Agent traffic is rate-limited per agent, so a malfunctioning agent degrades its own throughput rather than the exchange's.
+
+An operator can therefore answer *what did this agent do, for whom, under whose authority, and who approved it* — without reconstructing the story from service logs.
+
+## Design decisions & trade-offs
+
+- **Delegation rather than impersonation** — preserves attribution and lets an agent hold less authority than its user. Costs a token-exchange step and a second relationship to maintain per grant.
+- **A single tool boundary** — one place to validate, classify, and attach credentials, which makes the agent's reachable surface reviewable. It also makes the MCP Gateway a component agents cannot function without.
+- **Human approval for consequential tools** — stops an autonomous agent committing money or contracts. Costs latency and an approval interface.
+- **Reusing the human API Gateway** — guarantees agents cannot outrun platform policy, instead of relying on a parallel enforcement path staying in sync with the real one.
+
+:::note Optional by construction
+The Agentic Plane deploys only where an operator enables it, and no control-plane or data-plane service depends on it.
+:::
+
+See the [Agent Delegation flow](../flows/agent-delegation.mdx) to step through a request end to end, and [System Architecture](./architecture.mdx) for where this plane sits.

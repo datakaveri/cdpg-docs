@@ -37,7 +37,7 @@ const sidebars: SidebarsConfig = {
         type: 'generated-index',
         title: 'Architecture & Technology',
         description:
-          'The architecture of the Data Exchange — its interfaces, control and data planes, microservices, technology stack, deployment shapes, and the open standards it is built on.',
+          'The architecture of the Data Exchange — its interfaces, control and data planes, the optional agentic plane, microservices, technology stack, deployment shapes, and the open standards it is built on.',
         slug: '/category/technology',
       },
       items: [
@@ -45,6 +45,7 @@ const sidebars: SidebarsConfig = {
         'technical/architecture',
         'technical/control-plane',
         'technical/data-plane',
+        'technical/agentic-plane',
         'technical/technology-stack',
         'platform/standards',
         'technical/deployment',
@@ -72,6 +73,7 @@ const sidebars: SidebarsConfig = {
         'components/file-exchange',
         'components/community-layer',
         'components/marketplace',
+        'components/agent-plane',
         'components/supporting-services',
         'components/messaging-backbone',
       ],
@@ -84,13 +86,14 @@ const sidebars: SidebarsConfig = {
         type: 'generated-index',
         title: 'Platform Flows',
         description:
-          'End-to-end walkthroughs of the key journeys — authentication, consuming data, and the lifecycle of an access policy.',
+          'End-to-end walkthroughs of the key journeys — authentication, consuming data, the lifecycle of an access policy, and how an AI agent borrows authority.',
         slug: '/category/flows',
       },
       items: [
         'flows/authentication',
         'flows/data-consumption',
         'flows/policy-lifecycle',
+        'flows/agent-delegation',
       ],
     },
     {

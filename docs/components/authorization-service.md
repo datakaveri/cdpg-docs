@@ -27,6 +27,7 @@ This means a grant becomes enforceable within moments of being created, and a re
 | `policy.create` / `policy.delete` | Write/delete `(subject, access-type relation, resource)` tuples |
 | `org.member.added` / `org.member.removed` | Write/delete `(user, member, organisation)` tuples |
 | `group.member.*` | Write/delete group-membership tuples |
+| `delegation.*` | Write/delete the delegated relationships an agent acts under |
 
 Consumers of these events are **idempotent** — duplicate delivery during retries is detected and ignored. Unparseable messages are dead-lettered for inspection, never silently dropped.
 
@@ -37,10 +38,22 @@ Consumers of these events are **idempotent** — duplicate delivery during retri
 | [API Gateway](./api-gateway.md) | Route-level relationship checks before proxying |
 | [Data Plane](./data-plane.md) | "May this user query this dataset's API?" |
 | [File Exchange](./file-exchange.md) | "May this user download files of this databank?" |
+| [Agent Plane](./agent-plane.md) | "May this agent do this — *and* may the user it acts for?" |
 | Other components | Generic relationship checks |
+
+## Expiry and revocation
+
+Two properties matter more than raw check latency:
+
+- **Expiry is evaluated on every decision**, against the service's own clock — never a caller-supplied time, and never dependent on a cleanup job having run. A grant past its expiry stops working at that instant.
+- **Creation and revocation are not symmetric.** A grant that has not yet projected causes a denial, which is safe and retryable. A revocation that has not yet propagated would mean continued unauthorized access — so revocation reaches the decision path first, and graph cleanup follows.
+
+## Delegated agents
+
+An agent request carries two identities and is checked twice: the delegating user must hold the permission, **and** the agent must hold a separate delegated relationship to the same resource. An agent is therefore always narrower than its user, and revoking a delegation leaves the user's own access untouched. See the [Agentic Plane](../technical/agentic-plane.mdx).
 
 ## Group resolution
 
 Group policies (e.g. "everyone in organisation O may access dataset D") are answered through the graph itself: the consumer's organisation membership connects them to the grant — no per-user fan-out is needed when organisations grow.
 
-See the [FGA Authorization guide](../guides/fga-authorization.md) for the tuple model and debugging.
+See the [Relationship Authorization guide](../guides/fga-authorization.mdx) for the relationship model and debugging.

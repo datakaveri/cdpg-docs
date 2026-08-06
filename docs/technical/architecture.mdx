@@ -22,6 +22,7 @@ The Data Exchange is a **cloud-native, microservices-based platform**. Deciding 
     {color: 'navy', label: 'control calls'},
     {color: 'teal', label: 'events'},
     {color: 'green', label: 'data services'},
+    {color: 'berry', label: 'agent plane (optional)'},
   ]}
 />
 
@@ -37,6 +38,8 @@ The Data Exchange is a **cloud-native, microservices-based platform**. Deciding 
 
 5. **Unbundled and independently deployable** — each capability is its own service communicating only through well-defined contracts (REST, gRPC, events), so services scale and evolve independently.
 
+6. **Optional planes add nothing to the core** — where an operator enables the [Agentic Plane](./agentic-plane.mdx), AI agents act under revocable delegation and re-enter the platform through the *same* gateway as human traffic. No control-plane or data-plane service depends on it, and an agent can never exceed the user who delegated to it.
+
 ## The service fleet
 
 | Service | Role | Plane |
@@ -51,6 +54,7 @@ The Data Exchange is a **cloud-native, microservices-based platform**. Deciding 
 | [File Exchange](../components/file-exchange.md) | Bulk file upload/download with object storage | Data |
 | [Community Layer](../components/community-layer.md) | Discussions and data challenges | Data |
 | [Marketplace](../components/marketplace.md) | Monetisable datasets — products, orders, payments | Data |
+| [Agent Plane services](../components/agent-plane.md) | Agent registry, MCP tool gateway, agent runtime — **optional** | Agent |
 | [Supporting services](../components/supporting-services.md) | Registry, credits, audit, notifications | Control |
 | [Messaging Backbone](../components/messaging-backbone.md) (RabbitMQ) | Asynchronous events connecting the components | Both |
 
@@ -63,6 +67,7 @@ The Data Exchange is a **cloud-native, microservices-based platform**. Deciding 
 | Policy Service → Catalogue | gRPC | Validate the resource being granted (owner, organisation, allowed access types) |
 | Policy / User service → Authorization Service | Events (messaging backbone) | Project grants, revocations, and membership changes into the authorization graph |
 | Data Plane / File Exchange → Authorization Service | HTTP `/v1/check` | Real-time permission checks before serving data |
+| MCP Gateway → API Gateway | HTTP + delegated token | Agent tool calls enter at the normal edge; both identities are checked |
 | Any service → Notification service | Events | Outbound email to users |
 | Any mutating endpoint → Audit service | Events | Immutable audit trail |
 

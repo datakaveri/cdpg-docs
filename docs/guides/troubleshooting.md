@@ -35,7 +35,7 @@ The grant exists in the Policy Service but hasn't reached the Authorization Serv
 3. **DLQ empty?** A non-empty policy dead-letter queue means events are arriving but failing to apply — inspect a dead-lettered message.
 4. **Check the graph directly** — `POST /v1/check` on the Authorization Service with the subject/relation/object you expect.
 
-Full pipeline walkthrough: [FGA Authorization](./fga-authorization.md).
+Full pipeline walkthrough: [FGA Authorization](./fga-authorization.mdx).
 
 ## Catalogue search fails with `index_not_found_exception`
 
