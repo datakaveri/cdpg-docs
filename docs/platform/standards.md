@@ -1,33 +1,39 @@
 ---
 id: standards
-title: The Role of Standards
+title: Standards and Interoperability
 sidebar_label: The Role of Standards
-description: How open standards make IUDX interoperable, future-ready, and compliant.
+description: Standards used at CDPG boundaries, their scope, and current implementation status.
 ---
 
-# The Role of Standards
+# Standards and Interoperability
 
-IUDX is **fully standards compliant** and **FIWARE compatible**, based on ETSI, OGC, BIS, and other pertinent standards. Standards are what make the platform interoperable across domains and future-ready as technology evolves.
+CDPG adopts standards at boundaries where they materially improve portability and conformance. This does not imply that every optional part of every standard is implemented. Service-specific conformance must be demonstrated by contract tests and published profiles.
 
-## Standards adopted
+| Boundary | Standard/profile | Use | Status |
+| --- | --- | --- | --- |
+| User authentication | OpenID Connect, OAuth 2.0, PKCE | Browser/mobile authentication and access tokens | **Implemented** |
+| Workload and delegated identity | OAuth 2.0 client credentials and token exchange | Service identity and user-subject/agent-actor delegation | **Partially implemented** |
+| Public APIs | HTTPS, REST/JSON, OpenAPI | Client contracts, validation, and generated SDKs | **Partially implemented** |
+| Internal APIs | gRPC and Protocol Buffers | Typed service-to-service contracts | **In development** |
+| Catalogue metadata | JSON-LD | Linked resource descriptions and semantic context | **Partially implemented** |
+| Context data | ETSI NGSI-LD | Entity, temporal, attribute, and geospatial queries | **Partially implemented** |
+| Geospatial data | OGC API Features, Tiles, Coverages, Processes, Records; CQL2/CRS profiles | GIS discovery, query, analysis, and delivery | **Partially implemented** |
+| Agent tools | Model Context Protocol | Governed tool discovery and invocation | **In development** |
+| Events | Versioned CloudEvents-style envelope over AMQP | Correlation, schema evolution, replay, and audit | **Partially implemented** |
+| Object access | S3-compatible APIs | Multipart transfer and short-lived object capabilities | **Implemented** |
+| Telemetry | OpenTelemetry and Prometheus exposition | Traces, metrics, and correlation | **Partially implemented** |
+| Federation | Mutual TLS, verifiable trust lists, signed/encrypted envelopes | Cross-operator trust boundary | **Deferred** |
 
-| Domain | Standards |
-| --- | --- |
-| **Context & exchange APIs** | NGSI-LD (ETSI), OGC |
-| **Metadata & catalog** | JSON-LD |
-| **Authentication & tokens** | OAuth2, JWT |
-| **Federated identity** | OIDC, SAML |
-| **Consent** | DEPA-based consent for PII |
-| **Interoperability frameworks** | FIWARE-compatible, BIS, ETSI |
+## Conformance rules
 
-## Why standards matter here
+- Document the exact profile, supported operations, versions, extensions, and omitted optional capabilities.
+- Generate or validate contracts in CI where possible; a library name is not conformance evidence.
+- Preserve standard error/content negotiation semantics at the owning boundary, then map them into the platform error envelope without losing meaning.
+- Version extensions in a CDPG namespace and do not redefine standard fields.
+- Treat security profiles—issuer, audience, algorithms, token type, scopes, trust anchors, and replay rules—as part of conformance.
 
-- **Data interoperability** — IUDX supports heterogeneous data with schema templates and data dictionaries, so interoperability is built into the platform rather than left to each provider and consumer to negotiate.
-- **Future-readiness** — an agile, standards-based design accommodates emerging technology and evolving standards, instead of locking adopters into slow, ecosystem-wide change cycles.
-- **Compliance** — standards-based identity, consent, and audit make regulatory compliance demonstrable.
+## Planned evolution
 
-## Interoperability vs. legacy data exchanges
+EDR, Maps, Routes, DGGS, Styles, and full STAC support are potential OGC evolution, not current capability. Federation profiles, decision-attestation format, policy bundle format, and a complete event schema registry remain open architecture work.
 
-Traditional data-exchange platforms are data-agnostic but require **prior agreement on formats**, leaving legibility as the provider's and consumer's responsibility. They suit static, high-assurance, slow-update-cycle data and need ecosystem-wide buy-in for any change.
-
-IUDX instead supports heterogeneous data with **schema templates and data dictionaries**, and is designed for emerging technology and evolving standards. See the full [Market Comparison](../adoption/market-comparison.md).
+See [Technology Stack](../technical/technology-stack.md), [Data Plane](../technical/data-plane.md), and [Architecture Decisions](../technical/decisions.md).

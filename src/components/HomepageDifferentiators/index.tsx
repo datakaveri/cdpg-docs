@@ -5,7 +5,7 @@ const items = [
   'Open source — a freely available Digital Public Good with full ownership and no lock-in.',
   'A national standard — adopted by the Bureau of Indian Standards as IS 18003.',
   'Consent-driven and auditable — data is shared only with explicit provider consent, and every access is logged.',
-  'Federated by design — independent and third-party resource servers coexist in one exchange.',
+  'Federated by design — independently operated resource servers participate in one governed exchange.',
 ];
 
 export default function HomepageDifferentiators(): ReactNode {

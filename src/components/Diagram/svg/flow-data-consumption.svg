@@ -1,72 +1,22 @@
-<svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Data consumption flow: a consumer discovers a resource in the catalogue, requests access, the provider grants it in the policy service, the grant propagates through RabbitMQ into the authorization graph, and the consumer's queries are then served by the data plane with an access check on every request.">
-  <defs>
-    <marker id="fd-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="fd-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="fd-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
-    </marker>
-    <marker id="fd-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-  </defs>
-
-  <!-- paths -->
-  <path id="p-disc" class="dxf orange dim" marker-end="url(#fd-o)" d="M115,178 C130,110 200,62 276,55"/>
-  <text id="lbl-disc" class="dxe orange dim" x="128" y="102">search · metadata is public</text>
-  <path id="p-reqacc" class="dxf orange dim" marker-end="url(#fd-o)" d="M172,207 H276"/>
-  <text id="lbl-reqacc" class="dxe orange dim" x="182" y="198">request access</text>
-  <path id="p-grant" class="dxf orange dim" marker-end="url(#fd-o)" d="M355,328 C356,290 356,275 355,238"/>
-  <text id="lbl-grant" class="dxe orange dim" x="366" y="288">grant · api / file / sub · expiry</text>
-  <path id="p-event" class="dxf teal dim" marker-end="url(#fd-t)" d="M432,222 C462,236 472,244 488,262"/>
-  <text id="lbl-event" class="dxe teal dim" x="400" y="252">policy.created</text>
-  <path id="p-write" class="dxf teal dim" marker-end="url(#fd-t)" d="M556,304 C558,322 558,330 560,346"/>
-  <text id="lbl-write" class="dxe teal dim" x="572" y="330">tuple write</text>
-  <path id="p-query" class="dxf green dim" marker-end="url(#fd-g)" d="M172,190 C320,122 430,108 556,102"/>
-  <text id="lbl-query" class="dxe green dim" x="330" y="128">query · download</text>
-  <path id="p-check" class="dxf navy dashed dim" marker-end="url(#fd-n)" d="M645,134 C662,220 645,300 608,346"/>
-  <text id="lbl-check" class="dxe navy dim" x="660" y="246">allowed?</text>
-  <path id="p-resp" class="dxf green dashed dim" marker-end="url(#fd-g)" d="M556,122 C400,152 262,186 174,198"/>
-  <text id="lbl-resp" class="dxe green dim" x="320" y="176">results · audited</text>
-
-  <!-- nodes -->
-  <g id="n-consumer" class="dxn orange">
-    <rect class="dxn-box" x="30" y="180" width="142" height="54" rx="12"/>
-    <text class="dxn-t" x="101" y="203">Consumer</text>
-    <text class="dxn-s" x="101" y="219">discover · consume</text>
-  </g>
-  <g id="n-cat" class="dxn navy">
-    <rect class="dxn-box" x="278" y="30" width="150" height="50" rx="12"/>
-    <text class="dxn-t" x="353" y="52">Catalogue</text>
-    <text class="dxn-s" x="353" y="67">public metadata</text>
-  </g>
-  <g id="n-acl" class="dxn navy">
-    <rect class="dxn-box" x="278" y="182" width="155" height="54" rx="12"/>
-    <text class="dxn-t" x="355" y="205">Policy Service</text>
-    <text class="dxn-s" x="355" y="221">grants · outbox</text>
-  </g>
-  <g id="n-provider" class="dxn orange">
-    <rect class="dxn-box" x="278" y="330" width="155" height="50" rx="12"/>
-    <text class="dxn-t" x="355" y="352">Provider</text>
-    <text class="dxn-s" x="355" y="367">or org admin</text>
-  </g>
-  <g id="n-dp" class="dxn green">
-    <rect class="dxn-box" x="558" y="76" width="172" height="54" rx="12"/>
-    <text class="dxn-t" x="644" y="99">Data Plane</text>
-    <text class="dxn-s" x="644" y="115">ngsi-ld · ogc · files</text>
-  </g>
-  <g id="n-mq" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="490" y="258" width="134" height="46" rx="12"/>
-    <text class="dxn-t" x="557" y="278">RabbitMQ</text>
-    <text class="dxn-s" x="557" y="292">policy events</text>
-  </g>
-  <g id="n-az" class="dxn navy">
-    <rect class="dxn-box" x="490" y="348" width="152" height="52" rx="12"/>
-    <text class="dxn-t" x="566" y="370">Authorization</text>
-    <text class="dxn-s" x="566" y="386">openfga graph</text>
-  </g>
+<svg viewBox="0 0 760 510" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fd-title fd-desc">
+  <title id="fd-title">Data access and download flow</title>
+  <desc id="fd-desc">A consumer discovers a resource, obtains a grant, and the grant is projected through RabbitMQ. The gateway requests a composite authorization decision and sends a carried decision to the Data Plane. The Data Plane validates and enforces filters or masks, delivers data, and emits audit events.</desc>
+  <defs><marker id="fd-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker><marker id="fd-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker><marker id="fd-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker><marker id="fd-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker></defs>
+  <path id="p-disc" class="dxf orange dim" marker-end="url(#fd-o)" d="M166 72H270"/><text id="lbl-disc" class="dxe orange dim" x="188" y="61">discover metadata</text>
+  <path id="p-reqacc" class="dxf orange dim" marker-end="url(#fd-o)" d="M166 146H270"/><text id="lbl-reqacc" class="dxe orange dim" x="190" y="135">obtain grant</text>
+  <path id="p-event" class="dxf teal dim" marker-end="url(#fd-t)" d="M430 146H492"/><text id="lbl-event" class="dxe teal dim" x="434" y="135">policy event</text>
+  <path id="p-write" class="dxf teal dim" marker-end="url(#fd-t)" d="M568 172V236"/><text id="lbl-write" class="dxe teal dim" x="579" y="207">projection</text>
+  <path id="p-query" class="dxf green dim" marker-end="url(#fd-g)" d="M166 326H286"/><text id="lbl-query" class="dxe green dim" x="194" y="315">query / download</text>
+  <path id="p-check" class="dxf navy dim" marker-end="url(#fd-n)" d="M368 294C430 262 470 260 492 266"/><text id="lbl-check" class="dxe navy dim" x="394" y="268">composite decision</text>
+  <path id="p-carry" class="dxf navy dim" marker-end="url(#fd-n)" d="M450 326H572"/><text id="lbl-carry" class="dxe navy dim" x="462" y="315">carried obligations</text>
+  <path id="p-resp" class="dxf green dashed dim" marker-end="url(#fd-g)" d="M572 356C440 410 288 410 166 350"/><text id="lbl-resp" class="dxe green dim" x="312" y="408">filtered result / scoped object</text>
+  <path id="p-audit" class="dxf teal dim" marker-end="url(#fd-t)" d="M652 378V442"/><text id="lbl-audit" class="dxe teal dim" x="664" y="414">audit event</text>
+  <g id="n-consumer" class="dxn orange"><rect class="dxn-box" x="30" y="54" width="136" height="320" rx="14"/><text class="dxn-t" x="98" y="207">Consumer</text><text class="dxn-s" x="98" y="224">discover · request · use</text></g>
+  <g id="n-cat" class="dxn navy"><rect class="dxn-box" x="270" y="48" width="160" height="50" rx="11"/><text class="dxn-t" x="350" y="69">Catalogue</text><text class="dxn-s" x="350" y="84">resource + access modes</text></g>
+  <g id="n-acl" class="dxn navy"><rect class="dxn-box" x="270" y="122" width="160" height="54" rx="11"/><text class="dxn-t" x="350" y="143">Policy Service</text><text class="dxn-s" x="350" y="158">grant + outbox</text><text class="dx-status impl" x="350" y="172">IMPLEMENTED</text></g>
+  <g id="n-mq" class="dxn teal dxn-store"><rect class="dxn-box" x="492" y="122" width="152" height="50" rx="11"/><text class="dxn-t" x="568" y="143">RabbitMQ</text><text class="dxn-s" x="568" y="158">versioned events</text></g>
+  <g id="n-az" class="dxn navy"><rect class="dxn-box" x="492" y="236" width="152" height="62" rx="11"/><text class="dxn-t" x="568" y="258">Authorization</text><text class="dxn-s" x="568" y="274">OpenFGA + planned OPA</text><text class="dx-status partial" x="568" y="292">PARTIAL</text></g>
+  <g id="n-gw" class="dxn navy"><rect class="dxn-box" x="286" y="294" width="164" height="64" rx="11"/><text class="dxn-t" x="368" y="316">Gateway / app PEP</text><text class="dxn-s" x="368" y="332">resolve · decide · carry</text><text class="dx-status partial" x="368" y="352">PARTIAL</text></g>
+  <g id="n-dp" class="dxn green"><rect class="dxn-box" x="572" y="316" width="158" height="64" rx="11"/><text class="dxn-t" x="651" y="338">Data executor</text><text class="dxn-s" x="651" y="354">verify · filter · deliver</text><text class="dx-status partial" x="651" y="374">PARTIAL</text></g>
+  <g id="n-audit" class="dxn teal"><rect class="dxn-box" x="572" y="442" width="158" height="48" rx="11"/><text class="dxn-t" x="651" y="462">Audit Service</text><text class="dxn-s" x="651" y="478">decision + outcome</text></g>
 </svg>

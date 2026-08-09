@@ -2,89 +2,126 @@
 id: architecture
 title: System Architecture
 sidebar_label: System Architecture
-description: The microservices architecture of the Data Exchange — the API gateway, control-side and data-side services, and how they interact.
+description: Complete Go platform architecture across the edge, Control Plane, Data Plane, Agentic Plane, shared platform, and infrastructure.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
 import SystemArch from '@site/src/components/Diagram/svg/system-architecture.svg';
+import EventArch from '@site/src/components/Diagram/svg/event-integrations.svg';
 
 # System Architecture
 
-The Data Exchange is a **cloud-native, microservices-based platform**. Deciding *who may access what* is handled by the control-side components (catalogue, user, policy, authorization), while the data-side components (data plane, file exchange) serve the actual content once access is proven. Every request enters through a single **API Gateway**.
+## 1. High-level architecture
 
-## System diagram
+CDPG is a cloud-native data-exchange platform implemented as independently deployable Go services behind one API gateway. The **Control Plane** owns identity-linked governance, discovery, policies, commerce, and platform administration; the **Data Plane** ingests and serves resource content; the **Agentic Plane** lets governed AI agents exercise revocable delegated authority. `dx-common-go/platform` supplies the shared runtime contract, while PostgreSQL/PostGIS, Elasticsearch, Redis, RabbitMQ, S3-compatible storage, Keycloak, OpenFGA, and the planned OPA policy engine provide specialized infrastructure. The primary non-functional requirement is security-preserving multi-organization operation: identity, authorization, failure, cache, event, and recovery paths default to denial rather than broadening access.
+
+**Architecture status:** the service fleet and primary business paths are **Partially implemented**. The complete intended design appears here; [Current State and Target State](./current-and-target.mdx) is authoritative for operational status.
+
+## 2. Diagram
 
 <DiagramFrame
   svg={SystemArch}
-  label="system_architecture · one gateway, two sides"
+  label="system_architecture · complete Go platform context"
   legend={[
-    {color: 'orange', label: 'callers & auth'},
-    {color: 'navy', label: 'control calls'},
-    {color: 'teal', label: 'events'},
-    {color: 'green', label: 'data services'},
-    {color: 'berry', label: 'agent plane (optional)'},
+    {color: 'orange', label: 'actors & external systems'},
+    {color: 'navy', label: 'control, identity & decisions'},
+    {color: 'green', label: 'data access & delivery'},
+    {color: 'berry', label: 'agentic governance'},
+    {color: 'teal', label: 'events & shared infrastructure'},
   ]}
 />
 
-## Design principles
+### System boundary
 
-1. **Single entry point** — every request enters through the API Gateway, which authenticates it once and propagates a **cryptographically signed identity** (HMAC-signed headers) to all internal services. Internal services never re-validate user credentials.
+Inside the boundary are the gateway, Go service fleet, shared platform SDK, service-owned data stores, and platform-operated infrastructure. Outside it are end users, client applications, data providers and source systems, payment providers, email delivery, LLM providers, and federated participants. External systems are never trusted merely because they can reach a service; every boundary has a protocol-specific authentication and authorization control.
 
-2. **Policy as the source of truth** — access grants live in the Policy Service as explicit, auditable records (who granted what, to whom, until when). The Authorization Service holds a *projection* of those grants optimised for millisecond permission checks.
+### Trust boundaries
 
-3. **Asynchronous synchronisation** — when a policy is created or revoked, the change is propagated to the Authorization Service through the messaging backbone using a **transactional outbox**, so the two can never silently diverge: a committed grant is always eventually enforced.
+1. **Public edge:** HTTPS reaches only the load balancer/WAF and `dx-gateway-go`. Payment callbacks use provider-specific signature verification at their dedicated endpoint.
+2. **Identity domain:** Keycloak authenticates users, applications, agents, and service workloads and publishes verification keys. It does not decide resource access.
+3. **Private service network:** each call presents a destination-bound workload token. Receiving services allowlist callers and independently decide which callers may assert an end-user subject.
+4. **Authorization domain:** at target state, `dx-authz-go` combines OpenFGA relationship results with OPA contextual policy, delegation state, and trust rules. OpenFGA evaluation exists now; OPA composition is **Planned**. Policy administration remains in `dx-acl-go`.
+5. **Data domain:** data services verify the carried decision and enforce row, field, quota, and ownership obligations against their own stores.
+6. **Agentic domain:** agent runtime, tool gateway, token vault, and approvals form a stricter boundary. Model output is untrusted and cannot directly call a platform API.
+7. **Federation boundary:** when enabled, cross-operator traffic adds mutual TLS, trust-list validation, envelope integrity/confidentiality, and a versioned federation contract.
 
-4. **Control/data separation** — components that decide access never sit in the hot path of serving data. The Data Plane asks one fast question ("may this subject do this action on this resource?") and streams the content itself.
+## 3. Components
 
-5. **Unbundled and independently deployable** — each capability is its own service communicating only through well-defined contracts (REST, gRPC, events), so services scale and evolve independently.
-
-6. **Optional planes add nothing to the core** — where an operator enables the [Agentic Plane](./agentic-plane.mdx), AI agents act under revocable delegation and re-enter the platform through the *same* gateway as human traffic. No control-plane or data-plane service depends on it, and an agent can never exceed the user who delegated to it.
-
-## The service fleet
-
-| Service | Role | Plane |
+| Component | Tech | Responsibility |
 | --- | --- | --- |
-| [API Gateway](../components/api-gateway.md) | Edge — JWT validation, authorization enforcement, signed identity, routing | Edge |
-| [Identity Provider](../components/identity-provider.md) (Keycloak) | User and machine identity (OIDC) | Edge |
-| [Authorization Service](../components/authorization-service.md) | Decision point — real-time ReBAC checks (OpenFGA) | Control |
-| [Policy Service](../components/policy-service.md) | System of record for access grants | Control |
-| [User Service](../components/user-service.md) | Profiles, organisations, membership, delegations, app credentials | Control |
-| [Catalogue](../components/catalogue.md) | Registry and discovery of resources (JSON-LD, search) | Control |
-| [Data Plane](../components/data-plane.md) | NGSI-LD queries, OGC API Features, subscriptions | Data |
-| [File Exchange](../components/file-exchange.md) | Bulk file upload/download with object storage | Data |
-| [Community Layer](../components/community-layer.md) | Discussions and data challenges | Data |
-| [Marketplace](../components/marketplace.md) | Monetisable datasets — products, orders, payments | Data |
-| [Agent Plane services](../components/agent-plane.md) | Agent registry, MCP tool gateway, agent runtime — **optional** | Agent |
-| [Supporting services](../components/supporting-services.md) | Registry, credits, audit, notifications | Control |
-| [Messaging Backbone](../components/messaging-backbone.md) (RabbitMQ) | Asynchronous events connecting the components | Both |
+| API Gateway (`dx-gateway-go`, host `:8000`) | Go, HTTP reverse proxy | Validates external credentials, resolves operation policy, obtains edge authorization, enforces edge-known obligations, attaches trusted internal context, rate-limits, and routes. |
+| Identity Provider | Keycloak, OIDC/OAuth 2.0 | Authenticates human, application, agent, and workload principals; issues signed tokens; publishes JWKS; performs token exchange. |
+| Authorization Service (`dx-authz-go`, host `:8090`) | Go, OpenFGA, planned OPA | Acts as the composite PDP and emits final decisions, reasons, revisions, obligations, and attestations. |
+| Policy Service (`dx-acl-go`, host `:8100`) | Go, PostgreSQL, RabbitMQ | Validates, stores, versions, expires, and revokes access grants; publishes durable grant and delegation facts. |
+| User Service (`dx-user-go`, host `:8190`) | Go, Keycloak, PostgreSQL | Owns profiles, organizations, membership, delegations, application credentials, and membership events. |
+| Catalogue (`dx-catalogue-go`, host `:8120`) | Go, Elasticsearch, JSON-LD | Owns resource metadata, discovery, ownership facts, supported access types, and lifecycle state. |
+| Marketplace (`dx-marketplace-go`, host `:8110`) | Go, PostgreSQL, payment adapter | Owns products, merchants, orders, payments, invoices, and purchase-to-entitlement orchestration. |
+| Supporting services | Go, PostgreSQL/RabbitMQ | Registry resolves endpoints; credits meters balances; audit stores activity; notifications dispatch email; subscriptions manage streaming registrations. |
+| NGSI-LD Data Plane (`dx-dataplane-rs-go`, host `:8260`) | Go, Elasticsearch | Serves entity, temporal, geo, aggregation, bulk, and CSV query operations. |
+| OGC Data Plane (`dx-dataplane-ogc-go`, host `:8200`) | Go, PostgreSQL/PostGIS | Serves OGC Features, Tiles, Coverages, Processes/jobs, Records-lite, CQL2, and CRS operations. |
+| File Exchange (`dx-files-connect-api-go`, host `:3000`) | Go, PostgreSQL, Redis, RabbitMQ, S3 | Owns file metadata, multipart transfers, presigned access, processing jobs, cleanup, and object ownership checks. |
+| Community Layer (`dx-community-layer-go`, host `:5000`) | Go, PostgreSQL, Redis, S3 | Owns discussions, challenges, submissions, attachments, moderation, and community workflows. |
+| Agent Registry (`:8270`) | Go, PostgreSQL, Keycloak admin | Owns agent records, versioned templates, credential bindings, lifecycle, delegations facade, and kill switch. |
+| MCP Gateway (`:8280`) | Go, MCP, Redis | Exposes the governed tool catalogue and enforces schema, scope, resource, risk, approval, credential, and sole-egress controls. |
+| Agent Runtime (`:8290`) | Go, PostgreSQL, Redis, SSE, LLM adapters | Owns sessions, transcripts, guardrails, planning loop, token exchange, tool orchestration, and streaming responses. |
+| Shared Go platform | `dx-common-go/platform` | Supplies bootstrap, configuration, HTTP/gRPC, identity, persistence, events, cache, health, observability, error, and resilience conventions. |
+| Infrastructure | PostgreSQL/PostGIS, Elasticsearch, Redis, RabbitMQ, S3/MinIO | Provides service-owned persistence, spatial/search indexes, hot state, durable messaging, and object storage. |
+| GitOps and observability | Kubernetes, Helm, ArgoCD, External Secrets, Prometheus/OpenTelemetry | Reconciles deployment state, injects secrets, isolates networks, and exposes operational signals. |
 
-## Component interactions
+## 4. Data flow
 
-| From → To | Channel | Purpose |
-| --- | --- | --- |
-| Gateway → all services | HTTP + signed identity headers | Forward authenticated requests |
-| Gateway / services → User service | gRPC | Verify app credentials, resolve delegations |
-| Policy Service → Catalogue | gRPC | Validate the resource being granted (owner, organisation, allowed access types) |
-| Policy / User service → Authorization Service | Events (messaging backbone) | Project grants, revocations, and membership changes into the authorization graph |
-| Data Plane / File Exchange → Authorization Service | HTTP `/v1/check` | Real-time permission checks before serving data |
-| MCP Gateway → API Gateway | HTTP + delegated token | Agent tool calls enter at the normal edge; both identities are checked |
-| Any service → Notification service | Events | Outbound email to users |
-| Any mutating endpoint → Audit service | Events | Immutable audit trail |
+1. A user signs in with Keycloak and receives a signed user token; an application or workload receives a credential appropriate to its principal type.
+2. The client sends an HTTPS request to `dx-gateway-go`, which matches the exact operation and validates the declared authentication mode.
+3. The gateway builds normalized principal, actor, workload, organization, operation, resource, and request context and calls the composite authorization contract when the operation requires it.
+4. At target state, `dx-authz-go` asks OpenFGA for relationship facts, evaluates contextual and attribute rules in OPA, applies delegation/trust state, and returns a default-deny decision with reasons, obligations, revisions, expiry, and a decision ID. The OPA and obligation stages are **Planned**.
+5. The gateway enforces edge-known controls and forwards the request with a destination-bound workload credential and an integrity-protected decision artefact. If the authoritative resource is body- or query-derived, the application service completes the PEP step before invoking the data operation.
+6. The target service verifies caller workload, permitted subject assertion, operation/resource binding, and decision validity. Data services translate typed obligations into parameterized PostGIS/Elasticsearch/SQL queries, field shaping, and quota consumption.
+7. The service reads or mutates only its owned store, returns the standard response or standards-native representation, and emits metrics, traces, logs, and an audit event.
+8. For asynchronous changes, the domain transaction appends an outbox event. RabbitMQ delivers the versioned fact to idempotent consumers; dead letters, replay, and reconciliation recover failures.
 
-## Every service, the same shape
+The most important alternate path is failure: missing identity, wrong audience, unknown caller, PDP timeout, OPA undefined/error, OpenFGA error, stale or invalid decision, unsupported obligation, ownership mismatch, or unavailable quota state all deny. A retry is allowed only when it cannot duplicate a side effect or broaden access.
 
-Each service follows a common skeleton and exposes the same operational surface:
+### Event-driven integrations
 
-- `GET /healthz/live` — liveness · `GET /healthz/ready` — readiness (real dependency checks)
-- `GET /metrics` — Prometheus metrics
-- `GET /docs` — embedded Swagger UI (the OpenAPI spec is compiled into the binary)
+<DiagramFrame
+  svg={EventArch}
+  label="event_integrations · durable facts and projections"
+  legend={[
+    {color: 'teal', label: 'versioned event'},
+    {color: 'navy', label: 'projection / governance'},
+    {color: 'berry', label: 'agent lifecycle'},
+    {color: 'green', label: 'notification / processing'},
+  ]}
+/>
 
-Configuration is environment-driven with baked development defaults — see [Configuration](../develop/configuration.md). Responses follow the platform-wide envelope — see [API Standards](../develop/api-standards.md).
+The event bus carries facts, not commands disguised as events. The producing service remains the source of truth; consumers build projections or trigger bounded side effects. See [Messaging Backbone](../components/messaging-backbone.md) and [Audit Events](../flows/audit-events.md).
 
-## Shared infrastructure
+## 5. Design decisions & trade-offs
 
-All components run as containers behind the gateway. Shared infrastructure: **PostgreSQL** (policies, accounts, service data), **Elasticsearch** (catalogue discovery and NGSI-LD search), an **S3-compatible object store** (file exchange), **Redis** (caching), and **RabbitMQ** (the messaging backbone). Identity is delegated entirely to **Keycloak**.
+- **One public gateway and per-service workload identity** — centralizes edge policy while preserving accountability between internal callers. It costs identity-provider configuration and token caching per destination.
+- **OpenFGA plus OPA behind one composite PDP** — separates graph reachability from contextual policy without exposing engine-specific contracts to services. It adds policy-bundle operations and a multi-engine failure surface that must fail closed.
+- **Central decisions, distributed enforcement** — one service explains why access is allowed; the component with data context applies filtering, masking, and quotas. It requires a versioned, integrity-protected decision format and obligation conformance tests.
+- **Service-owned data and events** — independent evolution and failure containment in exchange for more operational components and explicit projection consistency.
+- **gRPC internally, HTTP/REST externally** — typed internal contracts and familiar public APIs in exchange for protobuf governance and two transports to operate.
+- **Optional Agentic and federated capabilities** — core exchange operation does not depend on them. Optionality requires explicit feature gates, isolated failure domains, and status labels that prevent design-only components appearing operational.
 
-:::tip Deployment shapes
-The same images support a **central** topology (everything in one cluster) and a **federated** topology (a data plane inside each provider's network, connected to the central control plane). See [Deployment Architecture](./deployment.mdx).
-:::
+## 6. Best practices
+
+### Scalability
+
+- Keep gateway, stateless control APIs, and authorization API pods horizontally scalable; isolate projector and worker concurrency with durable leases.
+- Partition Elasticsearch/PostGIS and object storage by service-owned resource identity; introduce replicas and aliases only from measured load.
+- Scale RabbitMQ consumers by idempotent event ID and exclusive outbox claims; never scale a process-local singleton horizontally.
+
+### Security
+
+- Require issuer, audience, expiry, token ID, caller allowlist, and subject-asserter checks on internal credentials; rotate through identity-provider key rollover.
+- Keep operation policy versioned with OpenAPI, fail startup on invalid manifests, and deny unknown operations or policy profiles.
+- Scope every object or row lookup by owner and organization in the datastore query and make forbidden and absent resources non-enumerating.
+- Keep LLMs, prompts, tool output, and policy author input outside the trusted computing base for authorization.
+
+### Observability
+
+- Propagate request, trace, event, grant, decision, delegation, agent, session, and approval IDs through every relevant hop.
+- Record authorization engine revisions, cache result, reason codes, obligations selected/enforced, and failure class without logging sensitive policy data.
+- Alert on PDP error/timeout rates, policy projection lag, outbox/DLQ depth, missing event consumers, decision-attestation rejection, agent kill-switch latency, and organization-isolation failures.

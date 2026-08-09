@@ -71,7 +71,7 @@ const features: Feature[] = [
     icon: 'exchange',
     tag: 'APIs',
     title: 'Open, standards-based APIs',
-    text: 'Resource-access APIs harmonized with ETSI NGSI-LD, plus support for OGC, GTFS, FHIR, and RESTful APIs for interoperability across legacy and modern systems.',
+    text: 'Resource-access APIs harmonized with ETSI NGSI-LD, plus support for OGC, GTFS, FHIR, and consistent REST APIs for semantic and domain interoperability.',
   },
   {
     icon: 'flask',
@@ -95,7 +95,7 @@ const features: Feature[] = [
     icon: 'spark',
     tag: 'Architecture',
     title: 'Federated & cloud-native',
-    text: 'A modular microservices architecture with independent and third-party resource servers coexisting in one exchange — for centralised or federated deployments.',
+    text: 'A modular microservices architecture that connects independently operated resource servers in centralised or federated deployments.',
   },
   {
     icon: 'lock',

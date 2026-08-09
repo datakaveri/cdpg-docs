@@ -1,93 +1,42 @@
-<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Two planes: providers and consumers interact with the control plane to discover, grant and govern; consumers fetch content from the data plane, which enforces the control plane's decisions.">
+<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pi-title pi-desc">
+  <title id="pi-title">Control, Data, and Agentic Plane relationships</title>
+  <desc id="pi-desc">Actors enter through a shared gateway. The Control Plane governs identity-linked records, policy and decisions. The Data Plane executes governed data operations with carried decisions. The Agentic Plane obtains delegated authority and invokes tools through the normal gateway. Events and audit connect all planes.</desc>
   <defs>
-    <marker id="pi-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="pi-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="pi-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
-    </marker>
+    <marker id="pi-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker>
+    <marker id="pi-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker>
+    <marker id="pi-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker>
+    <marker id="pi-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker>
+    <marker id="pi-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker>
   </defs>
+  <rect class="dxz plain" x="22" y="24" width="716" height="72" rx="14"/><text class="dxz-lbl" x="40" y="45">actors &amp; public edge</text>
+  <rect class="dxz navy" x="22" y="126" width="342" height="238" rx="16"/><text class="dxz-lbl navy" x="42" y="150">control plane · govern &amp; decide</text>
+  <rect class="dxz green" x="396" y="126" width="342" height="238" rx="16"/><text class="dxz-lbl green" x="416" y="150">data plane · enforce &amp; deliver</text>
+  <rect class="dxz berry" x="22" y="394" width="716" height="82" rx="16"/><text class="dxz-lbl berry" x="42" y="417">agentic plane · delegated execution</text>
 
-  <!-- zones -->
-  <text class="dxz-lbl" x="34" y="34">actors</text>
-  <rect class="dxz navy" x="230" y="30" width="500" height="160" rx="16"/>
-  <text class="dxz-lbl navy" x="250" y="53">control plane · discover, grant, govern</text>
-  <rect class="dxz green" x="230" y="230" width="500" height="140" rx="16"/>
-  <text class="dxz-lbl green" x="250" y="253">data plane · serve, meter, audit</text>
+  <path class="dxf orange calm" marker-end="url(#pi-o)" d="M185 62H288"/><path class="dxf orange calm" marker-end="url(#pi-o)" d="M565 62H470"/>
+  <path class="dxf navy calm" marker-end="url(#pi-n)" d="M340 88C300 110 250 112 205 132"/><path class="dxf green calm" marker-end="url(#pi-g)" d="M420 88C470 110 520 112 556 132"/>
+  <path class="dxf navy calm" marker-end="url(#pi-n)" d="M364 266H466"/><text class="dxe" x="380" y="254">carried decision + obligations</text>
+  <path class="dxf teal dashed calm" marker-end="url(#pi-t)" d="M466 322H364"/><text class="dxe" x="390" y="342">audit · usage · lifecycle events</text>
+  <path class="dxf berry calm" marker-end="url(#pi-b)" d="M600 434C660 370 660 160 465 80"/><text class="dxe" x="624" y="290">sole egress</text>
+  <path class="dxf navy dashed calm" marker-end="url(#pi-n)" d="M160 418C110 360 110 210 160 176"/><text class="dxe" x="55" y="300">identity · grants</text>
 
-  <!-- flows -->
-  <path class="dxf orange calm" marker-end="url(#pi-o)" d="M160,84 C200,80 210,76 228,70"/>
-  <text class="dxe" x="168" y="66">publish · grant (m)</text>
-  <path class="dxf orange calm" marker-end="url(#pi-o)" d="M160,190 C200,175 215,140 228,120"/>
-  <text class="dxe" x="150" y="150">discover · request (d)</text>
-  <path class="dxf green calm" marker-end="url(#pi-g)" d="M160,204 C200,225 215,265 228,290"/>
-  <text class="dxe" x="146" y="260">query · download (r)</text>
-  <path class="dxf orange dashed calm" marker-end="url(#pi-o)" d="M160,308 C200,310 215,150 228,102"/>
-  <path class="dxf navy dashed calm" marker-end="url(#pi-n)" d="M480,190 C480,205 480,215 480,228"/>
-  <text class="dxe" x="494" y="212">decisions enforced (a)</text>
+  <g class="dxn orange"><rect class="dxn-box" x="42" y="48" width="143" height="36" rx="10"/><text class="dxn-t" x="113" y="70">People / apps</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="288" y="44" width="184" height="44" rx="11"/><text class="dxn-t" x="380" y="63">Gateway · PEP</text><text class="dxn-s" x="380" y="78">authenticate · route · enforce</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="565" y="48" width="153" height="36" rx="10"/><text class="dxn-t" x="641" y="70">Sources / providers</text></g>
 
-  <!-- actors -->
-  <g id="pi-provider" class="dxn orange">
-    <rect class="dxn-box" x="30" y="60" width="130" height="48" rx="12"/>
-    <text class="dxn-t" x="95" y="81">Provider</text>
-    <text class="dxn-s" x="95" y="96">publish · grant</text>
-  </g>
-  <g id="pi-consumer" class="dxn orange">
-    <rect class="dxn-box" x="30" y="172" width="130" height="48" rx="12"/>
-    <text class="dxn-t" x="95" y="193">Consumer</text>
-    <text class="dxn-s" x="95" y="208">discover · consume</text>
-  </g>
-  <g id="pi-admin" class="dxn orange">
-    <rect class="dxn-box" x="30" y="284" width="130" height="48" rx="12"/>
-    <text class="dxn-t" x="95" y="305">Operator</text>
-    <text class="dxn-s" x="95" y="320">platform admin</text>
-  </g>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="170" width="142" height="48" rx="11"/><text class="dxn-t" x="113" y="190">Identity records</text><text class="dxn-s" x="113" y="205">user · org · agent</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="202" y="170" width="142" height="48" rx="11"/><text class="dxn-t" x="273" y="190">Catalogue</text><text class="dxn-s" x="273" y="205">resources · discovery</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="242" width="142" height="48" rx="11"/><text class="dxn-t" x="113" y="262">Policy · PAP</text><text class="dxn-s" x="113" y="277">author · revoke</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="202" y="242" width="142" height="48" rx="11"/><text class="dxn-t" x="273" y="262">Authorization</text><text class="dxn-s" x="273" y="277">compose · decide</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="314" width="302" height="34" rx="10"/><text class="dxn-t" x="193" y="335">Commerce · registry · credits · audit · notify</text></g>
 
-  <!-- control plane -->
-  <g id="pi-cat" class="dxn navy">
-    <rect class="dxn-box" x="252" y="68" width="140" height="44" rx="12"/>
-    <text class="dxn-t" x="322" y="87">Catalogue</text>
-    <text class="dxn-s" x="322" y="101">discovery (d)</text>
-  </g>
-  <g id="pi-usr" class="dxn navy">
-    <rect class="dxn-box" x="412" y="68" width="140" height="44" rx="12"/>
-    <text class="dxn-t" x="482" y="87">User &amp; Orgs</text>
-    <text class="dxn-s" x="482" y="101">identity (i)</text>
-  </g>
-  <g id="pi-acl" class="dxn navy">
-    <rect class="dxn-box" x="252" y="128" width="140" height="44" rx="12"/>
-    <text class="dxn-t" x="322" y="147">Policy</text>
-    <text class="dxn-s" x="322" y="161">management (m)</text>
-  </g>
-  <g id="pi-az" class="dxn navy">
-    <rect class="dxn-box" x="412" y="128" width="140" height="44" rx="12"/>
-    <text class="dxn-t" x="482" y="147">Authorization</text>
-    <text class="dxn-s" x="482" y="161">access (a)</text>
-  </g>
-  <g id="pi-aud" class="dxn navy">
-    <rect class="dxn-box" x="572" y="98" width="138" height="44" rx="12"/>
-    <text class="dxn-t" x="641" y="117">Audit</text>
-    <text class="dxn-s" x="641" y="131">every access logged</text>
-  </g>
+  <g class="dxn green"><rect class="dxn-box" x="416" y="170" width="142" height="48" rx="11"/><text class="dxn-t" x="487" y="190">NGSI-LD</text><text class="dxn-s" x="487" y="205">entity · temporal</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="576" y="170" width="142" height="48" rx="11"/><text class="dxn-t" x="647" y="190">OGC APIs</text><text class="dxn-s" x="647" y="205">spatial · processes</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="416" y="242" width="142" height="48" rx="11"/><text class="dxn-t" x="487" y="262">File Exchange</text><text class="dxn-s" x="487" y="277">objects · jobs</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="576" y="242" width="142" height="48" rx="11"/><text class="dxn-t" x="647" y="262">Subscriptions</text><text class="dxn-s" x="647" y="277">streams · delivery</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="416" y="314" width="302" height="34" rx="10"/><text class="dxn-t" x="567" y="335">query compilation · filtering · metering · delivery</text></g>
 
-  <!-- data plane -->
-  <g id="pi-q" class="dxn green">
-    <rect class="dxn-box" x="252" y="272" width="150" height="48" rx="12"/>
-    <text class="dxn-t" x="327" y="293">Query APIs</text>
-    <text class="dxn-s" x="327" y="308">ngsi-ld · ogc (r)</text>
-  </g>
-  <g id="pi-sub" class="dxn green">
-    <rect class="dxn-box" x="422" y="272" width="140" height="48" rx="12"/>
-    <text class="dxn-t" x="492" y="293">Subscriptions</text>
-    <text class="dxn-s" x="492" y="308">streams (r)</text>
-  </g>
-  <g id="pi-files" class="dxn green">
-    <rect class="dxn-box" x="582" y="272" width="128" height="48" rx="12"/>
-    <text class="dxn-t" x="646" y="293">Files</text>
-    <text class="dxn-s" x="646" y="308">presigned (r)</text>
-  </g>
+  <g class="dxn berry"><rect class="dxn-box" x="194" y="426" width="130" height="34" rx="10"/><text class="dxn-t" x="259" y="447">Agent Registry</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="334" y="426" width="130" height="34" rx="10"/><text class="dxn-t" x="399" y="447">Agent Runtime</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="474" y="426" width="130" height="34" rx="10"/><text class="dxn-t" x="539" y="447">MCP Gateway</text></g>
 </svg>

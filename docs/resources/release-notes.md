@@ -1,32 +1,18 @@
 ---
 id: release-notes
-title: Release Notes
-sidebar_label: Release Notes
-description: Notable changes to the Data Exchange platform, most recent first.
+title: Architecture Release Notes
 ---
 
-# Release Notes
+# Architecture Release Notes
 
-Notable platform changes, most recent first. Service-level changelogs live in each service's repository; this page tracks what adopters and integrators need to know.
+## 2026-08-09 — Go platform architecture baseline
 
-## 2026 — Current platform (in progress)
+- Established Control Plane, Data Plane, and Agentic Plane as equal top-level architecture views.
+- Defined authentication, workload identity, subject/actor propagation, and fail-closed enforcement boundaries.
+- Defined `dx-authz-go` as the composite PDP, OpenFGA as the relationship engine, and OPA as the **Planned** contextual/obligation engine.
+- Documented carried authorization decisions for data-plane execution.
+- Added policy, membership, agent, audit, marketplace, dataset, and file workflows with status and recovery paths.
+- Added shared Go platform, deployment, trust-boundary, event-integration, and current/target documentation.
+- Recorded unresolved decisions for OPA topology and bundle governance, the final subject-context contract, decision-artifact format, revocation SLO, reconciliation, and Agentic Plane production deployment.
 
-The generational re-architecture into Go microservices behind a single gateway. Highlights:
-
-- **New:** API Gateway as the single entry point — JWT validation at the edge, signed identity propagation, config-driven routing.
-- **New:** Relationship-based authorization (OpenFGA) with a PAP/PDP split — grants enforce and revoke within moments, platform-wide.
-- **New:** Marketplace for monetisable datasets with integrated payments.
-- **New:** Platform-wide standards — one response envelope, one error taxonomy, embedded OpenAPI validation, uniform health/metrics endpoints ([API Standards](../develop/api-standards.md)).
-- **Redesigned:** Community Layer (discussions + challenges) with moderation, search, and leaderboards.
-- **Re-implemented on the same data:** catalogue, policy administration, user/IAM, audit, notifications, registry, credits, subscriptions, NGSI-LD data plane, OGC geospatial, file exchange.
-- **Migration:** both stacks run in parallel; see the [Migration Overview](../migration/overview.md) for current status and the [Client Migration Guide](../migration/client-guide.md) for required client changes.
-
-**Known gaps** (remaining on the legacy stack for now): KYC and org-approval workflows, NGSI-LD ingestion/admin endpoints, OGC advanced features (CQL, tiles) — tracked in the [Migration Overview](../migration/overview.md).
-
-## Earlier — Legacy platform
-
-The previous generation (Java control plane and data plane, Node.js file service, Python community service) remains in operation during the parallel-run period. Its documented behaviour is preserved by the current services except where the [Client Migration Guide](../migration/client-guide.md) says otherwise.
-
-:::note Versioning
-Platform releases are coordinated through the GitOps repository — an environment's exact service versions are always visible there ([Deployment & GitOps](../operations/deployment-gitops.md)).
-:::
+This page records documentation architecture baselines. Product release readiness remains tracked by [Current and Target State](../technical/current-and-target.mdx) and the engineering roadmap.

@@ -1,34 +1,23 @@
 ---
 sidebar_position: 8
 title: File Exchange
-description: Bulk data as files — resumable uploads, presigned downloads, and asynchronous processing.
+description: Governed multipart upload, object access, metadata, and asynchronous file processing.
 ---
 
 # File Exchange
 
-Handles **bulk data as files** — for datasets that are exchanged as downloadable artefacts rather than live APIs.
+`dx-files-connect-api-go` owns file metadata, multipart-upload state, processing jobs, and object-store access. Upload/download, processing jobs, and S3-compatible integration are **Partially implemented**; streaming archive delivery and some hardening controls remain incomplete.
 
-## Capabilities
+## Upload and processing
 
-- **Provider uploads** — providers attach files to their catalogue items, including large files via resumable **multipart upload**: the service issues the upload, hands out per-part presigned URLs, and finalises when all parts are confirmed.
-- **Consumer downloads** — consumers with `file` access download via short-lived, **pre-signed links**; the file content streams directly from object storage, not through the platform's application servers.
-- **Processing pipeline** — uploaded files can be validated and processed asynchronously (virus scanning, format detection, previews) before becoming available. Jobs are dispatched over the [messaging backbone](./messaging-backbone.md) and tracked through statuses `PENDING → RUNNING → COMPLETED | FAILED`.
-- **Assets** — platform-level file assets (documentation, imagery) with role-restricted upload.
+After the gateway authenticates the provider, the service verifies catalogue ownership and the authorization decision. It records an upload session, issues narrowly scoped and short-lived object-store capabilities, verifies completion metadata, then commits a processing job and outbox event. Workers validate the object, derive metadata or previews, and transition the job idempotently through pending, running, completed, or failed states.
 
-## How access is enforced
+## Download
 
-A download is only issued after two checks:
+A consumer presents a decision bound to the file, resource, action, subject, and expiry. The service validates the carried decision and required obligations, then either streams the object or issues a short-lived object-store capability according to the approved delivery profile. A missing or stale decision, ownership mismatch, quarantined object, or unsupported obligation is denied.
 
-1. The requested file belongs to a real catalogue item (verified with the [Catalogue](./catalogue.md)).
-2. The requester holds an active `file` grant on that item (verified with the [Authorization Service](./authorization-service.md)).
+## Recovery and signals
 
-Pre-signed links are deliberately short-lived, so a leaked link expires quickly and access always snaps back to the policy record.
+Multipart sessions expire and incomplete parts are garbage-collected. Worker messages use bounded retry and dead-letter handling; retries use stable job and object identifiers. Metrics cover active uploads, processing latency, failures, quarantines, bytes transferred, and decision denials. Audit records contain metadata and capability identifiers, never file contents or secret URLs.
 
-## Interactions
-
-| Talks to | Why |
-| --- | --- |
-| Object storage (S3/MinIO) | File content (upload/download via presigned URLs) |
-| Authorization Service | Per-download permission checks |
-| Catalogue | Item validation |
-| Messaging Backbone | Async file-processing jobs, audit and email events |
+See [File Upload and Processing](../flows/file-processing.md) and [Data Plane Architecture](../technical/data-plane.md).

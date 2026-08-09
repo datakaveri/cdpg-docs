@@ -1,114 +1,83 @@
 ---
 id: fga-authorization
-title: Relationship-Based Authorization
-sidebar_label: Relationship Authorization
-description: How the platform answers "may this subject perform this action on this resource?" — the relationship model, where grants come from, and where enforcement happens.
+title: Relationship and Context Authorization
+sidebar_label: OpenFGA & OPA Authorization
+description: How relationship and contextual decisions are composed, enforced, observed, and debugged.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
 import AuthzModelSvg from '@site/src/components/Diagram/svg/authorization-model.svg';
 
-# Relationship-Based Authorization
-
-How the platform answers **"may this subject perform this action on this resource?"**
-
-Access is **relationship-based** (ReBAC). Rather than attaching a permission list to each user, the platform stores relationships between subjects and resources and answers a permission question by traversing them.
-
-That choice is what makes organisational access practical. A grant to a hundred-person institution is *one* grant, not a hundred — and someone joining or leaving that institution gains or loses access without a single policy being rewritten.
-
-## The model
+# Relationship and Context Authorization
 
 <DiagramFrame
   svg={AuthzModelSvg}
-  label="authorization_model · record · decide · enforce"
+  label="authorization_model · administer · evaluate · compose · enforce"
   legend={[
-    {color: 'orange', label: 'the author'},
-    {color: 'navy', label: 'record & decision'},
-    {color: 'teal', label: 'projection'},
+    {color: 'orange', label: 'policy sources'},
+    {color: 'navy', label: 'composite PDP'},
+    {color: 'teal', label: 'evaluation engines'},
     {color: 'green', label: 'enforcement points'},
   ]}
 />
 
-Three roles, deliberately separated so that recording, deciding, and enforcing are distinct concerns:
+The target decision is the intersection of authenticated identity, durable relationships, trusted resource/action context, active delegation, and enforceable obligations. Relationship evaluation is **Implemented**. Contextual OPA evaluation and the full obligation contract are **Planned**.
 
-| Role | Component | Responsibility |
-| --- | --- | --- |
-| **PAP** — administration | [Policy Service](../components/policy-service.md) | The durable record of every grant, with its expiry and constraints |
-| **PDP** — decision | [Authorization Service](../components/authorization-service.md) | Answers the permission question; stores none of the data it protects |
-| **PEP** — enforcement | Gateway, services, data planes | Acts on the decision, at the point that has enough context |
+## Responsibility split
 
-The reason for the split is that no single component has both the authority and the context. A gateway cannot filter rows out of a geospatial query; a data plane should not be reimplementing policy semantics.
+| Role | Component | Owns | Does not own |
+| --- | --- | --- | --- |
+| PAP | `dx-acl-go` | Grant authoring, versions, constraints, expiry, revocation | Request-time decisions |
+| Relationship engine | OpenFGA | Tuples, relationship model, graph evaluation | Authentication, business records, contextual rules |
+| Context engine | OPA — **Planned** | Policy over trusted attributes, reason codes, obligations | Relationship source data or enforcement |
+| Composite PDP | `dx-authz-go` | Input validation, engine calls, composition, stable response | Policy administration or business effects |
+| PEP | Gateway/service/MCP/data executor | Decision and obligation enforcement | Changing policy meaning |
 
-## From grant to decision
+## Input construction
 
-A grant is authored once and projected into the relationship graph asynchronously. Writing the grant and its event in **one transaction** is what makes the projection trustworthy: a committed policy always has an event, and a rolled-back one never emits a phantom grant.
+A PEP resolves canonical inputs before asking for a decision:
 
-Delivery is at-least-once, so the projection is idempotent and versioned — a redelivered or out-of-order event cannot produce a wrong result.
+- subject, optional actor/delegation chain, workload caller, and organisation;
+- action and decision profile;
+- canonical resource type, ID, owner, organisation, classification, and available access modes;
+- request purpose, risk, time, network/device facts, and trace/request IDs;
+- policy/relationship version requirements where the operation is revocation-sensitive.
 
-### Creation and revocation are not symmetric
+Caller-provided attributes are never trusted merely because they are present. The gateway may decide a route action, while the service must decide again after it resolves object ownership or classification.
 
-This asymmetry is intentional, and it is the thing most worth understanding about the pipeline:
-
-| Change | While the projection catches up | Why |
-| --- | --- | --- |
-| **New grant** | Access is denied | A false denial is safe, and the client can retry |
-| **Revocation** | Applied to the decision path first; graph cleanup follows | A delayed revoke means continued unauthorized access |
-| **Expiry** | Enforced at decision time, on the service's own clock | Correct even if no cleanup job has run |
-
-A grant that has passed its expiry stops working at that instant — not when a sweeper next runs.
-
-## Subjects
-
-| Subject | Reaches |
-| --- | --- |
-| `user` | that person |
-| `organisation` | its members, through membership relationships |
-| `group` | a named set of users within an organisation |
-| `application` | a registered machine client |
-| `agent` | an AI agent — only ever in combination with its delegating user |
-
-### Grant shapes
-
-| Policy type | Relationships written |
-| --- | --- |
-| **Individual** | one relationship from the named consumer to the resource, per access type |
-| **Group** | one per allowed user, plus one per allowed organisation — organisation members are reached *through* the graph rather than expanded into individual grants |
-
-Access types (`api`, `file`, `sub`) are validated against what the resource actually supports, so a grant cannot confer an access mode the resource does not offer.
-
-## Agent access
-
-An agent request is checked **twice**, and both must pass:
+## Composition
 
 ```text
-the delegating user's own permission on the resource
-  AND the agent's delegated permission on that same resource
-  AND the delegation is active and unexpired
-  AND the kill switch permits this agent
+authenticated principal
+AND required OpenFGA relationships
+AND OPA contextual policy
+AND active delegation and agent state when an actor is present
+AND every returned obligation is supported by the selected PEP
+= allow
 ```
 
-The delegated relationship is separate from the user's, which is what keeps an agent strictly narrower: revoking the delegation removes the agent's access and leaves the user's intact. See the [Agentic Plane](../technical/agentic-plane.mdx).
+Any missing mandatory input, engine error, stale security projection, expired grant, denied subdecision, or unsupported obligation results in deny. Reason codes are stable and safe for logs; sensitive policy internals are not returned to callers.
 
-## Where enforcement happens
+## Policy projection
 
-A central decision is not the end of enforcement:
+The Policy Service and User Service publish versioned changes through transactional outboxes. `dx-authz-go` projects policy and membership relationships into OpenFGA. The planned OPA distribution path compiles reviewed policy into versioned, integrity-verified bundles. Activation status and bundle/graph versions are observable. Periodic reconciliation repairs drift between authorities and projections.
 
-| Point | Can decide |
-| --- | --- |
-| **Gateway** | Authentication, which operation is called, relationship checks on a resource named in the request, call-rate limits |
-| **Service** | Resources that only become known once the body is parsed or a lookup runs |
-| **Data plane** | Query- and result-dependent constraints — which rows may be returned, which fields must be withheld, how much data a grant permits |
+Creation and revocation are deliberately asymmetric: a new grant denies until active; revocation and invalidation take priority over cleanup. Expiry is evaluated by the decision service's trusted clock.
 
-When a decision carries an instruction the receiving component cannot apply, the request is **denied** rather than served without it. Silently ignoring part of a policy is the one outcome the design does not permit.
+## Caching
 
-## Troubleshooting
+Only a complete composite decision may be cached. The key includes subject, actor/delegation, organisation, action, resource, relevant context, and policy/relationship versions. Allow entries use short TTLs and explicit invalidation. Deny caching is bounded so recovery does not create a long false denial. Data-plane carried decisions are also short-lived and bound to the exact operation.
 
-**A grant was created but access is still denied.** The projection has not caught up, or the event never left the Policy Service. Check the outbox for unsent rows — if they accumulate, the messaging backbone is unreachable and the dispatcher is retrying.
+## Troubleshooting order
 
-**Access is denied unexpectedly.** Work outward: confirm the grant exists and is active, confirm it has not expired, confirm the access type matches the operation, then confirm the relationship exists in the graph. For an organisation grant, check the user's **membership** relationship — that is the most common gap, and it fails in a way that looks like the grant itself is broken.
+1. Confirm token and workload identity validation.
+2. Confirm authoritative resource and organisation facts.
+3. Confirm the policy is active, unexpired, and covers the access mode.
+4. Compare policy and membership event watermarks with OpenFGA projection versions.
+5. Query the relationship result and inspect model/type/relation names.
+6. Inspect the OPA bundle version and contextual reason codes when that path is enabled.
+7. Confirm the PEP supports every obligation.
+8. For agents, confirm delegation, lifecycle, approval, session, and kill-switch state.
+9. Correlate the decision ID with gateway, service, and audit traces.
 
-**An agent is denied where the user succeeds.** Expected when the delegation does not cover that resource or access type, has expired, or the agent is suspended. The two checks are independent by design.
-
-**Duplicate events.** Safe. The projection deduplicates by event identity and compares versions, so redelivery cannot double-apply or resurrect a revoked grant.
-
-See also the [Policy Lifecycle flow](../flows/policy-lifecycle.mdx) and [Debugging policy creation](./debugging-policy-creation.md).
+See [Security Architecture](../technical/security-architecture.mdx), [Authorization Flow](../flows/authorization.mdx), and [Policy Lifecycle](../flows/policy-lifecycle.mdx).

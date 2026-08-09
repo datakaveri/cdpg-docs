@@ -1,0 +1,216 @@
+---
+id: security-architecture
+title: Authentication and Authorization Architecture
+sidebar_label: Security Architecture
+description: Identity, workload trust, OPA/OpenFGA authorization, enforcement, policy distribution, tenancy, failure behavior, and auditability.
+---
+
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import SecuritySvg from '@site/src/components/Diagram/svg/security-architecture.svg';
+import AuthzModelSvg from '@site/src/components/Diagram/svg/authorization-model.svg';
+
+# Authentication and Authorization Architecture
+
+Authentication answers **who presented this credential**. Authorization answers **whether that principal, possibly through an actor or delegation, may perform this operation on this resource in this context**. The platform never substitutes one answer for the other.
+
+**Status:** external JWT validation, workload identity, OpenFGA relationship checks, agent token exchange, and several enforcement points are **Implemented** or **Partially implemented**. The composite `Authorize` contract, OPA evaluation, operation manifests, decision attestations, and complete data obligations are **Planned**. See [Current & Target](./current-and-target.mdx).
+
+## Architecture
+
+<DiagramFrame
+  svg={SecuritySvg}
+  label="security_architecture · identities, trust boundaries, decisions"
+  legend={[
+    {color: 'orange', label: 'external credential'},
+    {color: 'navy', label: 'identity & decision'},
+    {color: 'teal', label: 'policy distribution'},
+    {color: 'green', label: 'enforcement'},
+    {color: 'berry', label: 'delegated agent context'},
+  ]}
+/>
+
+## Responsibility matrix
+
+| Component | Owns | Must not own |
+| --- | --- | --- |
+| **Identity Provider (Keycloak)** | User login, MFA/federation configuration, application/workload credentials, token issuance, JWKS, token exchange, token claims | Dataset grants, row filters, marketplace entitlement decisions, service business roles outside identity claims |
+| **API Gateway** | Public ingress, operation match, external token validation, principal normalization, edge PEP, caller rate limits, decision request, edge obligation enforcement, routing | Grant authoring, relationship storage, contextual policy code, resource-store filtering it cannot express |
+| **Policy Service (`dx-acl-go`)** | Grant/access-request source of truth, author validation, constraints, validity, status, versions, revocation, durable events | Request-time allow/deny, identity issuance, direct writes to service data |
+| **Authorization Service (`dx-authz-go`)** | Stable `Authorize` contract, decision profiles, engine orchestration, candidate-grant resolution, cache policy, final combination, reason codes, decision IDs, attestation issuance, decision audit | Grant authoring, data-query execution, applying row filters to a datastore |
+| **OpenFGA** | Relationship facts and reachability: ownership, membership, group, application, agent, delegation, and resource permission relationships | Time windows, network context, purpose, assurance, field masks, row filters, quotas, executable business workflows |
+| **OPA** | Contextual and attribute policy, platform guardrails, condition evaluation, typed obligation selection, deny reasons under a versioned policy bundle | Identity proof, relationship source of truth, database calls from Rego, raw datastore query construction, mutable counters |
+| **Application service PEP** | Resource extraction when body/query/domain context is required, object ownership, organization predicates, supported-obligation check, business-state enforcement | Reimplementing the PDP or trusting an unverified decision artefact |
+| **Data service PEP** | Attestation validation, row/field/filter translation, quota consumption, data ownership, response shaping | Calling the PDP a second time, keeping grant state, deciding policy independently |
+| **Audit Service** | Durable activity projection and query/export API | Being the only evidence source; security decisions also require local metrics/traces and stable IDs |
+
+## Principal model
+
+| Principal/context | Required identity | Use |
+| --- | --- | --- |
+| Human user | `sub`, issuer, audience, roles, organization claims | Authentication and coarse identity context; not a resource grant |
+| Client application | Application/workload client ID, destination audience, expiry, token ID | Machine accountability and allowed internal/external call paths |
+| Service workload | `azp`/client ID, destination audience, issuer, expiry, token ID | Authenticates which service is calling which service |
+| Delegated human action | Subject plus actor/delegation ID | Records presenter versus effective authority without widening either |
+| Agent action | `sub` = user; `act.sub` = agent; delegation/grant context; runtime workload | Requires user right ∩ agent delegated right ∩ active grant ∩ active agent |
+
+Identity context is immutable after validation. Request bodies and client-supplied headers cannot overwrite verified subject, actor, workload, organization, delegation, or decision fields.
+
+## External authentication
+
+1. The caller authenticates with Keycloak using an appropriate OAuth/OIDC flow; browsers use authorization code with PKCE.
+2. The caller sends `Authorization: Bearer <token>` to the gateway.
+3. The gateway selects the operation's authentication mode: `required`, `optional`, or `none`.
+4. For a presented bearer token, the gateway pins the signing algorithm and validates signature, issuer, audience, expiry/not-before, and required claims against cached JWKS.
+5. A present but invalid token always returns `401`; an optional route never downgrades an invalid credential into anonymous access.
+6. The gateway creates the platform principal and removes or retains the original credential only where the operation contract explicitly requires token exchange.
+
+Authentication failures are observable through stable failure classes without logging the credential.
+
+## Workload identity and internal trust
+
+Each service is a distinct Keycloak client. Before an internal HTTP or gRPC call, the caller obtains a short-lived client-credential token for the destination audience. Tokens are cached per destination and refreshed before expiry; a token intended for one service is unusable at another.
+
+The receiving service validates issuer, signature, destination audience, expiry, token ID, and the workload identity named by `azp`/client ID. It then checks an explicit caller allowlist. A separate `subject_asserters` allowlist controls whether that workload may speak for an end user. Verification and issuance are separate code capabilities so a receiving-only service does not link secret-bearing minting code.
+
+The target subject assertion binds the user/actor/delegation and normalized request to the authenticated workload. Exact request-binding fields and replay-cache scope remain an implementation decision; until then the token ID and short lifetime bound replay, and every unexpected or absent internal credential fails closed in configured environments.
+
+Internal calls use gRPC with shared interceptors; public APIs remain HTTP/REST. Transport TLS and NetworkPolicy protect the channel and reachability, but workload authorization remains necessary. Cross-operator federation adds mutual TLS and dynamic trust-list verification when that topology is enabled.
+
+## Composite authorization
+
+<DiagramFrame
+  svg={AuthzModelSvg}
+  label="authorization_model · OpenFGA relationships + OPA context"
+  legend={[
+    {color: 'orange', label: 'policy author / caller'},
+    {color: 'teal', label: 'grant & bundle distribution'},
+    {color: 'navy', label: 'decision engines'},
+    {color: 'green', label: 'enforcement'},
+    {color: 'berry', label: 'deny / unsupported'},
+  ]}
+/>
+
+The target contract is logically:
+
+```text
+Authorize(
+  subject, actor, workload,
+  operation, permission,
+  resource, organization,
+  request_context,
+  delegation_context
+) -> {
+  decision_id,
+  allow,
+  reason_codes[],
+  obligations[],
+  grant_ids[],
+  relationship_revision,
+  policy_revision,
+  valid_until,
+  attestation
+}
+```
+
+### Decision pipeline
+
+1. Reject missing or malformed operation policy, identity, resource, organization, or context required by the selected decision profile.
+2. Resolve candidate grant IDs and graph relationships through OpenFGA and the durable grant projection.
+3. Build typed OPA input from verified principal/actor/workload, operation metadata, resource attributes, organization context, request context, and candidate grants.
+4. Evaluate the active OPA bundle. `undefined`, evaluation error, unknown rule/profile, or malformed output is denial.
+5. Apply delegation, agent status, trust, grant validity, and profile-combination rules in `dx-authz-go`.
+6. Intersect obligations across applicable grants without accidentally widening filters, masks, or quota.
+7. Confirm the requesting enforcement point declares support for every required obligation.
+8. Return and audit one final decision. An upstream error is not a denial reason that a caller may reinterpret; it is a fail-closed decision failure.
+
+## Decision profiles
+
+An operation selects a centrally registered profile; a service cannot choose engines ad hoc at runtime. Illustrative profiles are:
+
+| Profile | OpenFGA | OPA | Delegation/trust | Typical use |
+| --- | --- | --- | --- | --- |
+| Public | — | Optional public guardrails | — | Health, discovery metadata explicitly declared public |
+| Authenticated | — | Identity/context rules | Optional | User profile reads |
+| Relationship | Required | Optional contextual deny | Optional | Ownership/administration checks |
+| Data access | Required | Required obligations | Required where present | NGSI-LD, OGC, file read/download |
+| Agent action | User and agent checks | Tool/context/risk rules | Required | MCP tool invocation |
+| Administrative | Relationship/role as declared | Required assurance/network rules | Workload trust | Platform operations |
+
+The canonical profile catalog and default profile are open decisions. Unknown profiles deny.
+
+## Obligations and enforcement
+
+OPA returns typed, declarative obligations; it never returns SQL, CQL, Elasticsearch DSL, or executable code. Examples include:
+
+- `row_filter` — a normalized predicate tree translated by the data service;
+- `field_policy` — allowed, denied, or masked fields;
+- `quota` — quota key, unit, limit, and accounting owner;
+- `purpose` — permitted declared purposes;
+- `rate_limit` — edge or service budget;
+- `approval` — required approval class and validity;
+- `audit` — required fields or assurance level.
+
+The gateway enforces operations, rate limits, coarse context, and deny. Application services enforce domain state and resource extraction. Data services enforce filters, masks, ownership, and usage. If an enforcement point cannot implement a required obligation exactly, it denies and reports `unsupported_obligation`.
+
+The decision is carried forward as an integrity-protected artefact bound to subject, actor, workload, operation, resource, organization, policy revisions, and a validity window. A data service validates and enforces it; it does not ask the PDP again.
+
+## Policy lifecycle and distribution
+
+### Grants and relationship facts
+
+`dx-acl-go` stores a normalized grant and its outbox event in one transaction. RabbitMQ delivers the versioned event to projection workers. The durable projection preserves grant ID, status, validity, conditions, obligations, subject/resource types, and monotonic version; OpenFGA receives relationship tuples. Revocation becomes authoritative for denial before asynchronous cleanup, and reconciliation repairs missed or out-of-order projection work.
+
+### OPA bundles
+
+Platform policy follows review, automated tests, signing, promotion, activation, and rollback. Bundles are immutable and revisioned; `dx-authz-go` reports the active revision in every decision. A bundle that cannot be verified or loaded never becomes active. During rollout, pods must agree on the active revision before readiness. The repository, signer, distribution transport, and OPA deployment mode remain open decisions and are tracked on [Decisions & Gaps](./decisions.md).
+
+## Caching
+
+- JWKS and workload tokens are cached with bounded refresh and hard failure on unknown key or audience.
+- Authorization cache keys cover every decision input that can change the result, including actor/delegation, organization, purpose, resource attributes, relationship model/store, policy revision, and grant version.
+- A cached allow expires at the earliest relevant token, grant, policy, decision, or configured cache deadline.
+- Revocation state and kill-switch state outrank cached allows.
+- Negative caching is short and never hides recovery longer than the published propagation SLO.
+- Cache errors follow the security control's declared failure mode; authorization never silently fails open.
+
+## Organization and tenant isolation
+
+The current architecture assumes one exchange tenant operated as a unit, with multiple organizations inside it. A multi-tenant SaaS control plane for unrelated exchange operators is not implemented.
+
+Within an exchange:
+
+- organization identity comes from verified principal/context, not the request body;
+- organization-admin rights are scoped to organization relationships, never a global role string alone;
+- datastore reads and writes include organization/owner predicates;
+- cache, event, search-index, object-key, rate-limit, decision, and audit keys include organization context where data is organization-scoped;
+- mixed-organization batches are rejected or split safely;
+- error messages do not reveal whether another organization's resource exists.
+
+## Failure handling
+
+| Failure | Behavior | Recovery signal |
+| --- | --- | --- |
+| Identity provider/JWKS unavailable | Existing valid cached keys/tokens may continue within policy; unknown key or new token mint fails | Auth failure metrics, token-mint breaker, readiness where required |
+| Wrong workload audience/caller | `401`/`403`; no alternate trust path | Caller/audience reason code and security event |
+| `dx-authz-go` timeout/error | Deny protected operation | PDP timeout/error SLO and trace |
+| OpenFGA error | Deny profiles requiring relationships | Engine error reason and readiness degradation |
+| OPA undefined/error/bad bundle | Deny profiles requiring contextual policy; bad bundle never activates | Bundle revision/readiness and evaluation metrics |
+| Projection lag | New access remains denied; revocation authority must not wait on cleanup | Projection lag, outbox depth, reconciliation status |
+| Invalid/stale attestation | Data service denies before store access | Attestation rejection metric and decision ID |
+| Unsupported obligation | Deny before partial enforcement | Obligation type, service, operation metric |
+| Quota store unavailable | Deny quota-controlled operation unless a reviewed bounded fallback exists | Quota backend health and failure-mode metric |
+
+## Auditability
+
+Every protected decision records decision ID, request/trace ID, subject, actor, workload, organization, operation, normalized resource, decision profile, allow/deny, stable reasons, grant/delegation IDs, relationship and policy revisions, cache result, obligations selected, enforcement location/outcome, and timing. Sensitive claims and policy bodies are minimized or referenced by ID.
+
+## Security and operational consequences
+
+- Compromise of one workload credential does not confer another workload's identity or another destination's audience.
+- Keycloak availability affects new internal-token minting; per-destination caching and circuit breakers bound the dependency without weakening verification.
+- OPA introduces a policy supply chain that needs signing, promotion, rollback, readiness, and revision observability.
+- Carrying decisions reduces hot-path PDP latency and availability coupling but makes attestation lifetime and revocation bounds security-critical open decisions.
+- Service owners must declare operations and obligation support; a central gateway cannot infer domain semantics from HTTP verbs or path prefixes.
+- Organization isolation is a datastore and cache-key invariant, not only an API-middleware rule.
+
+See [Authentication Flow](../flows/authentication.mdx), [Authorization Flow](../flows/authorization.mdx), [Policy Lifecycle](../flows/policy-lifecycle.mdx), and [Agent Delegation](../flows/agent-delegation.mdx).

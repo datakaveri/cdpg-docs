@@ -11,7 +11,7 @@ The Data Exchange represents a shift from fragmented, closed data systems to an 
 
 ## Open, standards-based APIs
 
-Resource-access APIs harmonized with **ETSI NGSI-LD**, native **OGC API Features** for geospatial data, plus RESTful APIs throughout — enabling interoperability with legacy and modern systems and semantic data modeling for richer context.
+Resource-access APIs harmonized with **ETSI NGSI-LD**, native **OGC APIs** for geospatial data, and consistent REST APIs enable semantic and spatial interoperability.
 
 ## Discovery and metadata
 
@@ -19,7 +19,7 @@ A **Catalogue service** indexes and describes available datasets, AI models, and
 
 ## Policy-driven access control
 
-Every access is an **explicit, time-bound policy** the provider (or their organisation's admin) granted and can revoke at any time. Policies are enforced in real time through **relationship-based access control (ReBAC)** — a graph of who relates to what, checked on every data request — with audit logs for traceability. Providers define precisely who can access what, down to *which user may call which API on which dataset, until when*. See [Core Concepts](../concepts/core-concepts.md).
+Protected access is governed by an **explicit, time-bound policy** that the provider or authorised organisation administrator can revoke. OpenFGA relationship checks are **Implemented**. The target composite decision also uses OPA for contextual/attribute rules and typed obligations, then carries those obligations to data executors for local enforcement. See [Security Architecture](../technical/security-architecture.mdx).
 
 ## Flexible data exchange models
 
@@ -33,7 +33,7 @@ Data models supported include **public, restricted, and monetisable** datasets �
 
 ## Single, secure entry point
 
-All traffic enters through one **API Gateway** that authenticates each caller once (OIDC/JWT for users, app credentials for machines) and propagates a **cryptographically signed identity** to internal services — one place to reason about authentication, rate limiting, and routing. See the [API Gateway](../components/api-gateway.md).
+All public traffic enters through one **API Gateway**. It validates OIDC/JWT credentials, obtains an audience-bound workload credential for the destination, and propagates subject or actor context separately. Receiving services verify both the immediate caller and its authority to assert that context. See the [API Gateway](../components/api-gateway.md).
 
 ## Organisation-aware governance
 
@@ -41,7 +41,7 @@ Organisations, org admins, and platform admins each have clearly scoped powers. 
 
 ## Federated, cloud-native architecture
 
-A modular fleet of independently deployable microservices separating the Control Plane and Data Plane. A data plane can run **inside a provider's own network** (federated topology) while connecting to a central control plane — data never leaves the provider's custody. Supports both **centralised** (national/state) and **federated** (departmental/city) deployments.
+A modular fleet of independently deployable Go services separates the Control Plane, Data Plane, and Agentic Plane. The central topology is **In development**. A provider-operated federated topology is **Deferred** pending reviewed cross-domain trust, conformance, and operational controls.
 
 ## Community and engagement
 
@@ -49,7 +49,7 @@ Discussions and data challenges live alongside the catalogue — under the same 
 
 ## Security and observability
 
-TLS in transit, JWT validation at the edge with HMAC-signed internal identity, per-request authorization checks, audit events from every mutating endpoint, and Prometheus-based metrics with health endpoints on every service. See [Security](../operations/security.md) and [Monitoring & Health](../operations/monitoring.md).
+TLS in transit, OIDC/JWT authentication at the edge, audience-bound workload identity, composite OpenFGA/OPA authorization, fail-closed enforcement, audit events, Prometheus metrics, and health endpoints form the target security baseline. OpenFGA checks and observability are **Implemented**; composite OPA decisions and full workload-identity adoption are **Partially implemented** or **Planned**. See [Security Architecture](../technical/security-architecture.mdx) and [Monitoring & Health](../operations/monitoring.md).
 
 ---
 
@@ -59,7 +59,7 @@ TLS in transit, JWT validation at the edge with HMAC-signed internal identity, p
 | --- | --- |
 | **Open APIs & standards** | NGSI-LD · OGC API Features · JSON-LD catalogue · REST |
 | **Discovery** | Geo-spatial, attribute, and text search over a JSON-LD catalogue |
-| **Access control** | Explicit time-bound policies · ReBAC (OpenFGA) · real-time enforcement · audit |
+| **Access control** | Explicit time-bound policies · OpenFGA ReBAC · planned OPA context/obligations · audit |
 | **Flexible access** | Pull APIs · push streams (subscriptions) · bulk file exchange · marketplace |
-| **Architecture** | Cloud-native microservices · single gateway · Control & Data planes · federated |
-| **Security** | TLS · OIDC/JWT at the edge · signed internal identity · rate limiting · audit |
+| **Architecture** | Go microservices · single gateway · Control, Data & Agentic planes · configuration-selected deployment |
+| **Security** | TLS · OIDC/JWT · audience-bound workloads · fail-closed authorization · rate limiting · audit |

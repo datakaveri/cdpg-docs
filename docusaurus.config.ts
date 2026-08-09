@@ -141,7 +141,7 @@ const config: Config = {
         {
           title: 'Documentation',
           items: [
-            {label: 'Overview', to: '/docs/overview'},
+            {label: 'Overview', to: '/docs/'},
             {label: 'Architecture', to: '/docs/technical/architecture'},
             {label: 'Getting Started', to: '/docs/develop/getting-started'},
           ],

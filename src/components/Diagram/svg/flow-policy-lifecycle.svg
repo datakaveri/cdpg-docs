@@ -1,77 +1,23 @@
-<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Policy lifecycle: a provider creates a grant in the policy service, which stores it and its event in one transaction via the outbox; the event travels through RabbitMQ into the authorization graph; the data plane checks that graph on every request; revocation follows the same pipeline and turns to deny within moments.">
-  <defs>
-    <marker id="fp-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="fp-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="fp-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="fp-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
-    </marker>
-    <marker id="fp-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/>
-    </marker>
-  </defs>
-
-  <!-- paths -->
-  <path id="p-create" class="dxf orange dim" marker-end="url(#fp-o)" d="M172,60 H276"/>
-  <text id="lbl-create" class="dxe orange dim" x="184" y="50">create policy</text>
-  <path id="p-revoke" class="dxf berry dashed dim" marker-end="url(#fp-b)" d="M172,82 C220,94 236,92 278,86"/>
-  <text id="lbl-revoke" class="dxe berry dim" x="196" y="106">revoke</text>
-  <path id="p-outbox" class="dxf teal dim" marker-end="url(#fp-t)" d="M358,98 C360,118 360,128 360,146"/>
-  <text id="lbl-outbox" class="dxe teal dim" x="372" y="128">one transaction</text>
-  <path id="p-pub" class="dxf teal dim" marker-end="url(#fp-t)" d="M422,172 C458,172 474,172 516,172"/>
-  <text id="lbl-pub" class="dxe teal dim" x="428" y="162">policy.created / .deleted</text>
-  <path id="p-consume" class="dxf teal dim" marker-end="url(#fp-t)" d="M590,198 C592,222 592,232 592,256"/>
-  <text id="lbl-consume" class="dxe teal dim" x="604" y="230">consume · idempotent</text>
-  <path id="p-serve" class="dxf orange dim" marker-end="url(#fp-o)" d="M172,340 H276"/>
-  <text id="lbl-serve" class="dxe orange dim" x="192" y="331">request</text>
-  <path id="p-data" class="dxf green dashed dim" marker-end="url(#fp-g)" d="M278,362 C240,368 214,368 174,362"/>
-  <text id="lbl-data" class="dxe green dim" x="198" y="384">data</text>
-  <path id="p-check" class="dxf navy dashed dim" marker-end="url(#fp-n)" d="M434,332 C470,322 486,308 514,296"/>
-  <text id="lbl-check" class="dxe navy dim" x="446" y="318">allowed?</text>
-  <path id="p-deny" class="dxf berry dashed dim" marker-end="url(#fp-b)" d="M514,308 C480,326 462,340 436,350"/>
-  <text id="lbl-deny" class="dxe berry dim" x="452" y="366">403 within moments</text>
-
-  <!-- nodes -->
-  <g id="n-provider" class="dxn orange">
-    <rect class="dxn-box" x="30" y="38" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="60">Provider</text>
-    <text class="dxn-s" x="101" y="76">or org admin</text>
-  </g>
-  <g id="n-acl" class="dxn navy">
-    <rect class="dxn-box" x="278" y="38" width="160" height="56" rx="12"/>
-    <text class="dxn-t" x="358" y="62">Policy Service</text>
-    <text class="dxn-s" x="358" y="78">validate · store</text>
-  </g>
-  <g id="n-outbox" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="300" y="148" width="122" height="46" rx="12"/>
-    <text class="dxn-t" x="361" y="168">Outbox</text>
-    <text class="dxn-s" x="361" y="182">event rows</text>
-  </g>
-  <g id="n-mq" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="518" y="148" width="140" height="46" rx="12"/>
-    <text class="dxn-t" x="588" y="168">RabbitMQ</text>
-    <text class="dxn-s" x="588" y="182">authz exchange</text>
-  </g>
-  <g id="n-az" class="dxn navy">
-    <rect class="dxn-box" x="516" y="258" width="152" height="52" rx="12"/>
-    <text class="dxn-t" x="592" y="280">Authorization</text>
-    <text class="dxn-s" x="592" y="296">openfga tuples</text>
-  </g>
-  <g id="n-dp" class="dxn green">
-    <rect class="dxn-box" x="278" y="316" width="156" height="52" rx="12"/>
-    <text class="dxn-t" x="356" y="338">Data Plane</text>
-    <text class="dxn-s" x="356" y="354">checks every request</text>
-  </g>
-  <g id="n-consumer" class="dxn orange">
-    <rect class="dxn-box" x="30" y="316" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="338">Consumer</text>
-    <text class="dxn-s" x="101" y="354">granted access</text>
-  </g>
+<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fp-title fp-desc">
+  <title id="fp-title">Policy creation, distribution, enforcement, revocation, and reconciliation</title>
+  <desc id="fp-desc">A provider authors a grant. Policy Service validates it with Catalogue facts, commits it with an outbox event, and RabbitMQ delivers it to authorization projections. Consumers receive decisions at an enforcement point. Revocation denies before cleanup, and reconciliation compares source records with projections.</desc>
+  <defs><marker id="fp-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker><marker id="fp-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker><marker id="fp-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker><marker id="fp-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker><marker id="fp-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker></defs>
+  <path id="p-create" class="dxf orange dim" marker-end="url(#fp-o)" d="M170 74H280"/><text id="lbl-create" class="dxe orange dim" x="195" y="63">author grant</text>
+  <path id="p-validate" class="dxf navy dim" marker-end="url(#fp-n)" d="M360 100V160"/><text id="lbl-validate" class="dxe navy dim" x="372" y="133">canonical facts</text>
+  <path id="p-outbox" class="dxf teal dim" marker-end="url(#fp-t)" d="M440 74H510"/><text id="lbl-outbox" class="dxe teal dim" x="448" y="63">atomic commit</text>
+  <path id="p-pub" class="dxf teal dim" marker-end="url(#fp-t)" d="M586 100V160"/><text id="lbl-pub" class="dxe teal dim" x="598" y="133">publish</text>
+  <path id="p-consume" class="dxf teal dim" marker-end="url(#fp-t)" d="M586 210V268"/><text id="lbl-consume" class="dxe teal dim" x="598" y="242">project + activate</text>
+  <path id="p-serve" class="dxf orange dim" marker-end="url(#fp-o)" d="M170 332H278"/><text id="lbl-serve" class="dxe orange dim" x="194" y="321">protected request</text>
+  <path id="p-check" class="dxf navy dim" marker-end="url(#fp-n)" d="M438 332H508"/><text id="lbl-check" class="dxe navy dim" x="444" y="321">check revisions</text>
+  <path id="p-revoke" class="dxf berry dashed dim" marker-end="url(#fp-b)" d="M170 98C214 124 238 124 280 92"/><text id="lbl-revoke" class="dxe berry dim" x="190" y="124">revoke / expire</text>
+  <path id="p-deny" class="dxf berry dim" marker-end="url(#fp-b)" d="M508 356H438"/><text id="lbl-deny" class="dxe berry dim" x="446" y="377">deny first</text>
+  <path id="p-reconcile" class="dxf teal dashed dim" marker-end="url(#fp-t)" d="M586 364V438H360V216"/><text id="lbl-reconcile" class="dxe teal dim" x="406" y="458">compare authority ↔ projections</text>
+  <g id="n-provider" class="dxn orange"><rect class="dxn-box" x="30" y="50" width="140" height="54" rx="11"/><text class="dxn-t" x="100" y="71">Provider / admin</text><text class="dxn-s" x="100" y="87">author · revoke</text></g>
+  <g id="n-acl" class="dxn navy"><rect class="dxn-box" x="280" y="48" width="160" height="58" rx="11"/><text class="dxn-t" x="360" y="69">Policy Service</text><text class="dxn-s" x="360" y="85">authority · version</text><text class="dx-status impl" x="360" y="101">IMPLEMENTED</text></g>
+  <g id="n-cat" class="dxn navy"><rect class="dxn-box" x="280" y="160" width="160" height="56" rx="11"/><text class="dxn-t" x="360" y="181">Catalogue / User</text><text class="dxn-s" x="360" y="197">resource · org · subject facts</text><text class="dx-status partial" x="360" y="211">PARTIAL</text></g>
+  <g id="n-outbox" class="dxn teal dxn-store"><rect class="dxn-box" x="510" y="48" width="152" height="58" rx="11"/><text class="dxn-t" x="586" y="69">Outbox</text><text class="dxn-s" x="586" y="85">stable event identity</text><text class="dx-status partial" x="586" y="101">PARTIAL ADOPTION</text></g>
+  <g id="n-mq" class="dxn teal dxn-store"><rect class="dxn-box" x="510" y="160" width="152" height="50" rx="11"/><text class="dxn-t" x="586" y="181">RabbitMQ</text><text class="dxn-s" x="586" y="197">confirm · retry · DLQ</text></g>
+  <g id="n-az" class="dxn navy"><rect class="dxn-box" x="508" y="268" width="156" height="96" rx="11"/><text class="dxn-t" x="586" y="290">Authorization</text><text class="dxn-s" x="586" y="306">OpenFGA projection</text><text class="dxn-s" x="586" y="321">planned OPA data/bundle</text><text class="dxn-s" x="586" y="336">cache invalidation</text><text class="dx-status partial" x="586" y="357">PARTIAL</text></g>
+  <g id="n-consumer" class="dxn orange"><rect class="dxn-box" x="30" y="306" width="140" height="54" rx="11"/><text class="dxn-t" x="100" y="327">Consumer</text><text class="dxn-s" x="100" y="343">exercise grant</text></g>
+  <g id="n-pep" class="dxn green"><rect class="dxn-box" x="278" y="304" width="160" height="62" rx="11"/><text class="dxn-t" x="358" y="326">Enforcement point</text><text class="dxn-s" x="358" y="342">apply every obligation</text><text class="dx-status partial" x="358" y="360">PARTIAL</text></g>
 </svg>

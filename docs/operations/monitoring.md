@@ -37,7 +37,7 @@ Every platform service exposes the same operational surface, so one dashboard pa
 
 ## Audit trail
 
-Operational monitoring tells you the platform is healthy; the [Audit service](../components/supporting-services.md#audit) tells you what its users did — every mutating action, queryable and exportable. Both matter; don't conflate them.
+Operational monitoring tells you the platform is healthy; the [Audit service](../components/supporting-services.md) tells you what its users did — every mutating action, queryable and exportable. Both matter; don't conflate them.
 
 ## Smoke verification
 

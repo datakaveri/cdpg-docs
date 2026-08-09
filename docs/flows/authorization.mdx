@@ -1,0 +1,56 @@
+---
+sidebar_position: 2
+title: "Flow: Authorization Decision"
+description: How the gateway and composite PDP combine OpenFGA, OPA, delegation, trust, and obligations into a fail-closed decision.
+---
+
+import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
+import AuthzSvg from '@site/src/components/Diagram/svg/authorization-model.svg';
+
+# Flow: Authorization Decision
+
+**Status:** the OpenFGA relationship check is **Partially implemented**. The composite request, OPA stage, operation manifests, obligations, and decision attestation shown below are **Planned**.
+
+<DiagramFrame
+  svg={AuthzSvg}
+  label="authorization_decision · relationships + context + obligations"
+  legend={[
+    {color: 'orange', label: 'caller / author'},
+    {color: 'teal', label: 'policy facts'},
+    {color: 'navy', label: 'decision'},
+    {color: 'green', label: 'enforcement'},
+    {color: 'berry', label: 'fail closed'},
+  ]}
+/>
+
+## Preconditions
+
+- The gateway has matched a valid operation policy.
+- Required authentication has produced a verified subject and, where present, actor/delegation context.
+- The caller workload and destination have been authenticated for internal calls.
+- Resource and organization identifiers required at the edge are normalized; otherwise the target service is the completing PEP.
+
+## Main flow
+
+1. The PEP sends `Authorize` with principal, actor, workload, operation, permission, resource, organization, request attributes, and delegation context.
+2. `dx-authz-go` validates the decision profile and all required inputs. Missing or unknown policy metadata denies.
+3. The PDP obtains relationship/candidate-grant facts from OpenFGA and the durable grant projection.
+4. The PDP sends normalized, typed input to OPA. OPA evaluates platform policy, grant conditions, purpose, network, assurance, risk, and typed obligation selection.
+5. The PDP checks delegation and agent state, combines engine results with logical AND, and rejects expired/revoked grants or unsupported states.
+6. The PDP returns one decision ID, allow/deny, stable reason codes, grant IDs, relationship/policy revisions, expiry, obligations, and integrity-protected attestation.
+7. The gateway enforces edge-known obligations and forwards the bound decision. If the service resolves the resource later, it completes authorization before data access.
+8. The data service verifies the decision artefact, confirms all obligations are supported, translates typed filters/masks/quotas, scopes the datastore query, and serves or denies.
+9. PDP and PEP signals share request, trace, grant, decision, and organization IDs so the outcome is explainable end to end.
+
+## Deny and failure paths
+
+Any of these conditions denies: invalid identity, wrong audience, unauthorized caller workload, untrusted subject asserter, unknown operation/profile, OpenFGA deny/error, OPA deny/undefined/error, inactive delegation, suspended agent, expired/revoked grant, stale decision, unsupported obligation, quota failure, or organization/ownership mismatch.
+
+The caller receives a stable public error without engine internals. Operators see the decision ID and failure class; sensitive policy input is not logged.
+
+## Cache rules
+
+Cache entries include every input and engine revision that affects the decision. Allows expire at the earliest token, grant, bundle, or attestation deadline. Revocation and kill-switch state override cache. A cache miss or cache failure does not become an allow.
+
+See [Security Architecture](../technical/security-architecture.mdx) for the responsibility boundary and [Policy Lifecycle](./policy-lifecycle.mdx) for how the decision inputs are published.
+

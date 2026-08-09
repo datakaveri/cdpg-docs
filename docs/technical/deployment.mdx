@@ -2,7 +2,7 @@
 id: deployment
 title: Deployment Architecture
 sidebar_label: Deployment Architecture
-description: How the Data Exchange is deployed — central and federated topologies, network zones, and the production environment shape.
+description: Central and federated Go deployment topologies, zones, identity, data stores, GitOps, availability, and recovery.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
@@ -10,44 +10,89 @@ import TopologySvg from '@site/src/components/Diagram/svg/deployment-topology.sv
 
 # Deployment Architecture
 
-All platform components run as containers behind the API Gateway. The same container images support two deployment configurations, selected purely by which services a deployment includes — nothing is forked.
+The same Go service images support a central platform and opt-in federated extensions. Deployment composition, routes, dependencies, schema execution, feature gates, and trust material are selected through GitOps configuration; business code does not branch on topology.
+
+**Status:** the shared Helm chart, ApplicationSets, environment values, NetworkPolicy, External Secrets pattern, and workload-identity configuration are **In development**. The desired state still has route/configuration/metrics boot gates, and the Agentic Plane is not present in GitOps. Federation is **Deferred**.
 
 <DiagramFrame
   svg={TopologySvg}
-  label="deployment_topology · central + federated"
+  label="deployment_topology · central target and deferred federation"
   legend={[
-    {color: 'teal', label: 'gitops & federation'},
-    {color: 'orange', label: 'client traffic'},
-    {color: 'navy', label: 'control link'},
-    {color: 'green', label: 'data'},
+    {color: 'teal', label: 'GitOps & shared infrastructure'},
+    {color: 'orange', label: 'external traffic'},
+    {color: 'navy', label: 'identity & control'},
+    {color: 'green', label: 'data service'},
+    {color: 'berry', label: 'Agentic Plane'},
   ]}
 />
 
-The diagram shows both shapes at once: the **central platform** (one Kubernetes cluster, reconciled from Git by ArgoCD) and a **federated provider network** running its own data plane. A central-only deployment simply has no federated zone.
-
 ## Central topology
 
-Everything behind one gateway in one Kubernetes cluster — suitable for a single-organization exchange or a state/national deployment operated by one team.
+The central target runs Kubernetes namespaces for edge, identity, authorization, domain/control services, data services, Agentic Plane, and platform operations. Only the gateway and deliberately public infrastructure endpoints receive ingress. Service workloads are independently scalable; stateful infrastructure is managed or operated with backups and high availability appropriate to its role.
+
+| Zone/namespace | Components | Inbound policy |
+| --- | --- | --- |
+| Public edge | Load balancer/WAF, `dx-gateway-go` | HTTPS from clients; provider callback endpoints narrowly routed |
+| Identity | Keycloak | OIDC/OAuth endpoints; admin surface restricted |
+| Authorization | `dx-acl-go`, `dx-authz-go`, OpenFGA, planned OPA runtime/bundles | Gateway and allowlisted service workloads only |
+| Control/domain | User, Catalogue, Marketplace, Registry, Credits, Subscription, Community | Gateway for public APIs; allowlisted gRPC callers internally |
+| Data | NGSI-LD, OGC, File Exchange, processing workers | Gateway/application PEP and workers only |
+| Agentic | Registry, Runtime, MCP Gateway | Gateway for user surfaces; strict internal workload call graph |
+| Platform operations | Audit, Notification, monitoring collectors | Broker and operator networks; no broad public API |
+| Data tier | PostgreSQL/PostGIS, Elasticsearch, Redis, RabbitMQ, S3 | Only owning/approved workloads through NetworkPolicy |
 
 ## Federated topology
 
-A **data plane + its own gateway run inside a provider's network** (a federated edge) and connect to the central control plane for:
+Federation is a configuration-gated extension, not required for the central platform. A participant may run data-plane/proxy/trust components in its own network while retaining local resource data. Cross-domain traffic adds participant workload identity, mutual TLS, dynamic trust-list verification, encrypted/signed envelopes, and a versioned authorization/federation contract.
 
-- **Identity** — cached signing keys (JWKS) from the central identity provider.
-- **Policy** — a local authorization-service replica fed by the central policy-event stream.
+This topology is **Deferred**. Existing proxy, trust-anchor, trust-store, and envelope components do not establish production readiness. Enablement requires conformance tests, certificate lifecycle automation, revocation SLOs, replay protection, remote-decision provenance, failure injection, and operator runbooks.
 
-Data never leaves the provider network; only tokens and policy tuples cross the boundary. This lets multiple independently operated data planes — including third-party ones — coexist in a single exchange, avoiding central data bottlenecks.
+## Identity and network trust
 
-## Network zones
+- External user/application traffic uses TLS and OIDC/OAuth credentials.
+- Internal calls use short-lived workload tokens addressed to the destination service; services enforce caller and subject-asserter allowlists.
+- NetworkPolicy limits which workloads can reach each service/store but is defense in depth, not identity.
+- Public bearer credentials are not forwarded unnecessarily. Agent Runtime is an explicit exception where the user's token is required as the token-exchange subject.
+- Federation adds mutual TLS and trust-list validation; central in-cluster identity does not depend on client certificates.
 
-- **Public zone** — external users connect over HTTPS through a load balancer / WAF; the only application entry point is the API Gateway. Large file downloads go directly to object storage via short-lived presigned URLs.
-- **Private zone** — all services, data stores, and the message broker live on a private network, unreachable from outside. Service-to-service traffic carries the gateway-signed identity.
-- **Operations** — metrics, logs, and dashboards (Prometheus/Grafana/Loki) with alerting; regular backups of data stores and configuration for disaster recovery.
+## Data and persistence topology
 
-## Environments and promotion
+Each service owns a database/schema, index namespace, bucket, or Redis keyspace appropriate to its domain. New environments provision schema through versioned Go migrations. A dedicated migration Job or other single actor runs with migration mode enabled; ordinary replicas run with schema execution disabled.
 
-Production deployments are managed declaratively with **GitOps** (ArgoCD): each environment (dev → staging → production) is a directory of Helm values in a Git repository, and promotion is a pull request. See [Deployment & GitOps](../operations/deployment-gitops.md) for the workflow and [Security](../operations/security.md) for the hardening checklist.
+PostgreSQL/PostGIS and OpenFGA require point-in-time backup/recovery; Elasticsearch requires index templates, aliases, snapshot/restore, and rebuild procedures; S3 requires lifecycle/versioning appropriate to retention; RabbitMQ requires durable topology and backed-up definitions; Redis durability depends on whether the use is cache or load-bearing Agentic state.
 
-## Local development
+## Availability and scaling
 
-The entire platform — every service plus all infrastructure — runs locally with Docker Compose in a few commands. See [Local Development](../develop/local-development.md).
+- Stateless APIs scale horizontally behind Services; readiness gates new traffic.
+- Projectors, outbox dispatchers, scheduled jobs, and agent turns use durable leases where one owner is required.
+- PodDisruptionBudgets, topology spread, resource requests/limits, and autoscaling are chart-level concerns.
+- Authorization, identity, broker, databases, and Redis need explicit availability SLOs because their failure behavior affects denial, session continuity, and event lag.
+- Long-lived SSE and large streaming transfers receive route-specific timeouts; global request timeouts must not terminate them.
+
+## GitOps and promotion
+
+`dx-gitops` is the desired-state repository. One parameterized Helm chart is rendered with environment-common values plus per-service values. ArgoCD ApplicationSets select which services run in dev, staging, and production. Image promotion is a reviewed tag update; secrets resolve through External Secrets from the configured secret manager.
+
+Before promotion, CI must render every environment, validate configuration, boot each service in config-check mode, verify routes and NetworkPolicy, confirm migrations have exactly one actor, and run contract/security smoke tests. See [Deployment & GitOps](../operations/deployment-gitops.md).
+
+## Failure and recovery
+
+| Failure | Expected behavior | Recovery requirement |
+| --- | --- | --- |
+| Bad configuration | Pod exits non-zero before readiness | Render/config-check gate prevents promotion |
+| Failed migration | New release does not become ready; schema remains auditable | Roll forward with reviewed migration repair; never allow competing migrators |
+| Identity provider outage | Cached valid verification may continue; new workload-token mint eventually fails closed | Breaker, token cache metrics, documented outage budget |
+| PDP/OPA/OpenFGA outage | Protected operations deny | Independent readiness/alerts; no bypass route |
+| Broker outage | Outbox accumulates; consumers report not ready/degraded as appropriate | Reconnect and drain; alert on age/depth |
+| Data-store outage | Owning service fails readiness and returns bounded errors | Service-specific restore/rebuild runbook |
+| Agentic Redis loss | In-flight sessions/approvals stop safely | Restore/reconcile durable state before accepting agent traffic |
+| Region/cluster loss | No silent split-brain writes | Restore from tested backups or fail over under documented RPO/RTO |
+
+## Open deployment decisions
+
+- OPA runtime placement and signed-bundle distribution.
+- Decision-attestation signer, key rotation, lifetime, and revocation bounds.
+- Agentic Redis/approval durability and multi-replica turn ownership.
+- Production ingress timeout and streaming configuration.
+- Federated trust/certificate automation and authorization contract.
+- Multi-region active/passive or active/active posture and measured RPO/RTO.

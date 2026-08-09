@@ -17,15 +17,15 @@ How tokens are validated across the stack, and how to debug 401s.
 ## Debugging a 401
 
 1. **Decode the token** (jwt.io or `jq`-based decode) — check `iss`, `aud`, `exp` first.
-2. **The classic gotcha**: the browser gets the token from the host-visible identity URL (e.g. `localhost:8180`), but backends fetch JWKS over the container network (e.g. `keycloak:8080`). The configured issuer must match the **browser-facing** URL that appears in the token, while the JWKS URL points wherever the backend can reach. See [Configuration](../develop/configuration.md#the-issuerjwks-gotcha-read-this-once).
+2. **Issuer/JWKS topology**: the browser gets the token from the public identity URL, while backends may fetch JWKS over an internal network. The configured issuer must match the URL in the token, while the JWKS URL points wherever the backend can reach. See [Configuration](../develop/configuration.md#issuer-and-jwks-endpoints).
 3. **Check the service's JWKS connectivity**:
    ```bash
    docker exec <svc> wget -qO- http://keycloak:8080/realms/<realm>/protocol/openid-connect/certs | head -c 200
    ```
 4. **Clock skew**: compare `date -u` inside the container with the token's `iat`.
-5. **On gateway-fronted services**, remember the service never sees your JWT — it sees the gateway's signed identity headers. A 401 from the *service* on a gateway path usually means a header-signature (shared-secret) mismatch, not a token problem.
+5. **On gateway-fronted services**, distinguish the client token from the gateway's destination-bound workload token. A service-side `401` can mean a wrong workload audience, unknown caller, expired token, or unauthorized subject asserter even when the external token was valid.
 
 ## See also
 
-- [Auth Flow](../api-reference/auth-flow.md) — claims and identity headers
+- [Auth Flow](../api-reference/auth-flow.md) — external and workload identity contracts
 - [Flow: Authentication & Identity](../flows/authentication.mdx)

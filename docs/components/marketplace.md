@@ -1,28 +1,17 @@
 ---
 sidebar_position: 10
 title: Marketplace
-description: Monetisable datasets — products, orders, and integrated payments on top of the policy fabric.
+description: Products, orders, payments, fulfilment, and entitlement creation.
 ---
 
 # Marketplace
 
-The **commercial surface** of the exchange — where providers offer datasets as purchasable products and consumers buy access.
+`dx-marketplace-go` owns commercial products, orders, payment attempts, and fulfilment state. Core catalogue linkage, Razorpay integration, and orders are **Partially implemented**.
 
-## Capabilities
+Providers package authorised catalogue resources as products. Consumers create orders and complete payment with the external payment provider. Webhook signatures, event identity, amount, currency, order reference, and state transition are verified before the order changes. Duplicate callbacks are idempotent.
 
-- **Products** — a provider packages one or more of their catalogue resources as a product with pricing and terms. Product authoring is restricted to the resource owner (enforced through the authorization graph).
-- **Orders & payments** — consumers place orders and pay through an integrated payment gateway (Razorpay). Payment confirmations arrive on a dedicated webhook whose signature is cryptographically verified before any order state changes.
-- **Fulfilment** — a successful purchase results in the same thing every other access path produces: an **access policy** for the buyer. Purchased access is therefore enforced, listed, audited, and revoked exactly like any granted access.
+Payment does not itself grant data access. Confirmed payment initiates fulfilment through the Policy Service, which creates the authoritative entitlement and publishes its enforcement projections. An order becomes fulfilled only when policy creation succeeds; otherwise it remains retryable and visible to operators. Refund, expiry, cancellation, and revocation must update both commercial state and access policy without losing audit history.
 
-## Why it works this way
+Metrics and audit events cover product changes, order transitions, webhook validation, payment failures, fulfilment lag, and entitlement identifiers. Sensitive payment material is never stored in application logs.
 
-Monetisation is deliberately a layer **on top of** the policy fabric, not beside it. The marketplace never grants access itself — it creates policies through the [Policy Service](./policy-service.md), so there is a single enforcement path and a single audit trail regardless of whether access was granted or sold.
-
-## Interactions
-
-| Talks to | Why |
-| --- | --- |
-| Policy Service | Creates the buyer's access policy on successful payment |
-| Catalogue | Validates the resources behind a product |
-| Payment gateway (Razorpay) | Checkout and signed payment webhooks |
-| Messaging Backbone | Audit events, purchase notifications |
+See [Marketplace Purchase and Entitlement](../flows/marketplace-entitlement.md) and [Policy Service](./policy-service.md).

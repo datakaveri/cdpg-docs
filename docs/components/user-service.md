@@ -1,29 +1,25 @@
 ---
 sidebar_position: 5
-title: User Service
-description: Accounts, organisations, membership, delegations, and app credentials — the platform's IAM core.
+title: User and Organisation Service
+description: The authority for profiles, organisations, membership, applications, and delegation records.
 ---
 
-# User Service
+# User and Organisation Service
 
-The **IAM core** of the Data Exchange — it knows *who is who*: user profiles, organisations, and the machine identities that act on the platform.
+`dx-user-go` owns platform profiles, organisations, membership, application records, and delegation metadata. Core user and organisation capabilities are **Partially implemented**; full delegation, application credential, group-membership, and assurance workflows remain incomplete.
 
 ## Responsibilities
 
-- **User profiles** — account details and role assignments, kept in sync with the [Identity Provider](./identity-provider.md).
-- **Organisations & membership** — organisation structures, adding and removing members, and organisation administration. Every membership change is published as an event so the [Authorization Service](./authorization-service.md) graph always reflects current membership — this is what makes organisation-wide grants take effect (and cease) automatically.
-- **App credentials** — issues and verifies machine credentials (app ID + secret) for applications, including their permitted scopes and expiry. The [API Gateway](./api-gateway.md) verifies these on every machine-to-machine call.
-- **Delegations** — records which applications (or delegates) may act on behalf of which users, and with what limits. The gateway resolves delegations here before narrowing and forwarding the delegator's identity.
+- Maintain profile and organisation records linked to identity-provider subjects.
+- Enforce organisation-admin boundaries on membership and organisation changes.
+- Publish `org.member.*` changes transactionally for OpenFGA projection.
+- Own application registration and delegation records, while Keycloak remains the credential/token issuer.
+- Provide authoritative organisation and delegation facts to policy administration and decision services over authenticated internal APIs.
 
-## Why it matters to other components
+The service does not store passwords, issue access tokens, or decide resource access. Token claims are evidence of authentication; authoritative organisation state comes from this service and its versioned authorization projection.
 
-Whenever another component needs an authoritative identity fact — *is this app credential valid? may this app act for this user? who are the members of this organisation?* — it asks the User Service (synchronously via gRPC for hot-path checks, or by consuming its membership events).
+## Isolation and failure behavior
 
-## Interactions
+Every organisation-scoped read and mutation includes an organisation predicate derived from trusted principal context. A caller-supplied organisation identifier cannot widen scope. Membership removal and delegation revocation publish cache-invalidation and projection events; while consistency is uncertain, affected access fails closed. A missing group-membership producer and incomplete delegation paths are documented implementation gaps.
 
-| Talks to / heard by | Why |
-| --- | --- |
-| API Gateway | App-credential verification, delegation resolution |
-| Identity Provider | Role and account synchronisation |
-| Messaging Backbone | Publishes `org.member.added` / `org.member.removed` events |
-| Authorization Service | Consumes membership events into the relationship graph |
+See [Control Plane](../technical/control-plane.mdx), [Security Architecture](../technical/security-architecture.mdx), and [Policy Lifecycle](../flows/policy-lifecycle.mdx).

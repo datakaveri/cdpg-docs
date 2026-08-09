@@ -22,9 +22,9 @@ The usual causes, in order of likelihood:
 
 ## Every request returns 401
 
-Nine times out of ten this is the **issuer/JWKS mismatch**: the token carries the browser-facing issuer URL while the backend validates against a different one. The configured issuer must equal the token's `iss` claim *exactly*; the JWKS URL points wherever the backend can actually reach the identity provider. Full explanation and fix: [Configuration](../develop/configuration.md#the-issuerjwks-gotcha-read-this-once) and [JWT Validation](./jwt-validation.md).
+Check for an **issuer/JWKS mismatch**: the token carries the public issuer URL while the backend may fetch keys from an internal endpoint. The configured issuer must equal the token's `iss` claim exactly; the JWKS URL points wherever the backend can reach the identity provider. See [Configuration](../develop/configuration.md#issuer-and-jwks-endpoints) and [JWT Validation](./jwt-validation.md).
 
-Also check: token expiry (default lifetimes are short — fetch a fresh one), and on gateway-fronted services a 401 can mean a **shared-secret mismatch** for the signed identity headers between gateway and service.
+Also check token expiry, destination audience, configured workload caller allowlist, and subject-asserter permission. Gateway authentication may succeed while the destination correctly rejects the internal caller context.
 
 ## Policy created but access still denied (403)
 

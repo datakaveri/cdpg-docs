@@ -1,95 +1,26 @@
-<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Agent delegation flow: a user delegates to an agent, the grant is recorded in the policy service and projected into the authorization graph, the runtime exchanges the user's token for a delegated token, the MCP gateway validates the proposed tool, the API gateway checks the user's and the agent's permission together, high-risk actions park for human approval, and the delegation can be revoked or the agent suspended outright.">
-  <defs>
-    <marker id="fd-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="fd-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="fd-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="fd-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/>
-    </marker>
-  </defs>
-
-  <!-- paths -->
-  <path id="p-delegate" class="dxf orange dim" marker-end="url(#fd-o)" d="M172,64 H246"/>
-  <text id="lbl-delegate" class="dxe orange dim" x="188" y="54">delegate</text>
-
-  <path id="p-record" class="dxf teal dim" marker-end="url(#fd-t)" d="M422,64 H496"/>
-  <text id="lbl-record" class="dxe teal dim" x="430" y="54">record grant</text>
-
-  <path id="p-project" class="dxf teal dim" marker-end="url(#fd-t)" d="M585,96 V146"/>
-  <text id="lbl-project" class="dxe teal dim" x="595" y="124">events · projected</text>
-
-  <path id="p-exchange" class="dxf orange dashed dim" marker-end="url(#fd-o)" d="M100,248 C100,204 178,182 246,176"/>
-  <text id="lbl-exchange" class="dxe orange dim" x="104" y="208">token exchange</text>
-
-  <path id="p-tool" class="dxf navy dim" marker-end="url(#fd-n)" d="M172,276 H246"/>
-  <text id="lbl-tool" class="dxe navy dim" x="188" y="266">tool call</text>
-
-  <path id="p-gate" class="dxf navy dim" marker-end="url(#fd-n)" d="M422,276 H496"/>
-  <text id="lbl-gate" class="dxe navy dim" x="432" y="266">delegated</text>
-
-  <path id="p-check" class="dxf navy dim" marker-end="url(#fd-n)" d="M585,248 V208"/>
-  <text id="lbl-check" class="dxe navy dim" x="595" y="232">user ∧ agent</text>
-
-  <path id="p-serve" class="dxf green dim" marker-end="url(#fd-n)" d="M585,304 V344"/>
-  <text id="lbl-serve" class="dxe green dim" x="595" y="330">authorized</text>
-
-  <path id="p-approve" class="dxf berry dashed dim" marker-end="url(#fd-b)" d="M300,248 C258,204 152,124 132,98"/>
-  <text id="lbl-approve" class="dxe berry dim" x="150" y="152">approval required</text>
-
-  <path id="p-kill" class="dxf berry dim" marker-end="url(#fd-b)" d="M420,82 C458,140 476,206 494,262"/>
-  <text id="lbl-kill" class="dxe berry dim" x="430" y="180">kill switch</text>
-
-  <!-- nodes -->
-  <g id="n-user" class="dxn orange">
-    <rect class="dxn-box" x="30" y="40" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="62">User</text>
-    <text class="dxn-s" x="101" y="78">delegates · approves</text>
-  </g>
-  <g id="n-registry" class="dxn berry">
-    <rect class="dxn-box" x="250" y="40" width="172" height="52" rx="12"/>
-    <text class="dxn-t" x="336" y="62">Agent Registry</text>
-    <text class="dxn-s" x="336" y="78">agents · templates</text>
-  </g>
-  <g id="n-acl" class="dxn navy">
-    <rect class="dxn-box" x="498" y="40" width="174" height="52" rx="12"/>
-    <text class="dxn-t" x="585" y="62">Policy Service</text>
-    <text class="dxn-s" x="585" y="78">the durable grant</text>
-  </g>
-  <g id="n-idp" class="dxn navy">
-    <rect class="dxn-box" x="248" y="150" width="174" height="52" rx="12"/>
-    <text class="dxn-t" x="335" y="172">Identity Provider</text>
-    <text class="dxn-s" x="335" y="188">user + agent in one token</text>
-  </g>
-  <g id="n-authz" class="dxn navy">
-    <rect class="dxn-box" x="498" y="150" width="174" height="52" rx="12"/>
-    <text class="dxn-t" x="585" y="172">Authorization</text>
-    <text class="dxn-s" x="585" y="188">two checks, not one</text>
-  </g>
-  <g id="n-runtime" class="dxn berry">
-    <rect class="dxn-box" x="30" y="250" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="272">Agent Runtime</text>
-    <text class="dxn-s" x="101" y="288">plans · never holds keys</text>
-  </g>
-  <g id="n-mcp" class="dxn berry">
-    <rect class="dxn-box" x="250" y="250" width="172" height="52" rx="12"/>
-    <text class="dxn-t" x="336" y="272">MCP Gateway</text>
-    <text class="dxn-s" x="336" y="288">the only egress</text>
-  </g>
-  <g id="n-gw" class="dxn navy">
-    <rect class="dxn-box" x="498" y="250" width="174" height="52" rx="12"/>
-    <text class="dxn-t" x="585" y="272">API Gateway</text>
-    <text class="dxn-s" x="585" y="288">same edge as humans</text>
-  </g>
-  <g id="n-svc" class="dxn green">
-    <rect class="dxn-box" x="498" y="346" width="174" height="50" rx="12"/>
-    <text class="dxn-t" x="585" y="367">Platform service</text>
-    <text class="dxn-s" x="585" y="382">serves · audits both ids</text>
-  </g>
+<svg viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fad-title fad-desc">
+  <title id="fad-title">Agent registration, delegation, tool execution, approval, audit, and kill-switch flow</title>
+  <desc id="fad-desc">The user registers an agent, creates a narrow policy grant, opens a runtime session, and token exchange names the user as subject and agent as actor. Runtime proposes a tool to MCP Gateway. Composite authorization and semantic controls run. High-risk actions wait for human approval. Approved calls traverse the normal gateway and service, emit audit, and can be stopped by revocation or kill switch.</desc>
+  <defs><marker id="ad-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker><marker id="ad-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker><marker id="ad-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker><marker id="ad-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker><marker id="ad-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker></defs>
+  <path id="p-register" class="dxf orange dim" marker-end="url(#ad-o)" d="M162 62H248"/><text id="lbl-register" class="dxe orange dim" x="184" y="51">register</text>
+  <path id="p-delegate" class="dxf berry dim" marker-end="url(#ad-b)" d="M424 62H506"/><text id="lbl-delegate" class="dxe berry dim" x="433" y="51">narrow grant</text>
+  <path id="p-project" class="dxf teal dim" marker-end="url(#ad-t)" d="M584 94V118"/><text id="lbl-project" class="dxe teal dim" x="596" y="110">project</text>
+  <path id="p-session" class="dxf orange dim" marker-end="url(#ad-o)" d="M162 216H248"/><text id="lbl-session" class="dxe orange dim" x="177" y="205">create session</text>
+  <path id="p-exchange" class="dxf navy dim" marker-end="url(#ad-n)" d="M424 232H506"/><text id="lbl-exchange" class="dxe navy dim" x="434" y="221">exchange</text>
+  <path id="p-tool" class="dxf berry dim" marker-end="url(#ad-b)" d="M336 248V310"/><text id="lbl-tool" class="dxe berry dim" x="347" y="280">propose tool</text>
+  <path id="p-check" class="dxf navy dim" marker-end="url(#ad-n)" d="M424 344C468 320 480 202 506 164"/><text id="lbl-check" class="dxe navy dim" x="438" y="302">authorize</text>
+  <path id="p-approve" class="dxf orange dashed dim" marker-end="url(#ad-o)" d="M248 358C208 382 190 408 162 420"/><text id="lbl-approve" class="dxe orange dim" x="174" y="391">HITL exact action</text>
+  <path id="p-gate" class="dxf green dim" marker-end="url(#ad-g)" d="M424 430H506"/><text id="lbl-gate" class="dxe green dim" x="437" y="419">approved call</text>
+  <path id="p-audit" class="dxf teal dim" marker-end="url(#ad-t)" d="M584 464V522"/><text id="lbl-audit" class="dxe teal dim" x="596" y="496">outcome event</text>
+  <path id="p-kill" class="dxf berry dashed dim" marker-end="url(#ad-b)" d="M286 94C210 148 204 486 278 538"/><text id="lbl-kill" class="dxe berry dim" x="178" y="500">revoke / suspend</text>
+  <g id="n-user" class="dxn orange"><rect class="dxn-box" x="28" y="38" width="134" height="54" rx="11"/><text class="dxn-t" x="95" y="59">Owner / user</text><text class="dxn-s" x="95" y="75">delegate · approve · revoke</text></g>
+  <g id="n-registry" class="dxn berry"><rect class="dxn-box" x="248" y="36" width="176" height="60" rx="11"/><text class="dxn-t" x="336" y="57">Agent Registry</text><text class="dxn-s" x="336" y="73">template · identity · lifecycle</text><text class="dx-status planned" x="336" y="90">IN DEVELOPMENT</text></g>
+  <g id="n-acl" class="dxn navy"><rect class="dxn-box" x="506" y="36" width="156" height="60" rx="11"/><text class="dxn-t" x="584" y="57">Policy Service</text><text class="dxn-s" x="584" y="73">delegation authority</text><text class="dx-status impl" x="584" y="90">IMPLEMENTED LOCALLY</text></g>
+  <g id="n-authz" class="dxn navy"><rect class="dxn-box" x="506" y="118" width="156" height="62" rx="11"/><text class="dxn-t" x="584" y="140">Authorization</text><text class="dxn-s" x="584" y="156">user ∩ agent ∩ context</text><text class="dx-status partial" x="584" y="174">PARTIAL</text></g>
+  <g id="n-runtime" class="dxn berry"><rect class="dxn-box" x="248" y="184" width="176" height="64" rx="11"/><text class="dxn-t" x="336" y="206">Agent Runtime</text><text class="dxn-s" x="336" y="222">session · plan · SSE</text><text class="dx-status planned" x="336" y="242">IN DEVELOPMENT</text></g>
+  <g id="n-idp" class="dxn navy"><rect class="dxn-box" x="506" y="204" width="156" height="60" rx="11"/><text class="dxn-t" x="584" y="225">Keycloak</text><text class="dxn-s" x="584" y="241">sub=user · act=agent</text><text class="dx-status partial" x="584" y="258">PARTIAL</text></g>
+  <g id="n-mcp" class="dxn berry"><rect class="dxn-box" x="248" y="310" width="176" height="70" rx="11"/><text class="dxn-t" x="336" y="332">MCP Gateway</text><text class="dxn-s" x="336" y="348">schema · scope · risk</text><text class="dxn-s" x="336" y="363">approval · sole egress</text><text class="dx-status planned" x="336" y="376">IN DEVELOPMENT</text></g>
+  <g id="n-gw" class="dxn navy"><rect class="dxn-box" x="506" y="310" width="156" height="70" rx="11"/><text class="dxn-t" x="584" y="332">PDP + Gateway</text><text class="dxn-s" x="584" y="348">decision · workload</text><text class="dxn-s" x="584" y="363">kill switch · route</text><text class="dx-status partial" x="584" y="376">PARTIAL</text></g>
+  <g id="n-svc" class="dxn green"><rect class="dxn-box" x="506" y="404" width="156" height="62" rx="11"/><text class="dxn-t" x="584" y="426">Platform service</text><text class="dxn-s" x="584" y="442">enforce · side effect</text><text class="dx-status partial" x="584" y="460">VARIES</text></g>
+  <g id="n-audit" class="dxn teal"><rect class="dxn-box" x="506" y="522" width="156" height="50" rx="11"/><text class="dxn-t" x="584" y="543">Audit</text><text class="dxn-s" x="584" y="559">subject + actor + outcome</text></g>
 </svg>

@@ -1,64 +1,38 @@
 ---
 id: faq
 title: Frequently Asked Questions
-sidebar_label: FAQ
-description: Common questions about the Data Exchange — for adopters, developers, and operators.
 ---
 
 # Frequently Asked Questions
 
-## About the platform
+## Is the complete target architecture operational?
 
-**Is this a data repository? Do you store my data centrally?**
-No. The exchange *interconnects* data sources; providers retain custody and full control. In the federated topology, the data plane runs inside the provider's own network and data never leaves it — only identity tokens and policy tuples cross the boundary.
+No. The platform is pre-first-release. Core Go services run locally and many capabilities are implemented, while composite OPA authorization, complete workload-identity adoption, data-plane hardening, Agentic Plane GitOps, and several reconciliation controls remain incomplete. See [Current and Target State](../technical/current-and-target.mdx).
 
-**What does it cost?**
-Nothing to license. The platform is open source and released as a Digital Public Good — see [Licensing](../platform/licensing.md).
+## Is authentication the same as authorization?
 
-**How is this different from other data-exchange platforms?**
-Low onboarding barriers, native support for streaming/time-series data, fine-grained dynamic authorization instead of certificate schemes, and standards-based interoperability. See the [Market Comparison](../adoption/market-comparison.md).
+No. Keycloak and the gateway establish who the caller is. `dx-authz-go`, OpenFGA, and planned OPA evaluation determine what that principal may do. A PEP then enforces the result and every obligation. See [Security Architecture](../technical/security-architecture.mdx).
 
-**Where is it deployed today?**
-Across 50+ Indian smart cities, plus agriculture (ADeX), e-governance (IPeG), and national geospatial (GDI) deployments — see [Use Cases](../adoption/use-cases.md) and [Case Studies](../adoption/case-studies.md).
+## Why use both OpenFGA and OPA?
 
-## For consumers and developers
+They answer different parts of a decision. OpenFGA resolves durable relationships and membership. OPA is the planned evaluator for contextual/attribute rules and typed obligations. `dx-authz-go` owns their composition and a stable external decision contract.
 
-**Can I browse what data exists without an account or grant?**
-Yes — catalogue **metadata is public**. The data itself requires an access grant.
+## Does a data service call the PDP for every row or query?
 
-**How do I get access to a dataset?**
-Request access from the provider (or buy it on the [Marketplace](../components/marketplace.md) if it's monetised). The provider's grant takes effect within moments — no manual sync. See [Flow: Consuming Data](../flows/data-consumption.mdx).
+No. A control-plane PEP obtains a decision and passes a short-lived carried decision to the data executor. The executor validates it and compiles obligations into the query or delivery operation. Invalid or unenforceable decisions are denied.
 
-**How quickly does a revocation take effect?**
-Within moments. Enforcement is checked on **every** request against the authorization graph, which is updated as soon as the revocation event propagates.
+## Can an agent do everything its user can do?
 
-**Why did I get 403 right after being granted access?**
-Almost always event-propagation lag or a stalled event pipeline — see [Troubleshooting](../guides/troubleshooting.md#policy-created-but-access-still-denied-403).
+No. Agent access is the intersection of user permission, active delegation, agent lifecycle state, contextual policy, tool policy, and any required human approval. Revocation or kill switch blocks new execution and invalidates active authority.
 
-**Is there an SDK?**
-Every service publishes an OpenAPI spec you can generate typed clients from; a first-party SDK is on the roadmap. See [SDKs & Libraries](../develop/sdks-libraries.md).
+## Where do I find API paths and ports?
 
-**Can my application act on behalf of a user?**
-Yes — via **delegation**: the user records what the app may do for them, and the platform narrows the app's effective identity to that intersection. See [Flow: Authentication](../flows/authentication.mdx).
+Use [Platform Endpoints](../develop/endpoints.md) for public prefixes. Public integrations use the gateway; service-local ports are deployment details.
 
-## For providers
+## How are failed asynchronous operations recovered?
 
-**Do I lose control of my data by publishing it?**
-No. Publishing puts *metadata* in the catalogue. Every access to the data itself requires a policy you (or your org admin) granted, time-bound and revocable at any time, with a full audit trail.
+Critical changes use transactional outboxes, publisher confirms, idempotent consumers, bounded retry, dead-letter queues, replay tooling, and reconciliation. Business-specific recovery is documented in the owning workflow.
 
-**What kinds of data can I publish?**
-Live APIs (NGSI-LD), geospatial layers (OGC), streaming feeds (subscriptions), and file-based datasets — a single catalogue item can support several access types at once. See [Data Access Models](../platform/data-access-models.md).
+## How do I report a security issue?
 
-**Can I charge for access?**
-Yes — package resources as products on the [Marketplace](../components/marketplace.md); a successful purchase creates a normal access policy for the buyer.
-
-## For operators
-
-**What do I need to run it?**
-Docker Compose for evaluation and development ([Local Development](../develop/local-development.md)); Kubernetes + ArgoCD for production ([Deployment & GitOps](../operations/deployment-gitops.md)).
-
-**Can I migrate gradually from the legacy platform?**
-Yes — that's the design. Both stacks run in parallel on the same data, and capabilities cut over one at a time. See [Migration](../migration/overview.md).
-
-**What should I monitor?**
-Health/readiness endpoints, gateway error rates, authorization-check latency, and above all **event-pipeline health** (outbox backlog and dead-letter queues). See [Monitoring & Health](../operations/monitoring.md).
+Report it privately to **info@cdpg.org.in** rather than opening a public issue.

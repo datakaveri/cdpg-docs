@@ -1,0 +1,24 @@
+<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ei-title ei-desc">
+  <title id="ei-title">Major event-driven integrations</title>
+  <desc id="ei-desc">Policy, membership, agent, business, data, and file producers write transactional outboxes. RabbitMQ delivers versioned events to authorization projections, audit, notifications, subscriptions, and workers with idempotency, retry, dead-lettering, and reconciliation.</desc>
+  <defs><marker id="ei-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker><marker id="ei-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker></defs>
+  <text class="dxz-lbl navy" x="38" y="30">authoritative producers</text><text class="dxz-lbl teal" x="300" y="30">durable delivery</text><text class="dxz-lbl green" x="558" y="30">projectors &amp; workers</text>
+  <path class="dxf teal calm" marker-end="url(#ei-t)" d="M190 86H272"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M190 150H272"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M190 214H272"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M190 278H272"/>
+  <path class="dxf teal calm" marker-end="url(#ei-t)" d="M392 182H472"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M392 182C430 146 445 102 472 86"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M392 182C430 214 445 258 472 278"/><path class="dxf teal calm" marker-end="url(#ei-t)" d="M392 182C430 260 445 330 472 342"/>
+  <path class="dxf berry dashed calm" marker-end="url(#ei-b)" d="M332 220V390"/><path class="dxf teal dashed calm" marker-end="url(#ei-t)" d="M532 374C470 446 266 446 190 306"/>
+  <text class="dxe" x="204" y="74">domain change + outbox</text><text class="dxe" x="399" y="170">versioned event</text><text class="dxe" x="344" y="326">bounded retry</text><text class="dxe" x="292" y="460">reconcile projections with sources</text>
+
+  <g class="dxn navy"><rect class="dxn-box" x="34" y="62" width="156" height="44" rx="10"/><text class="dxn-t" x="112" y="81">Policy / membership</text><text class="dxn-s" x="112" y="96">grant · org · group</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="34" y="126" width="156" height="44" rx="10"/><text class="dxn-t" x="112" y="145">Agent lifecycle</text><text class="dxn-s" x="112" y="160">delegate · suspend · approve</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="34" y="190" width="156" height="44" rx="10"/><text class="dxn-t" x="112" y="209">Business services</text><text class="dxn-s" x="112" y="224">orders · credits · resources</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="34" y="254" width="156" height="44" rx="10"/><text class="dxn-t" x="112" y="273">Data / files</text><text class="dxn-s" x="112" y="288">ingest · job · delivery</text></g>
+
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="272" y="94" width="120" height="48" rx="10"/><text class="dxn-t" x="332" y="114">Outboxes</text><text class="dxn-s" x="332" y="129">same transaction</text></g>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="272" y="158" width="120" height="48" rx="10"/><text class="dxn-t" x="332" y="178">RabbitMQ</text><text class="dxn-s" x="332" y="193">confirm · route</text></g>
+  <g class="dxn berry dxn-store"><rect class="dxn-box" x="272" y="390" width="120" height="48" rx="10"/><text class="dxn-t" x="332" y="410">DLQ</text><text class="dxn-s" x="332" y="425">inspect · repair · replay</text></g>
+
+  <g class="dxn teal"><rect class="dxn-box" x="472" y="62" width="246" height="48" rx="10"/><text class="dxn-t" x="595" y="81">Authorization projections</text><text class="dxn-s" x="595" y="96">OpenFGA · OPA data · invalidation</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="472" y="158" width="246" height="48" rx="10"/><text class="dxn-t" x="595" y="177">Audit and notifications</text><text class="dxn-s" x="595" y="192">append · template · dispatch</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="472" y="254" width="246" height="48" rx="10"/><text class="dxn-t" x="595" y="273">Subscriptions and data consumers</text><text class="dxn-s" x="595" y="288">fan-out · checkpoint · deliver</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="472" y="318" width="246" height="48" rx="10"/><text class="dxn-t" x="595" y="337">Background workers</text><text class="dxn-s" x="595" y="352">file jobs · leases · idempotency</text></g>
+</svg>

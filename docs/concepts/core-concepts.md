@@ -59,7 +59,7 @@ Policies are *records*; enforcement is a separate, fast concern. Every policy ch
 
 ## Tokens and identity
 
-Users authenticate via **OpenID Connect** (Keycloak) and receive a **JWT** carrying their identity, roles, and organisation. Clients send it as `Authorization: Bearer <token>` to the [API Gateway](../components/api-gateway.md), which validates it once and forwards a **signed internal identity** to the services. Machine clients use app credentials instead; the result inside the platform is the same identity shape.
+Users authenticate via **OpenID Connect** (Keycloak) and receive a **JWT** carrying identity context such as subject, roles, and organisation. Clients send it as `Authorization: Bearer <token>` to the [API Gateway](../components/api-gateway.md). For an internal call, the gateway presents its own short-lived, destination-bound workload token and propagates the represented subject or actor separately. The receiving service verifies both the immediate workload and its authority to assert that context. Authentication still does not grant resource access.
 
 ## How it all connects
 

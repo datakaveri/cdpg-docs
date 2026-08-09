@@ -5,7 +5,7 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
  * the original IUDX site):
  *   Get Started → Architecture & Technology → Platform Components →
  *   Platform Flows → Data Exchange → Develop → API Reference → Guides →
- *   Operations → Migration → Adoption → Resources.
+ *   Operations → Adoption → Resources.
  * Each top-level area has a generated landing page.
  */
 const sidebars: SidebarsConfig = {
@@ -46,6 +46,10 @@ const sidebars: SidebarsConfig = {
         'technical/control-plane',
         'technical/data-plane',
         'technical/agentic-plane',
+        'technical/security-architecture',
+        'technical/shared-platform',
+        'technical/current-and-target',
+        'technical/decisions',
         'technical/technology-stack',
         'platform/standards',
         'technical/deployment',
@@ -91,9 +95,14 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'flows/authentication',
+        'flows/authorization',
         'flows/data-consumption',
+        'flows/dataset-onboarding',
+        'flows/file-processing',
+        'flows/marketplace-entitlement',
         'flows/policy-lifecycle',
         'flows/agent-delegation',
+        'flows/audit-events',
       ],
     },
     {
@@ -181,19 +190,6 @@ const sidebars: SidebarsConfig = {
         'operations/monitoring',
         'operations/security',
       ],
-    },
-    {
-      type: 'category',
-      label: 'Migration',
-      collapsed: true,
-      link: {
-        type: 'generated-index',
-        title: 'Migration',
-        description:
-          'Moving from the legacy platform to the current Data Exchange — what changed, what is preserved, and how to migrate a client.',
-        slug: '/category/migration',
-      },
-      items: ['migration/overview', 'migration/client-guide'],
     },
     {
       type: 'category',

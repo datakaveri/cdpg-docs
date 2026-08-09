@@ -1,102 +1,29 @@
-<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Deployment topology: Git and ArgoCD reconcile the central Kubernetes platform; consumers enter through the gateway; a federated provider network runs its own data plane so provider data never leaves it.">
-  <defs>
-    <marker id="dt-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="dt-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="dt-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="dt-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/>
-    </marker>
-  </defs>
+<svg viewBox="0 0 760 550" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dt-title dt-desc">
+  <title id="dt-title">CDPG deployment topology</title>
+  <desc id="dt-desc">A GitOps-managed Kubernetes target separates public edge, identity and authorization, control services, data services, Agentic Plane, operations, and stateful data tiers with network policy. A provider-operated federated zone is deferred.</desc>
+  <defs><marker id="dt-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker><marker id="dt-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker><marker id="dt-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker></defs>
+  <rect class="dxz teal" x="20" y="24" width="720" height="64" rx="14"/><text class="dxz-lbl teal" x="40" y="47">delivery control plane · in development</text>
+  <rect class="dxz navy" x="20" y="112" width="510" height="404" rx="16"/><text class="dxz-lbl navy" x="40" y="136">central kubernetes target</text>
+  <rect class="dxz green deferred" x="556" y="112" width="184" height="404" rx="16"/><text class="dxz-lbl green" x="576" y="136">provider zone · deferred</text>
+  <path class="dxf teal calm" marker-end="url(#dt-t)" d="M380 80V154"/><text class="dxe" x="392" y="108">reconcile desired state</text>
+  <path class="dxf orange calm" marker-end="url(#dt-o)" d="M18 198H120"/><text class="dxe" x="32" y="187">HTTPS</text>
+  <path class="dxf navy calm" marker-end="url(#dt-n)" d="M236 198H314"/><path class="dxf navy calm" marker-end="url(#dt-n)" d="M236 198V280H314"/>
+  <path class="dxf teal dashed calm" marker-end="url(#dt-t)" d="M254 390H430"/><path class="dxf teal dashed calm" marker-end="url(#dt-t)" d="M430 466H254"/>
+  <path class="dxf navy dashed calm" marker-end="url(#dt-n)" d="M530 280H582"/><text class="dxe" x="542" y="268">mTLS + trust</text>
+  <g class="dxn teal"><rect class="dxn-box" x="70" y="42" width="176" height="34" rx="10"/><text class="dxn-t" x="158" y="63">Git repository + CI gates</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="290" y="42" width="180" height="34" rx="10"/><text class="dxn-t" x="380" y="63">ArgoCD + Helm</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="514" y="42" width="176" height="34" rx="10"/><text class="dxn-t" x="602" y="63">Secret / image registries</text></g>
 
-  <!-- zones -->
-  <rect class="dxz navy" x="200" y="30" width="330" height="440" rx="16"/>
-  <text class="dxz-lbl navy" x="220" y="53">central platform · kubernetes</text>
-  <rect class="dxz teal" x="555" y="30" width="185" height="440" rx="16"/>
-  <text class="dxz-lbl teal" x="573" y="53">provider network</text>
+  <g class="dxn navy"><rect class="dxn-box" x="120" y="170" width="116" height="54" rx="11"/><text class="dxn-t" x="178" y="191">Public edge</text><text class="dxn-s" x="178" y="206">LB/WAF · gateway</text><text class="dx-status partial" x="178" y="220">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="314" y="170" width="184" height="54" rx="11"/><text class="dxn-t" x="406" y="191">Identity &amp; authorization</text><text class="dxn-s" x="406" y="206">Keycloak · PDP · OpenFGA · OPA</text><text class="dx-status partial" x="406" y="220">PARTIAL / PLANNED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="72" y="254" width="182" height="54" rx="11"/><text class="dxn-t" x="163" y="275">Control services</text><text class="dxn-s" x="163" y="290">service-owned schemas</text><text class="dx-status partial" x="163" y="304">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="314" y="254" width="184" height="54" rx="11"/><text class="dxn-t" x="406" y="275">Data services</text><text class="dxn-s" x="406" y="290">NGSI-LD · OGC · files · subs</text><text class="dx-status partial" x="406" y="304">PARTIAL</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="72" y="340" width="182" height="54" rx="11"/><text class="dxn-t" x="163" y="361">Agentic Plane</text><text class="dxn-s" x="163" y="376">registry · runtime · MCP</text><text class="dx-status planned" x="163" y="390">ABSENT FROM GITOPS</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="314" y="340" width="184" height="54" rx="11"/><text class="dxn-t" x="406" y="361">Platform operations</text><text class="dxn-s" x="406" y="376">audit · notify · telemetry</text><text class="dx-status partial" x="406" y="390">PARTIAL</text></g>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="72" y="438" width="426" height="54" rx="11"/><text class="dxn-t" x="285" y="459">Stateful tier</text><text class="dxn-s" x="285" y="474">PostgreSQL/PostGIS · Search · RabbitMQ · Redis · S3</text><text class="dx-status partial" x="285" y="488">BACKUP / HA REQUIREMENTS VARY</text></g>
 
-  <!-- gitops -->
-  <path class="dxf teal calm" marker-end="url(#dt-t)" d="M95,74 V116"/>
-  <path class="dxf teal calm" marker-end="url(#dt-t)" d="M160,145 C180,148 185,150 198,155"/>
-  <text class="dxe" x="150" y="132">sync · reconcile</text>
-
-  <!-- traffic -->
-  <path class="dxf orange calm" marker-end="url(#dt-o)" d="M160,254 C180,200 200,130 238,100"/>
-  <text class="dxe" x="150" y="180">https · jwt</text>
-
-  <!-- federation links -->
-  <path class="dxf navy dashed calm" marker-end="url(#dt-n)" d="M490,94 C520,96 535,100 578,108"/>
-  <text class="dxe" x="480" y="82">identity + policy only</text>
-  <path class="dxf green calm" marker-end="url(#dt-g)" d="M645,286 V254"/>
-  <path class="dxf green calm" marker-end="url(#dt-g)" d="M645,186 V152"/>
-  <path class="dxf green calm" marker-end="url(#dt-g)" d="M578,124 C540,120 520,116 492,110"/>
-  <text class="dxe" x="500" y="140">data served on request</text>
-  <text class="dxe teal" x="580" y="392">data never leaves</text>
-
-  <!-- gitops nodes -->
-  <g class="dxn teal">
-    <rect class="dxn-box" x="30" y="30" width="130" height="44" rx="12"/>
-    <text class="dxn-t" x="95" y="49">Git</text>
-    <text class="dxn-s" x="95" y="63">desired state</text>
-  </g>
-  <g class="dxn teal">
-    <rect class="dxn-box" x="30" y="118" width="130" height="44" rx="12"/>
-    <text class="dxn-t" x="95" y="137">ArgoCD</text>
-    <text class="dxn-s" x="95" y="151">gitops controller</text>
-  </g>
-  <g class="dxn orange">
-    <rect class="dxn-box" x="30" y="256" width="130" height="44" rx="12"/>
-    <text class="dxn-t" x="95" y="275">Consumers</text>
-    <text class="dxn-s" x="95" y="289">users · apps</text>
-  </g>
-
-  <!-- central platform -->
-  <g class="dxn navy">
-    <rect class="dxn-box" x="240" y="74" width="250" height="46" rx="12"/>
-    <text class="dxn-t" x="365" y="94">API Gateway</text>
-    <text class="dxn-s" x="365" y="109">tls · jwt at the edge</text>
-  </g>
-  <g class="dxn navy">
-    <rect class="dxn-box" x="240" y="154" width="250" height="46" rx="12"/>
-    <text class="dxn-t" x="365" y="174">Control services</text>
-    <text class="dxn-s" x="365" y="189">catalogue · user · policy · authz</text>
-  </g>
-  <g class="dxn green">
-    <rect class="dxn-box" x="240" y="234" width="250" height="46" rx="12"/>
-    <text class="dxn-t" x="365" y="254">Data services</text>
-    <text class="dxn-s" x="365" y="269">data plane · files · community</text>
-  </g>
-  <g class="dxn navy dxn-store">
-    <rect class="dxn-box" x="240" y="314" width="250" height="46" rx="12"/>
-    <text class="dxn-t" x="365" y="334">Shared infrastructure</text>
-    <text class="dxn-s" x="365" y="349">postgres · rabbitmq · s3 · keycloak</text>
-  </g>
-  <g class="dxn navy">
-    <rect class="dxn-box" x="240" y="394" width="250" height="46" rx="12"/>
-    <text class="dxn-t" x="365" y="414">Observability</text>
-    <text class="dxn-s" x="365" y="429">metrics · logs · health</text>
-  </g>
-
-  <!-- federated -->
-  <g class="dxn teal">
-    <rect class="dxn-box" x="578" y="86" width="140" height="46" rx="12"/>
-    <text class="dxn-t" x="648" y="106">DP Proxy</text>
-    <text class="dxn-s" x="648" y="121">federated edge</text>
-  </g>
-  <g class="dxn green">
-    <rect class="dxn-box" x="578" y="188" width="140" height="46" rx="12"/>
-    <text class="dxn-t" x="648" y="208">Local Data Plane</text>
-    <text class="dxn-s" x="648" y="223">provider-run</text>
-  </g>
-  <g class="dxn green dxn-store">
-    <rect class="dxn-box" x="578" y="288" width="140" height="46" rx="12"/>
-    <text class="dxn-t" x="648" y="308">Provider data</text>
-    <text class="dxn-s" x="648" y="323">stays in-network</text>
-  </g>
+  <g class="dxn green deferred"><rect class="dxn-box" x="582" y="174" width="132" height="54" rx="11"/><text class="dxn-t" x="648" y="195">Trust boundary</text><text class="dxn-s" x="648" y="210">cert + trust list</text><text class="dx-status deferred" x="648" y="224">DEFERRED</text></g>
+  <g class="dxn green deferred"><rect class="dxn-box" x="582" y="254" width="132" height="54" rx="11"/><text class="dxn-t" x="648" y="275">DP proxy</text><text class="dxn-s" x="648" y="290">federated ingress</text><text class="dx-status deferred" x="648" y="304">DEFERRED</text></g>
+  <g class="dxn green deferred"><rect class="dxn-box" x="582" y="334" width="132" height="54" rx="11"/><text class="dxn-t" x="648" y="355">Local data plane</text><text class="dxn-s" x="648" y="370">provider operated</text><text class="dx-status deferred" x="648" y="384">DEFERRED</text></g>
+  <g class="dxn green deferred dxn-store"><rect class="dxn-box" x="582" y="414" width="132" height="54" rx="11"/><text class="dxn-t" x="648" y="435">Provider data</text><text class="dxn-s" x="648" y="450">local custody</text><text class="dx-status deferred" x="648" y="464">DEFERRED</text></g>
 </svg>

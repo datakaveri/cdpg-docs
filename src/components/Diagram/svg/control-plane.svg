@@ -1,91 +1,33 @@
-<svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Control plane internals: the gateway fronts the catalogue, user, policy and authorization services; the policy service's outbox publishes events through RabbitMQ, which the authorization service consumes into its OpenFGA graph.">
-  <defs>
-    <marker id="cp-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="cp-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-  </defs>
+<svg viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cp-title cp-desc">
+  <title id="cp-title">CDPG Control Plane services and ownership</title>
+  <desc id="cp-desc">Gateway and Keycloak establish the caller. User, Catalogue, Policy, Authorization, Marketplace, Community, Registry, Credits, Subscriptions, Audit, and Notifications own separate records and collaborate through authenticated APIs and RabbitMQ. Cards show implementation status.</desc>
+  <defs><marker id="cp-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker><marker id="cp-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker></defs>
+  <rect class="dxz navy" x="20" y="24" width="720" height="78" rx="15"/><text class="dxz-lbl navy" x="40" y="47">identity &amp; public enforcement</text>
+  <rect class="dxz navy" x="20" y="128" width="720" height="274" rx="16"/><text class="dxz-lbl navy" x="40" y="151">domain authorities · service-owned data</text>
+  <rect class="dxz teal" x="20" y="428" width="720" height="68" rx="15"/><text class="dxz-lbl teal" x="40" y="451">events &amp; operational services</text>
+  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M286 72H390"/><path class="dxf navy calm" marker-end="url(#cp-n)" d="M480 96V176"/>
+  <path class="dxf navy dashed calm" marker-end="url(#cp-n)" d="M188 280H286"/><path class="dxf navy dashed calm" marker-end="url(#cp-n)" d="M474 280H572"/>
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M380 388V446"/><text class="dxe" x="392" y="422">outbox events</text>
+  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M470 462H562"/><path class="dxf teal calm" marker-end="url(#cp-t)" d="M290 462H198"/>
 
-  <!-- request fan-out -->
-  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M330,66 C220,80 150,100 112,128"/>
-  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M355,72 C330,90 310,105 296,128"/>
-  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M405,72 C430,90 450,105 464,128"/>
-  <path class="dxf navy calm" marker-end="url(#cp-n)" d="M430,66 C540,80 610,100 648,128"/>
-  <text class="dxe" x="330" y="108">signed identity headers</text>
+  <g class="dxn navy"><rect class="dxn-box" x="86" y="48" width="200" height="44" rx="11"/><text class="dxn-t" x="186" y="67">Keycloak</text><text class="dxn-s" x="186" y="82">user · workload · agent identity</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="390" y="48" width="282" height="44" rx="11"/><text class="dxn-t" x="531" y="67">dx-gateway-go · public PEP</text><text class="dxn-s" x="531" y="82">validate · authorize · destination identity · route</text></g>
 
-  <!-- service → store verticals -->
-  <path class="dxf navy dashed calm" d="M110,180 V248"/>
-  <path class="dxf navy dashed calm" d="M295,180 V248"/>
-  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M480,180 V248"/>
-  <text class="dxe teal" x="492" y="218">same transaction</text>
-  <path class="dxf navy dashed calm" d="M660,180 V248"/>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="174" width="146" height="58" rx="11"/><text class="dxn-t" x="115" y="195">User &amp; Org</text><text class="dxn-s" x="115" y="210">profile · membership · app</text><text class="dx-status partial" x="115" y="226">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="210" y="174" width="146" height="58" rx="11"/><text class="dxn-t" x="283" y="195">Catalogue</text><text class="dxn-s" x="283" y="210">resource metadata · search</text><text class="dx-status partial" x="283" y="226">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="378" y="174" width="146" height="58" rx="11"/><text class="dxn-t" x="451" y="195">Policy · PAP</text><text class="dxn-s" x="451" y="210">grant · revoke · outbox</text><text class="dx-status impl" x="451" y="226">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="546" y="174" width="172" height="58" rx="11"/><text class="dxn-t" x="632" y="195">Authorization · PDP</text><text class="dxn-s" x="632" y="210">OpenFGA + planned OPA</text><text class="dx-status partial" x="632" y="226">PARTIAL</text></g>
 
-  <!-- event chain -->
-  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M480,294 C470,330 450,355 428,368"/>
-  <text class="dxe" x="330" y="342">relay · policy.*</text>
-  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M232,182 C168,265 220,355 326,384"/>
-  <text class="dxe" x="140" y="322">org.member.*</text>
-  <path class="dxf teal calm" marker-end="url(#cp-t)" d="M512,384 C590,370 640,330 658,298"/>
-  <text class="dxe" x="580" y="356">consume · idempotent</text>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="254" width="146" height="58" rx="11"/><text class="dxn-t" x="115" y="275">Marketplace</text><text class="dxn-s" x="115" y="290">product · order · payment</text><text class="dx-status partial" x="115" y="306">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="210" y="254" width="146" height="58" rx="11"/><text class="dxn-t" x="283" y="275">Community</text><text class="dxn-s" x="283" y="290">discussion · challenge</text><text class="dx-status partial" x="283" y="306">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="378" y="254" width="146" height="58" rx="11"/><text class="dxn-t" x="451" y="275">Registry</text><text class="dxn-s" x="451" y="290">server · capability</text><text class="dx-status impl" x="451" y="306">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="546" y="254" width="172" height="58" rx="11"/><text class="dxn-t" x="632" y="275">Credits</text><text class="dxn-s" x="632" y="290">ledger · atomic debit</text><text class="dx-status impl" x="632" y="306">IMPLEMENTED</text></g>
 
-  <!-- gateway -->
-  <g id="cpn-gw" class="dxn navy">
-    <rect class="dxn-box" x="305" y="22" width="150" height="46" rx="12"/>
-    <text class="dxn-t" x="380" y="42">API Gateway</text>
-    <text class="dxn-s" x="380" y="57">single entry</text>
-  </g>
+  <g class="dxn navy"><rect class="dxn-box" x="126" y="334" width="146" height="52" rx="11"/><text class="dxn-t" x="199" y="355">Subscriptions</text><text class="dxn-s" x="199" y="370">definition · delivery state</text><text class="dx-status impl" x="199" y="382">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="306" y="334" width="146" height="52" rx="11"/><text class="dxn-t" x="379" y="355">Audit</text><text class="dxn-s" x="379" y="370">append · query · export</text><text class="dx-status impl" x="379" y="382">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="486" y="334" width="146" height="52" rx="11"/><text class="dxn-t" x="559" y="355">Notifications</text><text class="dxn-s" x="559" y="370">template · dispatch</text><text class="dx-status impl" x="559" y="382">IMPLEMENTED</text></g>
 
-  <!-- services -->
-  <g id="cpn-cat" class="dxn navy">
-    <rect class="dxn-box" x="30" y="130" width="160" height="50" rx="12"/>
-    <text class="dxn-t" x="110" y="152">Catalogue</text>
-    <text class="dxn-s" x="110" y="167">json-ld · search</text>
-  </g>
-  <g id="cpn-usr" class="dxn navy">
-    <rect class="dxn-box" x="215" y="130" width="160" height="50" rx="12"/>
-    <text class="dxn-t" x="295" y="152">User Service</text>
-    <text class="dxn-s" x="295" y="167">users · orgs · apps</text>
-  </g>
-  <g id="cpn-acl" class="dxn navy">
-    <rect class="dxn-box" x="400" y="130" width="160" height="50" rx="12"/>
-    <text class="dxn-t" x="480" y="152">Policy Service</text>
-    <text class="dxn-s" x="480" y="167">pap · grants</text>
-  </g>
-  <g id="cpn-az" class="dxn navy">
-    <rect class="dxn-box" x="585" y="130" width="150" height="50" rx="12"/>
-    <text class="dxn-t" x="660" y="152">Authorization</text>
-    <text class="dxn-s" x="660" y="167">pdp · /check</text>
-  </g>
-
-  <!-- stores -->
-  <g id="cpn-search" class="dxn navy dxn-store">
-    <rect class="dxn-box" x="30" y="250" width="160" height="44" rx="12"/>
-    <text class="dxn-t" x="110" y="269">Search Index</text>
-    <text class="dxn-s" x="110" y="283">elasticsearch</text>
-  </g>
-  <g id="cpn-pg" class="dxn navy dxn-store">
-    <rect class="dxn-box" x="215" y="250" width="160" height="44" rx="12"/>
-    <text class="dxn-t" x="295" y="269">PostgreSQL</text>
-    <text class="dxn-s" x="295" y="283">shared legacy schema</text>
-  </g>
-  <g id="cpn-outbox" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="400" y="250" width="160" height="44" rx="12"/>
-    <text class="dxn-t" x="480" y="269">Outbox</text>
-    <text class="dxn-s" x="480" y="283">event rows</text>
-  </g>
-  <g id="cpn-fga" class="dxn navy dxn-store">
-    <rect class="dxn-box" x="585" y="250" width="150" height="44" rx="12"/>
-    <text class="dxn-t" x="660" y="269">OpenFGA</text>
-    <text class="dxn-s" x="660" y="283">relationship graph</text>
-  </g>
-
-  <!-- backbone -->
-  <g id="cpn-mq" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="330" y="366" width="180" height="50" rx="14"/>
-    <text class="dxn-t" x="420" y="388">RabbitMQ</text>
-    <text class="dxn-s" x="420" y="403">authz exchange</text>
-  </g>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="290" y="446" width="180" height="38" rx="10"/><text class="dxn-t" x="380" y="469">RabbitMQ · versioned events</text></g>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="42" y="446" width="156" height="38" rx="10"/><text class="dxn-t" x="120" y="469">PostgreSQL / Search</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="562" y="446" width="156" height="38" rx="10"/><text class="dxn-t" x="640" y="469">Metrics / Traces / Logs</text></g>
 </svg>

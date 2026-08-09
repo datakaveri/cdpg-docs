@@ -1,44 +1,28 @@
 ---
 sidebar_position: 4
 title: Policy Service (ACL)
-description: The system of record for access grants — creating, listing, revoking, and verifying policies.
+description: The policy administration point and durable system of record for grants, constraints, expiry, and revocation.
 ---
 
 # Policy Service (ACL)
 
-The **system of record for access grants (PAP)**. Every "user X may access resource Y" statement on the platform is a policy stored here.
+`dx-acl-go` is the **Policy Administration Point (PAP)** and durable authority for access grants. Core policy CRUD and `policy.*` publication are **Implemented**; the complete typed policy schema, OPA bundle lifecycle, and reconciliation controls are **Planned**.
 
 ## Responsibilities
 
-- **Granting** — a provider (or org admin) creates a policy giving a consumer access to a resource, with an expiry date and constraints (which access types: API, file, subscription).
-- **Revoking** — policies are soft-deleted, preserving a full audit history of who had access and when.
-- **Listing** — four views: *my grants as a consumer*, *grants I issued as a provider*, *all grants in my organisation* (org admin), *all grants on the platform* (platform admin).
-- **Verification** — answers "does an active policy exist for this user and resource?" — used by other platform components at access time.
-- **Access requests** — consumers can formally request access; approval by the provider creates the policy in the same transaction.
+- Validate that the author is entitled to administer the canonical resource.
+- Validate subject, resource, access mode, effective period, constraints, and organisation boundary.
+- Persist policy versions and lifecycle state; preserve revocation history.
+- Commit a transactional outbox record with every enforcement-relevant change.
+- Publish versioned policy events for OpenFGA projection, contextual-policy compilation, cache invalidation, notifications, and audit.
+- Expose administrative/listing views without becoming the request-path PDP.
 
-## Policy model
+The service does not authenticate users, evaluate relationship graphs, execute contextual rules, or enforce decisions. Catalogue and User Service provide authoritative resource and subject facts; `dx-authz-go` composes decisions; PEPs enforce them.
 
-| Aspect | Meaning |
-| --- | --- |
-| **Individual policy** | Grants one named consumer access to one resource |
-| **Group policy** | Grants access by criteria — allowed organisations, allowed users, allowed roles |
-| **Access types** | What the grant covers: `api`, `file`, `sub` (subscription) — validated against what the resource actually supports |
-| **Expiry** | Every grant is time-bound; expired grants stop working automatically |
-| **Status** | `ACTIVE` or `DELETED` (revoked) — never physically removed |
+## Lifecycle guarantees
 
-## Rules it enforces
+Creation is fail-safe: access remains denied until the new relationship and contextual policy version are active. Revocation is security-critical: deny markers and cache invalidation take precedence over asynchronous cleanup. Expiry is evaluated during decision making, not only by a background sweeper.
 
-1. Only the **resource owner** or an **org admin of the resource's organisation** may grant or revoke access to it.
-2. A grant must reference a **real catalogue item**, and may only cover access types that item supports (validated against the [Catalogue](./catalogue.md)).
-3. **No overlapping grants** — if a consumer already holds an active grant for the same resource and access type, a second one is rejected with `409 Conflict`.
-4. Every change is **projected to the Authorization Service** so enforcement always matches the record — atomically, via a transactional outbox and the messaging backbone.
+Critical events use an outbox, publisher confirms, idempotent consumers, bounded retry, and dead-letter handling. Projection lag and source-versus-graph drift are observable and repairable.
 
-## Interactions
-
-| Talks to | Why |
-| --- | --- |
-| Catalogue | Validate the resource on every grant (owner, organisation, supported access types) |
-| Messaging Backbone | Publish grant/revocation events for the [Authorization Service](./authorization-service.md) |
-| Notification service (events) | Email the consumer when access is granted |
-
-See the [ACL API Reference](../api-reference/acl-endpoints.md) for endpoints and the [Policy Lifecycle flow](../flows/policy-lifecycle.mdx) for the full journey of a grant.
+See [Policy Lifecycle](../flows/policy-lifecycle.mdx), [Authorization Service](./authorization-service.md), and [Security Architecture](../technical/security-architecture.mdx).

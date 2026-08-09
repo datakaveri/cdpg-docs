@@ -2,52 +2,42 @@
 id: overview
 title: Overview
 sidebar_label: Overview
-slug: /overview
-description: The Data Exchange — an open-source platform for secure, consent-driven, standards-based sharing of data across organizations.
+description: What the CDPG Data Exchange is, who it serves, and how its Go architecture is organized.
+slug: /
 ---
 
-# Data Exchange Platform
+# CDPG Data Exchange
 
-**The Data Exchange (DX) is an open-source platform for the secure, authenticated, and consent-driven exchange of data between providers and consumers.**
+CDPG is a Go-based platform for publishing, discovering, governing, exchanging, and auditing data across organizations. It supports API, geospatial, temporal, subscription, and file-based access, plus an optional Agentic Plane for AI agents operating under explicit delegated authority.
 
-It is developed by the **Centre of Data for Public Good (CDPG)** at the Indian Institute of Science (IISc), Bengaluru, as the next generation of the **India Urban Data Exchange (IUDX)** lineage. It is designed as **Digital Public Infrastructure (DPI)**: it interconnects data silos across cities, government bodies, academic institutions, and enterprises — rather than consolidating data into a central repository — so that providers retain full control over what data they expose and to whom.
-
-The platform's architecture and API specifications have been adopted by the **Bureau of Indian Standards as IS 18003**, and the technology has been deployed across **50+ Indian smart cities** as well as in the agriculture, e-governance, and geospatial sectors.
+The platform is pre-first-release and not yet production-ready. Pages describe the intended complete architecture and label unfinished behavior explicitly. Start with [Current State and Target State](./technical/current-and-target.mdx) whenever deployment readiness matters.
 
 ## Foundational attributes
 
-- **Open Source** — transparent, adaptable, and vendor-neutral.
-- **API-driven and modular** — a cloud-native fleet of independently deployable microservices behind a single API gateway.
-- **Secure and privacy-first** — authentication once at the edge, fine-grained relationship-based authorization on every data access, and a full audit trail.
-- **Interoperable** — built on open standards (NGSI-LD, OGC, JSON-LD, OAuth2/OIDC) for collaboration across diverse systems and sectors.
+- **Provider-controlled:** providers and their organizations remain authoritative for resource metadata and access grants.
+- **Policy-driven:** authentication proves identity; a separate authorization decision governs each protected operation.
+- **Standards-oriented:** OIDC/OAuth 2.0, JSON-LD, NGSI-LD, OGC APIs, OpenAPI, MCP, and CloudEvents-style envelopes define interoperable boundaries.
+- **Service-owned:** each Go service owns its capability, data, and contracts and consumes the shared Go platform for cross-cutting behavior.
+- **Default deny:** unknown, invalid, expired, unavailable, or unsupported security state does not widen access.
+- **Auditable:** user, workload, application, agent, delegation, grant, decision, and approval context can be correlated across the platform.
+- **Configuration-selected:** the same images support central deployment and opt-in extensions without code branches for topology.
 
 ## How it works
 
-Everything a client does enters through one **API Gateway**, which authenticates the caller and propagates a signed identity to the internal services. Behind it, the platform separates two concerns:
+1. A provider onboards resource metadata in the Catalogue and ingests data through a data service or File Exchange.
+2. A consumer discovers the resource and receives entitlement through an explicit grant, access request, or marketplace purchase.
+3. The Policy Service records the grant and publishes a durable fact; the Authorization Service updates its relationship and contextual-policy projections.
+4. The consumer calls the gateway. Authentication establishes principal identity; authorization evaluates the operation, resource, relationships, attributes, context, and delegation.
+5. The target data service verifies the carried decision, applies filters/masks/quotas and organization scoping, then returns data and emits audit signals.
+6. An enabled agent follows the same path through a governed MCP tool boundary, with additional delegation, risk, approval, and kill-switch controls.
 
-- The **Control Plane** decides *who may access what* — the **Catalogue** (discovery), the **User service** (accounts, organisations), the **Policy service** (explicit, time-bound access grants), and the **Authorization service** (real-time permission checks backed by a relationship graph).
-- The **Data Plane** serves *the content itself* — NGSI-LD queries, OGC geospatial APIs, streaming subscriptions, and bulk file exchange — asking the Authorization service one fast question per request.
+## Primary audiences
 
-The design is **federated**: a data plane can run inside a provider's own network while connecting to a central control plane, so data never has to leave the provider's custody. See the [System Architecture](./technical/architecture.mdx) for the full picture.
-
-## Who it is for
-
-The platform is designed to be deployed and operated by **governments, public agencies, enterprises, and research institutions** that need to share and consume data across organizational boundaries without surrendering control of their data.
-
-## How to navigate these docs
-
-| If you are a… | Start here |
+| Audience | Start here |
 | --- | --- |
-| **Newcomer** — what is this platform? | [Key Features](./platform/key-features.md) · [Core Concepts](./concepts/core-concepts.md) |
-| **Architect** — how is it built? | [System Architecture](./technical/architecture.mdx) · [Platform Components](/docs/category/components) |
-| **Developer** — build against it | [Getting Started](./develop/getting-started.md) · [API Standards](./develop/api-standards.md) |
-| **API consumer** — call the APIs | [Platform Endpoints](./develop/endpoints.md) · [API Reference](/docs/category/api-reference) |
-| **DevOps / operator** — run it | [Local Development](./develop/local-development.md) · [Operations](/docs/category/operations) |
-| **Migrating from the legacy platform** | [Migration Overview](./migration/overview.md) · [Client Migration Guide](./migration/client-guide.md) |
-| **Contributor** — improve it | [Contributing](./resources/contributing.md) |
-
----
-
-:::info Get in touch
-For more details visit [dataforpublicgood.org.in](https://dataforpublicgood.org.in) or email **info@cdpg.org.in**.
-:::
+| Architects and technical leaders | [Architecture Overview](./technical/overview.mdx) · [System Architecture](./technical/architecture.mdx) |
+| Security and risk teams | [Security Architecture](./technical/security-architecture.mdx) · [Architecture Decisions](./technical/decisions.md) |
+| Platform engineers and operators | [Deployment Architecture](./technical/deployment.mdx) · [Monitoring](./operations/monitoring.md) |
+| Service developers | [Shared Go Platform](./technical/shared-platform.md) · [Getting Started](./develop/getting-started.md) |
+| Data providers and consumers | [Core Concepts](./concepts/core-concepts.md) · [Data Access Models](./platform/data-access-models.md) |
+| Agent developers | [Agentic Plane](./technical/agentic-plane.mdx) · [Agent Delegation](./flows/agent-delegation.mdx) |

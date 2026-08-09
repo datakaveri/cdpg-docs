@@ -1,50 +1,46 @@
 ---
 id: security
-title: Security Considerations
+title: Security Operations
 sidebar_label: Security
-description: The platform's security model in practice — trust boundaries, secret handling, and the production hardening checklist.
+description: Operational controls for identity, policy, data, agent, secret, and incident boundaries.
 ---
 
-# Security Considerations
+# Security Operations
 
-## The trust model, layer by layer
+The canonical architecture is [Security Architecture](../technical/security-architecture.mdx). This page turns that design into operating controls.
 
-| Layer | Mechanism |
-| --- | --- |
-| **Channel** | TLS for all external traffic; in-cluster TLS / network policy for service-to-service |
-| **Workload** | Kubernetes NetworkPolicies restrict which service may call which; only the gateway is reachable from outside |
-| **User identity** | Validated once at the edge (OIDC/JWT), then carried as **HMAC-signed identity headers** with a freshness timestamp; an invalid signature is a hard failure with no fallback |
-| **Resource access** | Per-request ReBAC checks against the [Authorization Service](../components/authorization-service.md) |
+## Required controls
 
-## Principles applied across the platform
+- Expose only the public gateway, identity endpoints, and explicitly approved webhooks; deny direct internet access to service ports.
+- Require TLS on public connections and authenticated, encrypted workload channels inside the cluster.
+- Issue short-lived, audience-bound workload tokens; validate issuer, audience, subject, expiry, issue time, and operation-specific caller allowlists at every receiving service.
+- Allow subject assertion only from configured gateway/runtime identities and preserve both subject and actor in logs and audit events.
+- Operate the PDP, OpenFGA, OPA policy distribution, and revocation/invalidation paths as security-critical dependencies with default-deny health semantics.
+- Reject unknown or unsupported obligations. Never serve unfiltered data after a policy or enforcement error.
+- Scope all persistence queries, cache keys, events, indexes, buckets, and exports by the authoritative organisation boundary.
+- Store secrets in the deployment secret manager; never put credentials, private keys, tokens, approval codes, presigned URLs, or protected payloads in Git or logs.
 
-- **One entry point** — clients can only reach the gateway; every internal port is private. Gateway-only routes can additionally reject any request that did not arrive through the edge.
-- **Credentials never travel inward** — the gateway strips the `Authorization` header after validating it; internal services never see or store user credentials. Passwords live only in the identity provider.
-- **Explicit validation** — every request is validated against the service's OpenAPI contract before any handler runs; SQL is always parameterized; body-size limits apply everywhere; uploads are type- and size-validated.
-- **Least-privilege roles** — provider/org-admin/platform-admin powers are checked on every mutating operation, not assumed from the UI.
-- **Auditability** — every mutating endpoint emits an audit event; audit is append-only and asynchronous.
-- **Webhooks are verified** — payment callbacks are accepted only with a valid cryptographic signature.
-- **Presigned URLs are short-lived** — leaked file links expire in minutes and access snaps back to the policy record.
-- **Rate limiting** at the gateway protects open resources from abuse and DDoS.
+## Alerts and runbooks
 
-## Secret handling
+| Signal | Alert condition | First response |
+| --- | --- | --- |
+| Token validation failures | Rate or issuer/audience pattern exceeds baseline | Check key rotation, clock skew, client config, and active abuse |
+| PDP errors/latency | Mandatory checks exceed SLO | Confirm fail-closed responses; inspect OPA/OpenFGA and dependency health |
+| Projection lag/drift | Version watermark exceeds policy SLO | Pause risky grants, replay events, run reconciliation |
+| Revocation lag | Invalidation is not observed within the security SLO | Deny affected subject/resource scope and reconcile |
+| Security DLQ | Any policy, membership, delegation, approval, or kill-switch event | Quarantine, inspect, repair, and replay with an audit record |
+| Unsupported obligation | Any production occurrence | Deny request and fix the PEP/policy compatibility before enabling |
+| Agent kill-switch failure | Suspended agent can create a session or tool call | Block Agentic Plane ingress and invalidate sessions/tokens |
 
-- **No default or hardcoded secrets** anywhere, including Compose files — baked configs ship empty secret fields and services refuse to start without required secrets outside dev.
-- Secrets are injected as environment variables at runtime — from your secret store via External Secrets in clusters (see [Deployment & GitOps](./deployment-gitops.md)).
-- The identity-header **shared secret supports rotation**: services accept an additional-secrets list so the gateway can roll to a new key without downtime.
+## Release checklist
 
-## Production hardening checklist
+- [ ] Public/private route and NetworkPolicy tests pass.
+- [ ] Identity-provider development accounts and bootstrap credentials are absent.
+- [ ] Workload audiences, caller allowlists, and subject-asserter lists match the deployed call graph.
+- [ ] Default-deny tests cover unavailable OPA, OpenFGA, PDP, and policy bundles.
+- [ ] Organisation-isolation tests cover reads, writes, cache entries, search, object storage, events, exports, and support tooling.
+- [ ] Policy, membership, delegation, approval, and kill-switch revocation tests meet the agreed latency SLO.
+- [ ] Audit, DLQ, outbox, reconciliation, backup, and restore runbooks have been exercised.
+- [ ] Agent tools have schema, risk, approval, egress, timeout, and result-sanitisation controls.
 
-- [ ] TLS on every external endpoint; HTTP disabled
-- [ ] Real identity provider realm — dev test users and default admin passwords removed
-- [ ] Unique, generated secrets (HMAC shared secret, DB, broker, object store) in a secret store — none in Git
-- [ ] Kubernetes NetworkPolicies deployed (only the gateway is publicly reachable)
-- [ ] JWT validation enabled on every service (no dev bypass anywhere)
-- [ ] Rate limits configured at the gateway
-- [ ] DLQ and outbox alerts wired ([Monitoring & Health](./monitoring.md))
-- [ ] Backups of PostgreSQL, Elasticsearch, and object storage scheduled and restore-tested
-- [ ] Periodic security audits and dependency updates scheduled
-
-## Reporting a vulnerability
-
-Please report suspected vulnerabilities privately to **info@cdpg.org.in** rather than opening a public issue.
+Report suspected vulnerabilities privately to **info@cdpg.org.in**, not through a public issue.

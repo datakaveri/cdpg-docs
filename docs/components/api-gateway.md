@@ -1,35 +1,39 @@
 ---
 sidebar_position: 1
 title: API Gateway
-description: The single entry point for all traffic — authentication at the edge, signed identity propagation, and routing.
+description: The public policy-enforcement point for authentication, authorization, routing, and identity propagation.
 ---
 
 # API Gateway
 
-The **single entry point** for all traffic into the Data Exchange. No client ever talks to an internal component directly.
+`dx-gateway-go` is the platform's public ingress and a **Policy Enforcement Point (PEP)**. It is **Implemented** for the core routes; route coverage and the target composite authorization contract are **Partially implemented**.
 
 ## Responsibilities
 
-- **Authentication** — validates user tokens (OIDC/JWT from the [Identity Provider](./identity-provider.md)) and machine credentials (app ID + secret, verified against the [User Service](./user-service.md)). Both paths produce the same internal identity.
-- **Identity propagation** — after authenticating once at the edge, the gateway forwards requests with **cryptographically signed identity headers** (`X-Subject-Id`, `X-Subject-Email`, `X-Subject-Roles`, `X-Subject-Org-Id`, an issued-at timestamp, and an HMAC signature over all of them). Internal components verify one signature instead of re-validating credentials, keeping them simple and fast. The original `Authorization` header is **stripped** before proxying.
-- **Authorization enforcement** — routes can require a relationship check: the gateway calls the [Authorization Service](./authorization-service.md) (`POST /v1/check`) and refuses with `403` before the upstream is ever reached.
-- **Routing** — maps public API paths to the right internal component by longest prefix, optionally stripping the prefix. The route table is configuration, not code — see [Platform Endpoints](../develop/endpoints.md).
-- **Delegation handling** — when an application acts *on behalf of* a user, the gateway resolves the delegation with the User Service and forwards the delegator's identity with appropriately narrowed permissions.
+- Validate external OIDC access tokens: signature, issuer, audience, expiry, and required claims.
+- Derive a typed principal containing subject, organisation, roles, actor/delegation context, and request correlation.
+- Ask `dx-authz-go` for operations that require a pre-service decision and enforce **deny**, **allow**, or **allow with obligations**.
+- Exchange its workload identity for a short-lived, audience-bound service token when calling an upstream.
+- Propagate user/delegation context separately from the gateway's own service identity.
+- Route public REST APIs, apply limits and request validation, and produce security/audit telemetry.
+- Reject unregistered routes, invalid credentials, unavailable mandatory dependencies, and unenforceable obligations.
 
-## What it deliberately does not do
-
-- It does not hold business data or make resource-level decisions on its own — "may this caller access this dataset?" is always answered by the Authorization Service.
-- It does not proxy identity blindly: the signed headers include a freshness timestamp, so captured headers cannot be replayed later.
+The gateway does not own accounts, policy records, relationship tuples, application data, or business authorization rules. Application services repeat object-specific checks after resolving canonical resource facts; the gateway cannot authorize facts it has not yet seen.
 
 ## Trust model
 
-Internal services run a shared **resolver middleware**: if the signed identity headers are present, the HMAC is verified (an invalid signature is a hard `401` — it never falls back to other authentication, which prevents identity smuggling); if absent, a direct JWT is accepted as fallback. Sensitive routes can additionally require gateway origin, rejecting any request that did not come through the edge.
+The upstream authenticates the gateway using a short-lived Keycloak client-credentials JWT whose `aud` targets that service. The upstream validates the token independently and permits only configured caller identities. Forwarded subject context is accepted only from an allowlisted **subject asserter** and is bound to the request. Directly supplied identity-context fields are discarded.
 
-## Interactions
+The exact subject-context carrier and request-binding claims remain an engineering confirmation item. The security properties are normative: workload and subject identities are distinct, tokens are short-lived and audience-scoped, and every service validates its immediate caller.
 
-| Talks to | Why |
+## Failure contract
+
+| Condition | Result |
 | --- | --- |
-| Identity Provider | Token signature verification (cached JWKS key material) |
-| Authorization Service | Per-route relationship checks |
-| User Service | App credential verification, delegation resolution |
-| All internal components | Forwards authenticated traffic with signed identity |
+| Missing or invalid external token | `401 Unauthorized` |
+| Authenticated principal lacks permission | `403 Forbidden` |
+| PDP unavailable for a mandatory check | Deny; do not call the upstream |
+| Required obligation is unsupported | Deny; never silently weaken the decision |
+| Upstream or identity provider unavailable | Bounded retry where safe, then a typed `5xx` response |
+
+See [Security Architecture](../technical/security-architecture.mdx), [Authorization Flow](../flows/authorization.mdx), and [Platform Endpoints](../develop/endpoints.md).

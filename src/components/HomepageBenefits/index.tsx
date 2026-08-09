@@ -41,7 +41,7 @@ export default function HomepageBenefits(): ReactNode {
           ))}
         </div>
         <div className={styles.cta} style={{marginTop: '3rem'}}>
-          <Link className="button button--primary button--lg" to="/docs/overview">
+          <Link className="button button--primary button--lg" to="/docs/">
             Read the documentation
           </Link>
         </div>

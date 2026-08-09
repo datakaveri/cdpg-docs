@@ -1,52 +1,116 @@
 ---
 id: control-plane
-title: Control Plane — Discovery & Governance
+title: Control Plane
 sidebar_label: Control Plane
-description: The Data Exchange Control Plane — the services that manage discovery, identity, policy, and authorization decisions.
+description: Identity, organizations, catalogue, policy, authorization, marketplace, registry, credits, audit, notifications, and governance.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
 import ControlPlaneSvg from '@site/src/components/Diagram/svg/control-plane.svg';
 
-# Control Plane: Who May Access What
+# Control Plane
 
-The **Control Plane** is the set of services that securely manage, discover, and govern access to data across the ecosystem. Nothing on the control side ever serves resource data — it decides, records, and describes.
+The Control Plane records who participates, what resources exist, what policies and commercial entitlements apply, and how an access decision is made. It governs data without serving the resource payload itself.
 
-## Core services
-
-| Service | Responsibility |
-| --- | --- |
-| [Catalogue](../components/catalogue.md) | Resource metadata in **JSON-LD**; geo-spatial, attribute, and text discovery |
-| [User Service](../components/user-service.md) | User profiles, organisations and membership, delegations, app credentials |
-| [Identity Provider](../components/identity-provider.md) | Authentication (OIDC) — the platform never stores passwords |
-| [Policy Service](../components/policy-service.md) | The system of record for access grants — create, list, revoke, verify |
-| [Authorization Service](../components/authorization-service.md) | Real-time permission checks from a relationship graph (ReBAC/OpenFGA) |
-| [Supporting services](../components/supporting-services.md) | Server registry, credits ledger, audit trail, notifications |
-
-## How a decision is made
-
-The control plane splits **policy administration** from **policy decisions**:
-
-- The **Policy Service (PAP — policy administration point)** owns the authoritative ledger of grants. Every grant names a consumer (or group), a resource, the permitted access types, and an expiry.
-- The **Authorization Service (PDP — policy decision point)** holds a projection of those grants as relationship tuples, optimised for one thing: answering *"may this subject perform this action on this resource?"* in milliseconds.
-- The two are synchronised **asynchronously and reliably** — every policy change is written to a transactional outbox in the same database transaction as the grant, then relayed over the [messaging backbone](../components/messaging-backbone.md). A committed grant cannot fail to become enforceable.
-
-The **API Gateway** acts as the **policy enforcement point (PEP)**: it authenticates every request at the edge and — together with the data-side services — consults the PDP before content is served.
+**Status:** **Partially implemented.** Core APIs exist across the service fleet. Composite OPA/OpenFGA decisions, complete policy projection/reconciliation, organization hierarchy/group production, route coverage, and several production hardening gates remain open.
 
 <DiagramFrame
   svg={ControlPlaneSvg}
-  label="control_plane · administration vs decision"
+  label="control_plane · identity, discovery, policy, commerce, governance"
   legend={[
-    {color: 'navy', label: 'requests & stores'},
-    {color: 'teal', label: 'event pipeline'},
+    {color: 'orange', label: 'administrators, providers, consumers'},
+    {color: 'navy', label: 'control request'},
+    {color: 'teal', label: 'durable event / projection'},
+    {color: 'green', label: 'entitlement outcome'},
+    {color: 'berry', label: 'revocation / governance'},
   ]}
 />
 
-## Ecosystem participants
+## Service boundaries and status
 
-- **Data Providers** — publish resources and metadata, and control access via policies.
-- **Data Consumers / application developers** — discover, request, and use data securely via APIs.
-- **Organisation admins** — manage access on behalf of all providers in their organisation.
-- **Platform admins (cos_admin)** — operate the exchange itself.
+| Service | Purpose and owned data | Key integrations | Status |
+| --- | --- | --- | --- |
+| **Keycloak** | Identity realm, users, clients, credentials, token issuance, JWKS | Gateway, User Service, Agent Registry/Runtime, workload clients | **Implemented** |
+| **`dx-user-go`** | Profiles, organizations, membership, roles, delegations, application credentials | Keycloak; publishes organization membership facts | **Partially implemented** |
+| **`dx-catalogue-go`** | Resource metadata, ownership, organization, access modes, discovery index | Elasticsearch; ownership/resource lookup for policy and marketplace | **Partially implemented** |
+| **`dx-acl-go`** | Grants, access requests, validity, status, constraints, grant/delegation outbox | Catalogue validation; RabbitMQ; notifications; authorization projection | **Partially implemented** |
+| **`dx-authz-go`** | Request-time authorization API, decision orchestration, projection/reconciliation state | OpenFGA; planned OPA; RabbitMQ; gateway/application PEPs | **Partially implemented** |
+| **OpenFGA** | Relationship model, stores, tuples for owners, organizations, groups, users, applications, agents, and resources | Written only by authorization projectors; queried only through PDP | **Implemented** with model alignment gaps |
+| **OPA** | Versioned contextual/attribute policies and typed obligation selection | Called through composite PDP; policy bundle pipeline | **Planned** |
+| **`dx-marketplace-go`** | Merchants, products, orders, payments, invoices, purchase idempotency | Payment provider; Catalogue; Authz; ACL entitlement creation | **Partially implemented** |
+| **`dx-registry-go`** | Resource-server and policy-server endpoint/capability records | Gateway, Catalogue, data clients | **Implemented** |
+| **`dx-credits-go`** | User/organization balances, requests, atomic debit/credit ledger | Marketplace and metered services | **Implemented** |
+| **`dx-audit-go`** | Append-only activity projection, filtered reads, CSV exports | Consumes audit events from all planes | **Implemented** |
+| **`dx-notification-go`** | Template rendering, recipient resolution, outbound email retry/dead letter | Consumes notification events; Keycloak email lookup; SMTP | **Implemented** |
+| **`dx-subscription-go`** | Subscription registrations and optional broker provisioning | Data ingestion/events; authorization and user scoping | **Implemented** with end-to-end validation gaps |
 
-For the data-access side of the platform, see the [Data Plane](./data-plane.md).
+## Identity and organization management
+
+Keycloak owns authentication credentials. `dx-user-go` owns exchange-domain facts about profiles, organizations, memberships, applications, and user-to-user delegation. Role claims provide coarse identity context; organization and resource authority is resolved from domain relationships rather than inferred from a token role alone.
+
+When membership changes, the User Service commits the domain update and publishes `org.member.added` or `org.member.removed`. The authorization projector applies the relationship tuple idempotently. A missed or malformed event goes to quarantine/dead letter, and reconciliation must compare the source record with the projection.
+
+**Organization isolation:** administrative operations require an organization relationship and every organization-scoped repository query includes the organization ID. The current platform does not implement unrelated exchange tenants in one control plane; that is an explicit architecture gap.
+
+## Catalogue and resource governance
+
+The Catalogue is the metadata authority. An item records stable resource identity, type, provider/owner, organization, descriptive JSON-LD, data-access modes, endpoints, geography, temporal coverage, schema references, and lifecycle state.
+
+Public discovery may expose approved metadata. Authenticated views can add resources visible through ownership or entitlement. Provider and administrator mutations validate identity, organization, and ownership at the service. Search uses Elasticsearch with allowlisted filters; the source metadata lifecycle remains a Catalogue responsibility.
+
+## Policy administration and authorization
+
+The Policy Service is the **Policy Administration Point (PAP)**. It validates that the resource exists, the author may grant it, requested access types are supported, constraints are typed and bounded, and the validity window is acceptable. It stores the grant and outbox event atomically.
+
+The Authorization Service is the **Policy Decision Point (PDP)**. It never authors grants. At target state it combines OpenFGA relationships, OPA contextual policy, delegation and agent state, trust policy, and grant validity into one explainable decision. See [Security Architecture](./security-architecture.mdx).
+
+The Gateway and application/data services are **Policy Enforcement Points (PEPs)**. The Gateway enforces edge-known results; services enforce domain and datastore obligations. A data service validates a carried decision rather than querying the PDP again.
+
+## Marketplace and entitlement
+
+A provider creates a product only for a resource they are authorized to monetize. A consumer creates an idempotent order with the configured payment provider. A signed webhook records payment/invoice state transactionally and requests a grant from `dx-acl-go`; the Marketplace never writes authorization relationships directly. Access begins only after the grant becomes active in the authorization projection.
+
+Failed payment, invalid callback signature, product/version mismatch, duplicate callback, ACL failure, or projection delay cannot create partial entitlement. Recovery uses payment-provider reconciliation, idempotency keys, durable local state, and grant projection monitoring.
+
+## Registry, credits, audit, and notifications
+
+- **Registry:** resolves server capabilities and endpoints. Writes are platform-governed; reads may be public where declared.
+- **Credits:** owns balances and the immutable debit/credit history. The side-effect owner enforces idempotency and atomic balance checks.
+- **Audit:** consumes activity facts asynchronously so logging cannot block the primary operation. The producer still records local request/decision telemetry; audit is a durable projection, not the only signal.
+- **Notifications:** consumes user-facing notification events, resolves recipients, renders templates, retries boundedly, and dead-letters persistent failures. Email failure does not roll back a committed grant or payment.
+
+## Control-plane events
+
+| Event family | Source of truth | Consumers and effect | Current state |
+| --- | --- | --- | --- |
+| `policy.*` | Policy Service | Authorization projection writes/removes grant relationships | **Partially implemented** |
+| `org.member.*` | User Service | Authorization projection updates organization membership | **Implemented** |
+| `group.member.*` | Group-management owner | Authorization projection updates group membership | **Planned** producer ownership |
+| `delegation.*` | Policy Service | Authorization projection updates agent delegated relationships | **Implemented** locally |
+| `agent.suspended/resumed/retired` | Agent Registry | Gateway denylist and agent lifecycle projection | **Implemented** locally |
+| Audit events | Every mutating service/PEP | Audit Service append-only projection | **Partially implemented** fleet-wide |
+| Notification events | Domain services | Notification Service email dispatch | **Implemented** for selected workflows |
+| Subscription/data events | Data ingestion/subscription owners | Delivery queues or streaming integrations | **Partially implemented** |
+
+## Failure, retry, and recovery
+
+- Control writes use transactions; externally visible facts publish through outboxes after commit.
+- Consumers reconnect with bounded backoff, handle events idempotently, and quarantine unsupported versions.
+- New grants remain denied until projected. Revocation denial must become authoritative without waiting for asynchronous tuple cleanup.
+- Outbox backlog, projection lag, reconciliation mismatch, DLQ depth, OPA bundle revision, OpenFGA model/store revision, and notification failure are operational signals.
+- Repeated delivery is expected. Side-effect owners—payments, credits, approvals, subscriptions—store idempotency keys and original results.
+
+## Configuration and governance
+
+Service operation policy is versioned with OpenAPI. At target state, platform authorization policy is promoted as versioned, integrity-verified OPA bundles; that pipeline is **Planned**. Relationship schema and permission/resource registries are centrally governed. Environment configuration selects routes, feature gates, dependencies, one migration actor, and workload call graph. Secrets are injected through the deployment secret manager.
+
+## Known limitations and planned evolution
+
+- The composite authorization target and OPA bundle pipeline are **Planned**.
+- The current relationship projection has type/relation alignment and reconciliation work.
+- Group membership lacks a complete production owner and producer.
+- Organization hierarchy semantics need a canonical domain decision.
+- Several gateway routes and public-operation mappings require completion and conformance tests.
+- Multi-tenant exchange-operator isolation is not designed; organization isolation is the supported boundary.
+
+Workflows: [Authentication](../flows/authentication.mdx), [Policy Lifecycle](../flows/policy-lifecycle.mdx), [Dataset Onboarding](../flows/dataset-onboarding.md), [Marketplace Entitlement](../flows/marketplace-entitlement.md), and [Audit Events](../flows/audit-events.md).

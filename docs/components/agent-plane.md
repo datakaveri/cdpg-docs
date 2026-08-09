@@ -1,53 +1,31 @@
 ---
 sidebar_position: 13
-title: Agent Plane Services
-description: The three optional services that let AI agents act under delegation — the registry, the MCP tool gateway, and the agent runtime.
+title: Agentic Plane Services
+description: Agent Registry, MCP Gateway, and Agent Runtime responsibilities and implementation status.
 ---
 
-# Agent Plane Services
+# Agentic Plane Services
 
-Three optional services that together let an AI agent act on a user's behalf without ever holding the user's credential. They deploy only where an operator enables them; nothing else on the platform depends on them.
+The Agentic Plane consists of three Go services. Their repositories and local runtime are **In development**; production GitOps integration, complete cross-replica coordination, and several governance controls are not operational.
 
-See the [Agentic Plane](../technical/agentic-plane.mdx) for the model these services implement.
+## Agent Registry — `dx-agent-registry-go`
 
-## Agent Registry
+Owns agent records, versioned templates, lifecycle state, agent identity provisioning, approved capabilities, and the kill switch. It coordinates durable delegation records with the Policy Service and identity lifecycle with Keycloak; it does not execute prompts or decide access.
 
-The control plane for agents.
+## Agent Runtime — `dx-agent-runtime-go`
 
-- **Agent records and templates** — what an agent is, which template version it runs, which tools it may be offered.
-- **Agent identity** — provisions an identity for each agent in the [Identity Provider](./identity-provider.md), so an agent is a distinct principal rather than a label on someone else's session.
-- **Delegation** — records delegation grants through the [Policy Service](./policy-service.md). Agent grants live in the same durable store as every other access grant; there is no separate agent permission system to keep in sync.
-- **Kill switch** — suspends an agent platform-wide. Enforced at the [API Gateway](./api-gateway.md), so it takes effect without waiting for a token to expire.
+Owns sessions, conversation/execution state, SSE delivery, planning, retry checkpoints, and delegated token exchange. It proposes tool calls but has no direct data-service egress and never stores a reusable user credential.
 
-## MCP Gateway
+## MCP Gateway — `dx-mcp-gateway-go`
 
-The tool boundary, and the agent's only route out.
+Is the sole governed tool boundary. It discovers allowlisted tools, validates arguments, classifies risk, applies a semantic firewall, requests composite authorization, parks approval-required actions, obtains a destination-bound credential, invokes the platform gateway, and sanitises tool results before the model sees them.
 
-Every tool call passes the same pipeline before anything reaches the exchange:
+## Invariants
 
-| Stage | What it does |
-| --- | --- |
-| **Schema** | Validates arguments against the tool's declared schema; malformed calls stop here |
-| **Scope** | Confirms the tool and its target fall inside the delegation grant |
-| **Risk** | Classifies the operation; consequential ones park for human approval |
-| **Credential** | Attaches the delegated token — at the boundary, after the plan is fixed |
+- The user remains the subject and the agent is recorded as actor.
+- User permission, active delegation, agent lifecycle, contextual policy, and any human approval must all permit the action.
+- Every capability is narrower than the delegating user's authority and is resource-, action-, audience-, and time-bounded.
+- Suspended agents, revoked grants, expired sessions, unavailable mandatory checks, and invalid approval state fail closed.
+- Plan, tool arguments, decision IDs, approvals, workload/subject identities, outcome, and revocation events are correlated in the audit trail.
 
-Two consequences worth stating plainly: the reasoning layer never handles a raw credential, and there is no second egress. An agent's reachable surface is exactly the published tool set.
-
-Responses are wrapped and marked as untrusted before returning to the model, so retrieved content is material to summarise rather than instructions to follow.
-
-## Agent Runtime
-
-Sessions and planning.
-
-- **Sessions and streaming** — conversation state and event streaming to the user interface.
-- **Planning loop** — proposes tools. It proposes; the MCP Gateway disposes.
-- **Token exchange** — exchanges the user's token for one naming the user as subject and the agent as actor. Both identities travel on every request.
-
-## What these services do not do
-
-- They do not decide access. Authorization is answered by the [Authorization Service](./authorization-service.md), which checks the user's permission **and** the agent's delegated permission.
-- They do not serve data. Agent requests reach the [Data Plane](./data-plane.md) through the same [API Gateway](./api-gateway.md) as human traffic.
-- They do not store grants. Delegations live in the Policy Service.
-
-That division is deliberate: an agent plane that made its own access decisions would be a second policy system to keep correct.
+See [Agentic Plane Architecture](../technical/agentic-plane.mdx) and [Agent Tool Invocation](../flows/agent-delegation.mdx).

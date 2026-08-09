@@ -146,6 +146,22 @@
   stroke-dasharray: 3 4;
 }
 
+/* Planned/deferred components use a visibly dashed card, never color alone. */
+.dxn.planned .dxn-box { stroke-dasharray: 6 4; }
+.dxn.deferred .dxn-box { stroke-dasharray: 2 5; opacity: 0.82; }
+.dx-status {
+  font-family: var(--dx-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-anchor: middle;
+  fill: var(--dx-sub);
+}
+.dx-status.impl { fill: var(--dx-green); }
+.dx-status.partial { fill: var(--dx-orange); }
+.dx-status.planned { fill: var(--dx-berry); }
+.dx-status.deferred { fill: var(--dx-sub); }
+
 /* Node accent + lit states (color class sits on the .dxn group) */
 .dxn.orange .dxn-box { stroke: color-mix(in srgb, var(--dx-orange) 45%, var(--dx-node-border)); }
 .dxn.navy   .dxn-box { stroke: color-mix(in srgb, var(--dx-navy) 45%, var(--dx-node-border)); }

@@ -1,66 +1,77 @@
 ---
-sidebar_position: 2
-title: "Flow: Consuming Data"
-description: The complete journey from discovering a dataset to receiving its data.
+sidebar_position: 3
+title: "Flow: Data Access and Download"
+description: Discovery, entitlement, composite authorization, carried obligations, data filtering, delivery, and audit.
 ---
 
 import StepFlow from '@site/src/components/Diagram/StepFlow';
 import ConsumeSvg from '@site/src/components/Diagram/svg/flow-data-consumption.svg';
 
-# Flow: Consuming Data
+# Flow: Data Access and Download
 
-The complete journey from discovering a dataset to receiving its data. Step through it below.
+**Status:** discovery, grant authoring, OpenFGA projection, query APIs, and file access paths are **Partially implemented**. Composite OPA evaluation and carried obligations are **Planned**.
 
 <StepFlow
   svg={ConsumeSvg}
-  label="data_consumption · discover → grant → consume"
+  label="data_access · discover, authorize, enforce, audit"
   legend={[
-    {color: 'orange', label: 'people & requests'},
-    {color: 'teal', label: 'event pipeline'},
-    {color: 'navy', label: 'access check'},
-    {color: 'green', label: 'data'},
+    {color: 'orange', label: 'consumer/provider'},
+    {color: 'teal', label: 'grant projection'},
+    {color: 'navy', label: 'authorization'},
+    {color: 'green', label: 'filtered data'},
+    {color: 'berry', label: 'deny/revoke'},
   ]}
   steps={[
     {
-      title: 'Discover',
-      body: 'The consumer searches the Catalogue — geo-spatial, attribute, or free-text. Metadata is public; the data itself is not.',
+      title: 'Discover the resource',
+      body: 'The consumer searches approved Catalogue metadata and selects a resource and access mode such as API, file, OGC, or subscription.',
       lights: ['p-disc', 'lbl-disc', 'n-consumer', 'n-cat'],
     },
     {
-      title: 'Request access',
-      body: 'The consumer raises an access request for the dataset (or buys it on the Marketplace, which automates the rest of this flow).',
+      title: 'Obtain entitlement',
+      body: 'The consumer receives an explicit grant through provider approval or a successful marketplace purchase. Authentication alone is not entitlement.',
       lights: ['p-reqacc', 'lbl-reqacc', 'n-consumer', 'n-acl'],
     },
     {
-      title: 'The provider grants',
-      body: 'The provider — or their org admin — approves: a policy naming the consumer, the dataset, the permitted access types (api / file / sub), and an expiry. The consumer is notified by email.',
-      lights: ['p-grant', 'lbl-grant', 'n-provider', 'n-acl'],
+      title: 'Grant is recorded and projected',
+      body: 'The Policy Service commits the grant and outbox fact together. RabbitMQ carries it to the Authorization Service, which updates durable grant and relationship projections.',
+      lights: ['p-event', 'lbl-event', 'p-write', 'lbl-write', 'n-acl', 'n-mq', 'n-az'],
     },
     {
-      title: 'The grant is recorded — and announced',
-      body: 'The Policy Service stores the grant and its event in one database transaction (transactional outbox), then publishes policy.created to the messaging backbone. A committed grant cannot fail to propagate.',
-      lights: ['p-event', 'lbl-event', 'n-acl', 'n-mq'],
+      title: 'Consumer requests data',
+      body: 'The consumer calls the gateway using the resource operation selected from the Catalogue: NGSI-LD, OGC, file download, or subscription.',
+      lights: ['p-query', 'lbl-query', 'n-consumer', 'n-gw'],
     },
     {
-      title: 'The authorization graph updates',
-      body: "The Authorization Service consumes the event and writes a relationship tuple: consumer —api→ dataset. From this moment the grant is enforceable — no manual sync, nothing to deploy.",
-      lights: ['p-write', 'lbl-write', 'n-mq', 'n-az'],
+      title: 'Composite authorization decides',
+      body: 'The PEP asks dx-authz-go. OpenFGA checks relationships; OPA evaluates context and selects filters, field rules, quota, and audit obligations. Any error or unknown state denies.',
+      lights: ['p-check', 'lbl-check', 'n-gw', 'n-az'],
     },
     {
-      title: 'Query the data',
-      body: 'The consumer calls the Data Plane through the gateway — NGSI-LD queries, OGC features, subscriptions, or file downloads.',
-      lights: ['p-query', 'lbl-query', 'n-consumer', 'n-dp'],
+      title: 'Decision travels to the data service',
+      body: 'The gateway forwards an integrity-protected decision bound to subject, operation, resource, organization, revisions, and validity. The data service does not call the PDP again.',
+      lights: ['p-carry', 'lbl-carry', 'n-gw', 'n-dp'],
     },
     {
-      title: 'Checked on every request, then delivered',
-      body: 'The Data Plane asks the Authorization Service "may this subject api-access this dataset?" on every single request, then streams the results. Every access is audited. Revoke the policy, and the next request gets 403.',
-      lights: ['p-check', 'lbl-check', 'p-resp', 'lbl-resp', 'n-dp', 'n-az', 'n-consumer'],
+      title: 'Data service enforces and delivers',
+      body: 'The service verifies the decision, applies ownership and organization predicates, translates typed filters and masks, accounts quota, and returns only the allowed rows, fields, features, or objects.',
+      lights: ['p-resp', 'lbl-resp', 'n-dp', 'n-consumer'],
+    },
+    {
+      title: 'Access is observable and revocable',
+      body: 'The request and decision share trace, grant, and decision IDs. Revocation overrides cached allows; the next decision denies and asynchronous projection cleanup follows.',
+      lights: ['p-audit', 'lbl-audit', 'n-dp', 'n-audit'],
     },
   ]}
 />
 
-## Notes
+## Access-mode specifics
 
-- **Grants can also come from the [Marketplace](../components/marketplace.md)** — a successful purchase creates the same policy automatically (steps 2–4 collapse into the order flow).
-- **Propagation is asynchronous but fast** — typically well under a second. If access is denied right after a grant, see [Troubleshooting](../guides/troubleshooting.md#policy-created-but-access-still-denied-403).
-- **Expiry needs no action** — enforcement stops at the expiry timestamp automatically ([Policy Lifecycle](./policy-lifecycle.mdx)).
+- **NGSI-LD/OGC:** row and field obligations compile into parameterized, allowlisted Elasticsearch/PostGIS queries.
+- **Files:** object metadata is resolved by owner/databank before presigning; URLs are short-lived and scoped to one object/action.
+- **Subscriptions:** creation and ongoing delivery follow the subscription's authorization and revocation policy.
+- **Marketplace:** purchase creates an ordinary Policy Service grant; data services do not recognize a separate payment bypass.
+
+## Failure and recovery
+
+New grants remain denied until projection completes. A denied or stale decision, unsupported filter/mask, store outage, quota outage, or ownership mismatch produces no partial result. Projection lag, outbox/DLQ depth, decision failure, and obligation-translation failures are monitored and reconciled.

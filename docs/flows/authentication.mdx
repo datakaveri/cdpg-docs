@@ -1,68 +1,73 @@
 ---
 sidebar_position: 1
-title: "Flow: Authentication & Identity"
-description: How users and applications prove who they are — once, at the edge.
+title: "Flow: Authentication and Identity Propagation"
+description: User authentication, gateway validation, workload identity, subject assertion, and service verification.
 ---
 
 import StepFlow from '@site/src/components/Diagram/StepFlow';
 import AuthSvg from '@site/src/components/Diagram/svg/flow-authentication.svg';
 
-# Flow: Authentication & Identity
+# Flow: Authentication and Identity Propagation
 
-How callers prove who they are — once, at the edge. Step through the flow below; each step lights up the part of the system it touches.
+This flow separates the external user's credential from the identity of each internal workload. **Status:** user JWT validation and workload tokens are **Implemented/Partially implemented**; full request-bound subject assertions are **Planned**.
 
 <StepFlow
   svg={AuthSvg}
-  label="auth_flow · identity once, at the edge"
+  label="authentication · user, workload, subject assertion"
   legend={[
-    {color: 'orange', label: 'caller & credentials'},
-    {color: 'navy', label: 'identity plumbing'},
-    {color: 'green', label: 'the service'},
+    {color: 'orange', label: 'external credential'},
+    {color: 'navy', label: 'identity validation'},
+    {color: 'teal', label: 'workload credential'},
+    {color: 'green', label: 'verified service context'},
   ]}
   steps={[
     {
-      title: 'Sign in once',
-      body: 'The user authenticates against the Identity Provider (Keycloak) using OIDC with PKCE. The platform itself never sees or stores a password.',
+      title: 'User signs in',
+      body: 'The user authenticates with Keycloak using OIDC authorization code with PKCE. The platform services never receive the password.',
       lights: ['p-login', 'lbl-login', 'n-user', 'n-idp'],
     },
     {
-      title: 'A token is issued',
-      body: 'The JWT carries everything a service will ever need to know about the caller: identity, roles, and organisation membership.',
+      title: 'Identity Provider issues the user token',
+      body: 'The signed JWT names the user and carries identity context such as organization and coarse roles. Those claims authenticate; they are not a resource grant.',
       lights: ['p-token', 'lbl-token', 'n-user', 'n-idp'],
     },
     {
-      title: 'The request hits the edge',
-      body: 'Every call — from any client, to any service — enters through the API Gateway with the token as a bearer credential.',
+      title: 'Request reaches the gateway',
+      body: 'The client presents the bearer token on HTTPS. The gateway matches the exact operation and selects required, optional, or public authentication behavior.',
       lights: ['p-req', 'lbl-req', 'n-user', 'n-gw'],
     },
     {
-      title: 'The gateway validates … and strips',
-      body: "Signature, issuer, and expiry are checked against the Identity Provider's published keys (JWKS, cached). The token goes no further than the edge.",
+      title: 'Gateway validates the external credential',
+      body: 'The gateway pins the algorithm and validates signature, issuer, audience, time claims, and required identity claims against cached JWKS. A present but invalid token always fails.',
       lights: ['p-jwks', 'lbl-jwks', 'n-gw', 'n-idp'],
     },
     {
-      title: 'Identity is forwarded, signed',
-      body: 'The gateway forwards HMAC-signed identity headers (X-Subject-Id, roles, organisation, issued-at). The service verifies one signature — it contains no credential-handling logic at all.',
+      title: 'Gateway obtains a destination credential',
+      body: 'For the selected upstream, the gateway uses its own Keycloak service identity to obtain or reuse a short-lived token addressed to that destination service.',
+      lights: ['p-workload', 'lbl-workload', 'n-gw', 'n-idp'],
+    },
+    {
+      title: 'Identity context is propagated',
+      body: 'The gateway sends the destination-bound workload credential plus normalized subject, actor, organization, delegation, operation, and decision context. Client-supplied internal context is removed.',
       lights: ['p-fwd', 'lbl-fwd', 'n-gw', 'n-svc'],
     },
     {
-      title: 'Machines & delegation ride the same rails',
-      body: "Applications authenticate with app credentials, and can act on behalf of a user within a recorded delegation's scope — verified against the User Service. Downstream, services can't tell the difference.",
-      lights: ['p-m2m', 'lbl-m2m', 'p-deleg', 'lbl-deleg', 'n-app', 'n-usr', 'n-gw'],
+      title: 'Service verifies caller and subject authority',
+      body: 'The service verifies the workload token audience and caller allowlist, then accepts end-user context only if that workload is an approved subject asserter. Failure is 401/403 with no alternate trust path.',
+      lights: ['p-verify', 'lbl-verify', 'n-svc', 'n-authz'],
     },
   ]}
 />
 
-## Why identity is centralised at the gateway
+## Application and agent credentials
 
-Internal components receive identity as trusted, signed headers and contain **no credential-handling logic at all**. Adding a new authentication method (or rotating keys) touches only the edge. An invalid header signature is always a hard `401` — it never falls back to another path — and the issued-at timestamp bounds replay.
+Machine clients use their own principal and scopes rather than borrowing a human password. Agent execution uses RFC 8693 token exchange: `sub` remains the user, `act.sub` identifies the agent, and the service workloads remain separately authenticated. See [Agent Delegation](./agent-delegation.mdx).
 
-## Delegation in detail
+## Failure and recovery
 
-An application acting for a user can never do more than *either* the delegating user *or* the delegation itself allows:
+- Unknown signing key triggers a bounded JWKS refresh; it does not bypass validation.
+- A wrong issuer, audience, caller, or subject asserter fails immediately.
+- Identity-provider outage may be masked only by still-valid cached keys/tokens. New token minting eventually fails closed.
+- Request/trace IDs, principal type, caller workload, audience, result, and failure class are emitted without logging the credential.
 
-1. The user records a delegation to the app (scoped: which resources, which actions).
-2. The app calls the platform identifying both itself and the user it represents.
-3. The gateway verifies the delegation with the [User Service](../components/user-service.md) and forwards the **user's** identity, narrowed to the intersection of the user's rights and the delegation's scope.
-
-See the [Auth Flow API reference](../api-reference/auth-flow.md) for the exact claims and headers, and the [JWT Validation guide](../guides/jwt-validation.md) for debugging.
+See [Security Architecture](../technical/security-architecture.mdx) for claim ownership and [Authorization Decision](./authorization.mdx) for what happens after identity is established.

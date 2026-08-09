@@ -30,7 +30,7 @@ function HomepageHeader() {
             India&apos;s smart cities and beyond.
           </p>
           <div className={styles.heroButtons}>
-            <Link className="button button--primary button--lg" to="/docs/overview">
+            <Link className="button button--primary button--lg" to="/docs/">
               Explore the Platform
             </Link>
             <Link

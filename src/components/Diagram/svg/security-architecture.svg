@@ -1,0 +1,40 @@
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sec-title sec-desc">
+  <title id="sec-title">Authentication, authorization, trust, and enforcement architecture</title>
+  <desc id="sec-desc">External OIDC tokens terminate at the gateway. Internal callers use audience-bound workload tokens and separately propagated subject or actor context. The composite authorization service evaluates OpenFGA relationships and planned OPA context. Gateway, services, MCP Gateway, and data executors enforce decisions and obligations. All protected failures deny.</desc>
+  <defs>
+    <marker id="se-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker>
+    <marker id="se-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker>
+    <marker id="se-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker>
+    <marker id="se-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker>
+    <marker id="se-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker>
+  </defs>
+  <rect class="dxz orange" x="20" y="28" width="210" height="504" rx="16"/><text class="dxz-lbl orange" x="40" y="51">external trust zone</text>
+  <rect class="dxz navy" x="258" y="28" width="482" height="156" rx="16"/><text class="dxz-lbl navy" x="278" y="51">edge &amp; workload identity</text>
+  <rect class="dxz navy" x="258" y="210" width="482" height="178" rx="16"/><text class="dxz-lbl navy" x="278" y="233">authorization decision zone</text>
+  <rect class="dxz green" x="258" y="414" width="482" height="118" rx="16"/><text class="dxz-lbl green" x="278" y="437">enforcement zone</text>
+
+  <path class="dxf orange calm" marker-end="url(#se-o)" d="M190 104H302"/><text class="dxe" x="208" y="94">OIDC access token</text>
+  <path class="dxf navy dashed calm" marker-end="url(#se-n)" d="M512 76H602"/><text class="dxe" x="524" y="66">JWKS / token</text>
+  <path class="dxf navy calm" marker-end="url(#se-n)" d="M378 146V264"/><text class="dxe" x="388" y="202">principal + resource</text>
+  <path class="dxf teal calm" marker-end="url(#se-t)" d="M500 146V440"/><text class="dxe" x="510" y="220">workload + subject / actor</text>
+  <path class="dxf navy calm" marker-end="url(#se-n)" d="M466 294H544"/><path class="dxf navy calm" marker-end="url(#se-n)" d="M466 334H544"/>
+  <path class="dxf navy dashed calm" marker-end="url(#se-n)" d="M544 314H466"/><text class="dxe" x="470" y="282">relationships</text><text class="dxe" x="474" y="354">context + obligations</text>
+  <path class="dxf green calm" marker-end="url(#se-g)" d="M378 352V440"/><text class="dxe" x="390" y="404">allow + typed obligations</text>
+  <path class="dxf berry dashed calm" marker-end="url(#se-b)" d="M344 352C300 370 230 390 180 418"/><text class="dxe" x="214" y="376">deny / error · fail closed</text>
+
+  <g class="dxn orange"><rect class="dxn-box" x="42" y="78" width="148" height="50" rx="11"/><text class="dxn-t" x="116" y="99">User / application</text><text class="dxn-s" x="116" y="115">external principal</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="42" y="246" width="148" height="50" rx="11"/><text class="dxn-t" x="116" y="267">Agent actor</text><text class="dxn-s" x="116" y="283">delegated · revocable</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="42" y="408" width="148" height="50" rx="11"/><text class="dxn-t" x="116" y="429">Default deny</text><text class="dxn-s" x="116" y="445">no alternate trust path</text></g>
+
+  <g class="dxn navy"><rect class="dxn-box" x="302" y="76" width="154" height="70" rx="11"/><text class="dxn-t" x="379" y="98">Gateway · PEP</text><text class="dxn-s" x="379" y="114">validate user token</text><text class="dxn-s" x="379" y="128">resolve operation · decide</text><text class="dx-status partial" x="379" y="141">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="494" y="76" width="108" height="70" rx="11"/><text class="dxn-t" x="548" y="98">Workload</text><text class="dxn-s" x="548" y="114">audience token</text><text class="dxn-s" x="548" y="128">caller allowlist</text><text class="dx-status partial" x="548" y="141">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="620" y="76" width="98" height="70" rx="11"/><text class="dxn-t" x="669" y="98">Keycloak</text><text class="dxn-s" x="669" y="114">identity</text><text class="dxn-s" x="669" y="128">token issuer</text><text class="dx-status impl" x="669" y="141">IMPLEMENTED</text></g>
+
+  <g class="dxn navy"><rect class="dxn-box" x="302" y="264" width="166" height="88" rx="11"/><text class="dxn-t" x="385" y="286">dx-authz-go</text><text class="dxn-s" x="385" y="302">validate · compose</text><text class="dxn-s" x="385" y="317">reason · expiry · cache</text><text class="dxn-s" x="385" y="332">typed obligations</text><text class="dx-status partial" x="385" y="346">COMPOSITE TARGET PARTIAL</text></g>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="546" y="252" width="172" height="58" rx="11"/><text class="dxn-t" x="632" y="274">OpenFGA</text><text class="dxn-s" x="632" y="289">relationships · membership</text><text class="dx-status impl" x="632" y="304">IMPLEMENTED</text></g>
+  <g class="dxn teal planned"><rect class="dxn-box" x="546" y="320" width="172" height="58" rx="11"/><text class="dxn-t" x="632" y="342">OPA</text><text class="dxn-s" x="632" y="357">context · ABAC · obligations</text><text class="dx-status planned" x="632" y="372">PLANNED</text></g>
+
+  <g class="dxn green"><rect class="dxn-box" x="282" y="452" width="134" height="54" rx="11"/><text class="dxn-t" x="349" y="473">Application PEP</text><text class="dxn-s" x="349" y="488">object facts · effects</text><text class="dx-status partial" x="349" y="501">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="433" y="452" width="134" height="54" rx="11"/><text class="dxn-t" x="500" y="473">MCP PEP</text><text class="dxn-s" x="500" y="488">tool · risk · approval</text><text class="dx-status planned" x="500" y="501">IN DEVELOPMENT</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="584" y="452" width="134" height="54" rx="11"/><text class="dxn-t" x="651" y="473">Data PEP</text><text class="dxn-s" x="651" y="488">filter · mask · meter</text><text class="dx-status planned" x="651" y="501">TARGET PARTIAL</text></g>
+</svg>

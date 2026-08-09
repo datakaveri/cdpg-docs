@@ -14,7 +14,7 @@ The **ingestion layer** provides pluggable adapters for APIs, files, IoT, and me
 | Source type | Examples |
 | --- | --- |
 | **APIs** | REST/HTTP endpoints, third-party data services |
-| **Files** | Batch uploads, archival/legacy datasets — via the [File Exchange](../components/file-exchange.md) |
+| **Files** | Batch uploads and archival datasets — via the [File Exchange](../components/file-exchange.md) |
 | **IoT** | Sensor streams, real-time device telemetry |
 | **Message queues** | Async, high-throughput event streams into the [messaging backbone](../components/messaging-backbone.md) |
 
@@ -31,7 +31,7 @@ The platform natively supports **time-series, streaming, and async data** — no
 
 ## Schema templates & data dictionaries
 
-To make data interoperable across providers and consumers, the platform supports **schema templates** and **data dictionaries**. This shifts legibility from an ad-hoc, per-agreement responsibility to a platform capability — a key difference from legacy data exchanges. See [The Role of Standards](../platform/standards.md).
+To make data interoperable across providers and consumers, the platform supports **schema templates** and **data dictionaries**. This shifts legibility from an ad-hoc, per-agreement responsibility to a governed platform capability. See [The Role of Standards](../platform/standards.md).
 
 ## Security on ingestion
 

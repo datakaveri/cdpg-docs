@@ -1,50 +1,34 @@
 ---
 id: design-principles
-title: IUDX Design Principles
+title: CDPG Architecture Principles
 sidebar_label: Design Principles
-description: The twelve design principles that guide the architecture and implementation of IUDX, and their alignment with NUIS and IndEA.
+description: Governing principles for the Go platform across all three planes.
 ---
 
-# IUDX Design Principles
+# CDPG Architecture Principles
 
-IUDX adheres to the following design principles, which serve as guidelines for the design and implementation of the various interfaces in the exchange layer. The architecture, API specification, and implementation of IUDX are all designed using these principles.
+These principles are normative for the intended Go platform. Conformance is **Partially implemented** and is measured per service in [Current and Target State](./current-and-target.mdx).
 
-## The twelve principles
-
-| Principle | What it means |
+| Principle | Architectural consequence |
 | --- | --- |
-| **Open APIs and Standards** | Open APIs, data models, and exchange standards enable data interoperability, functional extensibility, and information exchange across application verticals and city departments. IUDX aligns with existing standards and promotes reuse of taxonomies and vocabularies. |
-| **Consent-driven data sharing** | Data is shared with a consumer only if the provider explicitly provides consent, preserving the privacy of data. |
-| **Minimalistic by design** | APIs are minimalistic and domain-agnostic to be inclusive across a wide range of applications, while extensible data models let providers add custom metadata and data attributes. |
-| **Secure by design** | Security is incorporated into the design of all components from the ground up, following security best practices in component design and implementation. |
-| **Accountability** | IUDX ensures accountability of all transactions that require authentication and authorization, carried out by various stakeholders. |
-| **Unbundling** | Complex tasks are broken into smaller microservices, enabling efficient and robust design. Seamless data exchange is split into simpler interfaces organized as multiple microservices. |
-| **User-centric** | The design takes the two key stakeholders — data providers and consumers — into account and simplifies their interactions with the exchange layer. |
-| **Scalable by design** | Components are designed to scale. A federated design is supported for data-access services, so multiple servers can co-exist and reduce data bottlenecks. |
-| **Technology-agnostic** | The design is neutral to applications, programming languages, and platforms, providing seamless and secure flow of data between stakeholders. |
-| **Open source** | IUDX is an open-source software product using leading open-source tools and technologies, with no proprietary tools or services. |
-| **Cloud-deployable** | IUDX is designed for cloud deployment and can utilize state-of-the-art cloud infrastructure. |
-| **Extensibility, modularity & service orientation** | The design is extensible, modular, and service-oriented, enabling scaling up/down without affecting other components and allowing independent design and development. |
+| **Provider authority** | Providers and their organisations remain authoritative for resource metadata, grants, and permitted delivery modes. |
+| **Authentication is not authorization** | Identity is established first; a separate, explicit decision governs every protected operation. |
+| **Default deny** | Missing, invalid, expired, unavailable, stale, or unenforceable security state never broadens access. |
+| **Distinct identities** | User/application subject, delegated agent actor, and immediate service workload remain independently accountable. |
+| **Central decisions, distributed enforcement** | `dx-authz-go` composes policy; the gateway, service, MCP Gateway, or data executor enforces where canonical facts and effects are known. |
+| **Obligations are mandatory** | A PEP applies every filter, mask, limit, purpose, approval, and audit obligation or denies the operation. |
+| **Organisation isolation in depth** | Organisation scope is present in authorization, datastore predicates, cache keys, search/index ownership, object namespaces, events, exports, and audit visibility. |
+| **Service ownership** | One service owns each business capability and its data. Shared Go modules supply infrastructure, not domain logic. |
+| **Durable facts, repairable projections** | Critical state changes use outboxes; delivery is at-least-once; consumers are idempotent; reconciliation repairs drift. |
+| **Open, versioned contracts** | Public REST/OpenAPI and domain standards are versioned; internal gRPC/protobuf contracts are explicit and compatibility-tested. |
+| **Configuration-selected topology** | The same images use typed configuration and feature gates; business logic does not branch on the deployment shape. |
+| **Least privilege and bounded authority** | Tokens, decisions, delegations, object capabilities, approvals, and agent tools are audience-, action-, resource-, and time-bounded. |
+| **Observable failure** | Logs, metrics, traces, decision IDs, outbox/DLQ state, projection lag, and audit records make security and recovery paths diagnosable. |
+| **Safe lifecycle** | Startup validates configuration and dependencies; readiness protects traffic; cancellation, leases, idempotency, retry budgets, and graceful shutdown prevent duplicate or abandoned work. |
+| **Status honesty** | Intended behavior is labelled **Planned** or **In development** until code, tests, deployment, and operational evidence meet its gate. |
 
-## Services architecture
+## Decision hierarchy
 
-Following the **unbundling** and **service orientation** principles, each platform capability is implemented as an independent microservice, so high-load services can scale independently. The full fleet — gateway, catalogue, policy, authorization, data plane, file exchange, and more — is described in the [System Architecture](./architecture.mdx) and the [Platform Components](/docs/category/components) section.
+When principles conflict, preserve security and correctness first, then availability, performance, and convenience. A false denial may be retried and investigated; an accidental allow or silently ignored obligation is not an acceptable availability strategy.
 
-## Alignment with NUIS and IndEA
-
-IUDX's principles map directly onto the **National Urban Innovation Stack (NUIS)** design principles from the NUIS digital blueprint:
-
-| NUIS principle | How IUDX aligns |
-| --- | --- |
-| **Interoperability through Open APIs & Standards** | "Open APIs and data models for data exchange" ensures interoperability and enables innovative applications across verticals. |
-| **Privacy and Security by Design** | "Consent-driven data sharing" plus "Secure by design" (HTTPS APIs) ensure authenticity, confidentiality, and integrity, sharing data only with authorized entities. |
-| **Extensibility through Layered Design** | "Extensibility, modularity and service orientation" keeps components modular and independently evolvable. |
-| **Evolvability and Scale** | "Scalable by design", "modularity", and "Cloud deployable" let services scale horizontally and cost-effectively. |
-| **Federated Architecture** | "Scalable by design" lets the data-access microservice operate in a federated mode for distributed data handling. |
-| **Transparency and Accountability** | Open APIs make public open data available for analysis, supporting transparency of operations. |
-| **Inclusive and Domain Modeling** | "Open APIs" and "Minimalistic by design" serve a diverse set of developers; domain-specific models are handled via extensible data models. |
-| **Minimalistic** | APIs and data models follow the "Minimalistic by design" principle. |
-| **Unbundling** | Exactly aligned with the NUIS unbundling principle — a key factor in designing the APIs. |
-| **Non-Repudiable** | "Accountability" ensures all stakeholder transactions are logged and available for internal audit. |
-
-IUDX also aligns with the **IndEA** (India Enterprise Architecture) reference models. Of the eight reference models, the **Data Reference Model**, **Technology Reference Model**, and **Security Reference Model** are the most relevant to a data-exchange layer, and IUDX is aligned with the broad principles defined for each.
+Architecture decisions refine these principles. See [Decisions and Open Gaps](./decisions.md), [Security Architecture](./security-architecture.mdx), and [Shared Go Platform](./shared-platform.md).

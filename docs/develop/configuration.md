@@ -2,68 +2,49 @@
 id: configuration
 title: Configuration
 sidebar_label: Configuration
-description: How platform services are configured — environment-driven settings, baked dev defaults, and secret handling.
+description: Typed, environment-driven service configuration and deployment validation.
 ---
 
 # Configuration
 
-Every platform service follows the same configuration model, so once you know it for one service you know it for all of them.
-
-## The model
-
-1. **Baked development defaults** — each service ships a `configs/config.yaml` compiled into its image with sensible local-dev values (local hostnames, dev ports, empty secrets).
-2. **Environment-variable overrides** — at runtime, environment variables override any baked value. This is the *only* production configuration mechanism: containers are configured entirely through their environment (injected by Compose locally, by Helm values + External Secrets in clusters).
-3. **No mounted config files** — services do not read config files from volumes at the application level; what's in the image plus the environment is the complete truth.
+Go services load configuration once at startup into typed structures. Development defaults may be embedded or versioned, but secrets and environment-specific endpoints are injected at runtime by Compose or the GitOps secret/config mechanism.
 
 ```yaml
-# configs/config.yaml — baked dev defaults (never secrets)
-jwt:
-  issuer: http://localhost:8180/realms/iudx
-  jwks_url: http://keycloak:8080/realms/iudx/protocol/openid-connect/certs
-  cache_ttl_minutes: 10
-hmac:
-  shared_secret: ""        # must be set via env outside dev
+identity:
+  issuer: https://identity.example/realms/cdpg
+  jwks_url: https://identity.internal/realms/cdpg/protocol/openid-connect/certs
+  audience: dx-catalogue-go
+  allowed_callers: [dx-gateway-go, dx-acl-go]
+authorization:
+  endpoint: dns:///dx-authz-go:8090
+  fail_closed: true
+database:
+  schema_mode: provision
 ```
 
-```yaml
-# docker-compose / Helm — env overrides
-environment:
-  JWT_ISSUER: http://localhost:8180/realms/iudx
-  JWT_JWKS_URL: http://keycloak:8080/realms/iudx/protocol/openid-connect/certs
-  HMAC_SHARED_SECRET: ${HMAC_SHARED_SECRET}
-```
+## Rules
 
-## Rules that keep configuration sane
+- Business code receives validated configuration; it does not read environment variables directly.
+- The external token issuer and the network-reachable JWKS URL are separate settings when topology requires it.
+- Service identity includes destination audience, allowed caller IDs, and allowed subject asserters. Wildcards are prohibited in production.
+- `schema_mode` is a deployment setting. Exactly one actor provisions versioned migrations; ordinary replicas do not execute DDL.
+- Secrets have no usable production defaults and services fail startup when required values are missing.
+- Routes, feature gates, dependency endpoints, timeouts, retry budgets, and policy versions are explicit and observable.
 
-- **Environment variables are unprefixed and uniform** across services (`JWT_ISSUER`, `RABBITMQ_URL`, …) — no per-service prefixes to memorise.
-- **Secrets never appear in baked config or in Git** — the baked value is empty, the runtime injects the real one, and services validate at startup that required secrets are present outside dev.
-- **Business code never reads the environment directly** — configuration is loaded once at boot into a typed struct; everything downstream receives values explicitly.
+## Validation
 
-## The issuer/JWKS gotcha (read this once)
+Every service must support a no-traffic configuration check used by CI and deployment gates. It validates syntax, required fields, URL/audience consistency, route targets, caller allowlists, secret references, database connectivity metadata, and incompatible feature combinations without mutating production data.
 
-The browser and the backend see the identity provider at **different URLs** in containerised environments:
+## Issuer and JWKS endpoints
 
-- The browser logs in at `http://localhost:8180`, so tokens carry `iss: http://localhost:8180/realms/iudx`.
-- A backend container reaches Keycloak at `http://keycloak:8080` on the Docker network.
+The token issuer must exactly match the `iss` claim that clients receive. The JWKS endpoint is the network-reachable location from which a service retrieves signing keys; in a container or cluster it may use a different hostname from the public issuer. Separating these settings prevents topology from weakening issuer validation.
 
-Token validation matches the **issuer exactly as it appears in the token**, while fetching keys from wherever the backend can actually reach. That is why the configuration has *two* URLs:
-
-| Setting | Value | Meaning |
-| --- | --- | --- |
-| `jwt.issuer` | the **browser-facing** URL | must equal the token's `iss` claim |
-| `jwt.jwks_url` | the **backend-reachable** URL | where signing keys are fetched |
-
-Setting both to the same URL is the most common cause of mysterious `401`s in local development — see [JWT Validation](../guides/jwt-validation.md).
-
-## Legacy services
-
-The previous-generation Java services use Vert.x JSON config files with per-environment merging instead of this model. They are configured as before until retired — see [Migration](../migration/overview.md).
-
-## Where configuration lives
-
-| Concern | Location |
+| Concern | Source |
 | --- | --- |
-| Dev defaults | `configs/config.yaml` in each service repo |
-| Local overrides | `docker-compose*.yml` in the orchestration repo |
-| Cluster values | Helm values per environment in the GitOps repo — see [Deployment & GitOps](../operations/deployment-gitops.md) |
-| Secrets (cluster) | External Secrets Operator → injected as env vars |
+| Development defaults | Service `configs/` directory |
+| Local overrides | Orchestration Compose environment |
+| Cluster values | Environment overlays in the GitOps repository |
+| Secrets | External secret manager references |
+| Policy bundles | Versioned, verified policy-distribution channel — **Planned** |
+
+See [Shared Platform Architecture](../technical/shared-platform.md) and [Deployment Architecture](../technical/deployment.mdx).

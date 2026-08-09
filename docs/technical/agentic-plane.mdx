@@ -2,7 +2,7 @@
 id: agentic-plane
 title: Agentic Plane
 sidebar_label: Agentic Plane
-description: How AI agents act on the Data Exchange under revocable delegation — two identities, two authorization checks, governed tools, and human approval for consequential actions.
+description: Agent identity, registration, sessions, MCP tools, semantic firewall, delegation, HITL, authorization, kill switch, audit, and failure behavior.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
@@ -10,112 +10,144 @@ import AgenticSvg from '@site/src/components/Diagram/svg/agentic-plane.svg';
 
 # Agentic Plane
 
-The **Agentic Plane** lets an AI agent act on the exchange on a user's behalf.
+The Agentic Plane lets an AI agent propose and execute platform operations under explicit, narrow, revocable authority. An agent is a first-class accountable actor, but it is never an independent source of permission. The governing rule is **delegation, never impersonation**.
 
-It exists because the obvious alternative — handing an agent a user's credential and letting it call APIs as that user — breaks the two properties the platform is built on. You can no longer tell who acted, and you cannot give an agent *less* authority than the person who deployed it.
-
-The governing rule is **delegation, never impersonation**.
-
-The plane is **optional**. A deployment that does not enable it is unaffected: human users and conventional applications use the control and data planes exactly as before, and nothing in those planes depends on the agent services existing.
-
-## Plane diagram
+**Status:** **Partially implemented for local integration and not deployable through GitOps.** Registry, Runtime, MCP Gateway, token exchange, delegated relationships, tool pipeline, HITL, and kill switch exist. Cross-replica execution leases, complete idempotency, policy/route deployment, provenance enforcement, sender-constrained tokens, and production failure testing remain open.
 
 <DiagramFrame
   svg={AgenticSvg}
-  label="agentic_plane · delegation, never impersonation"
+  label="agentic_plane · lifecycle, delegated execution, human control"
   legend={[
-    {color: 'orange', label: 'the human'},
-    {color: 'berry', label: 'agent plane'},
-    {color: 'navy', label: 'platform decision'},
-    {color: 'teal', label: 'events'},
-    {color: 'green', label: 'data services'},
+    {color: 'orange', label: 'owner / approver'},
+    {color: 'berry', label: 'agent identity & runtime'},
+    {color: 'navy', label: 'authorization & identity'},
+    {color: 'green', label: 'tool execution / data'},
+    {color: 'teal', label: 'events & audit'},
   ]}
 />
 
-## The three services
+## Components and ownership
 
-| Service | Role |
-| --- | --- |
-| **Agent Registry** | The control plane for agents — agent records and versioned templates, an identity for each agent in the identity provider, delegation grants recorded through the [Policy Service](../components/policy-service.md), and the kill switch. |
-| **MCP Gateway** | The tool boundary. Publishes the tools an agent may use and applies a fixed pipeline to every call before anything reaches the exchange. It is the agent's **only** egress. |
-| **Agent Runtime** | Sessions, the planning loop, and streaming. Exchanges the user's token for a delegated token and executes approved tools through the MCP Gateway. |
+| Component | Owns | Stores | Status |
+| --- | --- | --- | --- |
+| **Agent Registry (`dx-agent-registry-go`, host `:8270`)** | Agents, versioned templates, ownership, lifecycle, credential binding, kill switch, delegation facade, activity view | PostgreSQL `agentreg_db`; Keycloak client reference; lifecycle outbox | **Partially implemented** |
+| **Agent Runtime (`dx-agent-runtime-go`, host `:8290`)** | Sessions, transcripts, SSE, guardrails, planner loop, provider selection, token exchange, tool orchestration | PostgreSQL `agentrt_db`; Redis counters/hot state | **Partially implemented** |
+| **MCP Gateway (`dx-mcp-gateway-go`, host `:8280`)** | Tool manifest, discovery, schema/scope/resource/risk controls, token vault, HITL parking, sole egress | Redis session/token/approval state | **Partially implemented** |
+| **Identity Provider** | Agent/workload clients and RFC 8693 token exchange | Keycloak realm | **Implemented** for local flow |
+| **Policy Service** | Agent delegation grants, validity, resources, scopes, revocation | PostgreSQL and outbox | **Implemented** locally |
+| **Authorization Service** | User right ∩ agent delegated right ∩ context/trust decision | OpenFGA now; planned OPA composite policy | **Partially implemented** |
+| **API Gateway** | Agent token validation, workload identity, kill-switch deny, agent rate limit, composite PEP, routing | Redis denylist mirror/rate counters | **Partially implemented** |
+| **Audit/Notifications** | Durable activity and approval notifications | PostgreSQL/RabbitMQ/SMTP | **Partially implemented** |
 
-Notice what the diagram shows about the shape of this: **no agent service talks to a data plane directly**. Every agent request leaves the MCP Gateway and enters the platform through the same [API Gateway](../components/api-gateway.md) that serves human traffic. An agent therefore cannot bypass a control that applies to everyone else — not because the agent path is careful, but because there is no second path to be careless with.
+## Agent identity and registration
 
-## Two identities on every request
+An owner selects a certified template version and creates an agent record. A template defines persona, model/provider profile, maximum tool profile, and guardrails; it cannot grant resource permission. The Registry provisions a dedicated confidential identity-provider client and encrypts its secret at rest. The UI never receives the client secret.
 
-An agent's token names the **user as the subject** and the **agent as the actor**. One credential answers both questions the platform needs to ask:
+The agent record moves through `active`, `suspended`, and `retired`. Suspension and retirement write a lifecycle event in the same transaction as the state change. The Gateway consumes the event into a denylist so a valid-but-still-live delegated token does not defeat the kill switch.
 
-| Question | Answered by |
-| --- | --- |
-| On whose behalf is this? | the subject — the delegating user |
-| Who is actually calling? | the actor — the agent, and the delegation that authorized it |
+## Templates and lifecycle
 
-The gateway signs both identities onto the upstream request, so the service, the data plane, and the audit trail all see the same pair. **An action taken by an agent is never recorded as though the user did it by hand** — which is the whole point of not handing over the user's credential.
+- Templates are immutable, versioned, reviewed artifacts.
+- An agent pins the exact template version used at creation/session assembly.
+- Tool visibility is the intersection of template ceiling and active delegation, never the union.
+- Updating a template creates a new version; existing sessions do not silently change policy or model configuration.
+- Retirement is permanent. Resume is allowed only from suspended state after ownership/administrative checks.
 
-## Two checks, not one
+## Delegated authority
 
-An agent request must satisfy **both** relationship checks:
+The owner grants an agent specific operations/resources with expiry. The Policy Service stores the grant and publishes `delegation.granted`, `updated`, or `revoked`; the authorization projector writes agent ownership and delegated-resource relationships.
+
+An agent action allows only when all stages allow:
 
 ```text
-the user's own permission on the resource
-  AND the agent's delegated permission on that same resource
-  AND the delegation is active and unexpired
-  AND the kill switch permits this agent
+authenticated user
+AND authenticated runtime/MCP workloads
+AND active agent
+AND active, unexpired delegation
+AND user has the requested resource permission
+AND agent has the delegated resource permission
+AND OPA contextual/tool/risk policy allows
+AND every required obligation can be enforced
 ```
 
-The delegated permission is a **separate relationship**, granted per resource and per access type. That separation is what makes an agent strictly narrower than its user rather than equal to it:
+Delegation cannot create authority the user does not have. Losing the user's own right immediately invalidates the composite decision even if the delegation record remains.
 
-- Revoking the delegation removes the agent's access and leaves the user's untouched.
-- An agent granted access to one dataset gains nothing on any other.
-- An agent can never acquire something its user does not have, because the user's own check still has to pass.
+## Session and execution lifecycle
 
-See [Authorization Service](../components/authorization-service.md) for the relationship model these checks run against.
+1. The authenticated owner creates a session for an active agent.
+2. Runtime resolves the pinned agent/template and active grant using workload-authenticated internal calls.
+3. Runtime exchanges the user's token for a short-lived delegated token where `sub` names the user and `act.sub` names the agent.
+4. Runtime bootstraps MCP state, vaults the delegated token, and receives only tools visible under the template/delegation intersection.
+5. A user message is appended to the durable transcript. A cross-replica lease must own the turn before execution; this is **In development**.
+6. The LLM proposes a response or tool call. The proposal is untrusted input and cannot skip the MCP pipeline.
+7. Tool results are provenance-labelled and size-bounded before re-entering the model. Complete prompt-injection controls remain **In development**.
+8. The final answer and tool/approval outcomes are persisted and streamed over SSE.
 
-## Governed tools
+## Tool discovery and semantic firewall
 
-Agents do not get an open API surface. They get **tools** — declared, schema-bound operations published by the MCP Gateway — and every call passes the same four stages:
+The MCP Gateway's versioned manifest is the only tool vocabulary. Each tool declares a strict schema, required permission/scope, resource extraction, risk tier, exact upstream operation, response handling, and idempotency expectations.
 
-1. **Schema** — arguments are validated against the tool's declared schema. Malformed calls never reach the exchange.
-2. **Scope** — the tool and its target must fall inside the delegation grant.
-3. **Risk** — tools are classified; high-risk operations are parked for human approval instead of executing.
-4. **Credential** — the delegated token is attached here, at the boundary. **The agent's reasoning layer never handles a raw credential.**
+Every invocation passes:
 
-Data returned to the model is wrapped and marked as untrusted content, so text retrieved from the exchange is treated as material to summarise rather than as instructions to obey. This matters more than it sounds: without it, a dataset description becomes an injection vector.
+1. **Tool visibility:** the tool was present in the session's filtered catalogue.
+2. **Schema:** unknown/missing fields and invalid types are rejected.
+3. **Scope/resource:** current grant state covers the exact tool and target.
+4. **Authorization:** the platform composite decision checks user, agent, context, and trust.
+5. **Risk:** high-risk tools park for human approval.
+6. **Credential:** the delegated token and workload credential attach only at the egress boundary; the model never handles them.
+7. **Sole egress:** execution goes through the normal API Gateway and the same service operation policy as human traffic.
+8. **Output handling:** the response is bounded, labelled as untrusted, and audited before the model sees it.
 
-### Human approval
+## Human-in-the-loop approval
 
-Operations with real-world consequence — a marketplace purchase, a subscription that incurs cost — do not execute on the agent's judgement. They are parked, the user is notified, and they proceed only on explicit approval. An approval executes **exactly once**, and an unanswered request expires harmlessly.
+High-risk operations—such as a purchase or paid subscription—enter a durable approval state with action ID, owner, agent, session, exact tool and arguments, decision/grant references, expiry, and idempotency key. Only the owner or an explicitly authorized approver may approve or reject.
 
-There is no automatic approval path. An operator can classify *more* tools as high-risk; no configuration makes a high-risk tool self-approve.
+Approval executes the exact parked action, not a new model-generated variant. The side-effect owner stores the idempotency key and returns the original result on retry. Timeout and rejection cause no side effect. There is no auto-approve configuration.
 
-## Revocation, at three speeds
+## Kill switch and revocation
 
-Agent authority can be withdrawn three ways, and the plane needs all three because the slowest alone would not be acceptable:
-
-| Mechanism | Effect | Speed |
+| Mechanism | Scope | Expected behavior |
 | --- | --- | --- |
-| **Token expiry** | Delegated tokens are short-lived by design | bounded by token lifetime |
-| **Delegation revoke** | The delegated relationships are removed — the agent loses the resource, the user keeps it | seconds |
-| **Kill switch** | The agent is suspended platform-wide; the gateway rejects even a currently valid token | immediate |
+| Token expiry | One delegated credential | Bounds exposure by a short lifetime |
+| Grant revocation | Selected resources/operations | Removes delegated relationship; new decisions deny |
+| Agent suspension | All agent activity | Gateway denylist blocks immediately within the published event SLO |
+| Agent retirement | Permanent identity lifecycle | Disables future sessions/exchange and remains denied |
+| Session cancellation | One execution | Cancels planner/tools and releases durable lease; reconciles uncertain side effects |
 
-The kill switch exists because token expiry is the wrong instrument for an agent misbehaving *right now*. Suspension is enforced at the gateway, so it waits for neither a token to age out nor a policy change to propagate.
+Kill-switch and revocation paths must be measured under broker delay, cache, gateway restart, and multiple replicas. A missed lifecycle event triggers reconciliation; it never authorizes a new action.
 
-## Audit
+## Interaction with Control and Data Planes
 
-Every agent action is recorded with both identities, the delegation that permitted it, the tool invoked, the approval decision where one applied, and the outcome. Agent traffic is rate-limited per agent, so a malfunctioning agent degrades its own throughput rather than the exchange's.
+- Agent registration, ownership, templates, delegations, token exchange, policy, credits, approvals, audit, and notifications use Control Plane services.
+- Tools enter through the gateway and invoke the same Catalogue, Marketplace, Subscription, File, NGSI-LD, and OGC operations available to conventional clients.
+- Data services receive the same carried decision/obligations plus agent/delegation context. They do not trust model rationale or tool names as authorization.
+- A deployment without Agentic Plane services continues to operate; no core service depends on an agent component.
 
-An operator can therefore answer *what did this agent do, for whom, under whose authority, and who approved it* — without reconstructing the story from service logs.
+## Threat model
 
-## Design decisions & trade-offs
+| Threat | Control | Remaining gap |
+| --- | --- | --- |
+| Model requests out-of-scope tool | Filtered catalogue + scope/resource stage + platform authorization | Manifest/operation conformance automation |
+| Prompt injection in resource/tool output | Sole ingress wrapping, provenance labels, size bounds, fixed system/policy instructions | Complete content-policy and red-team suite |
+| Compromised Runtime | Destination-bound workload identity, Registry/MCP caller allowlists, active grant checks | Sender-constrained delegated token |
+| Compromised MCP Gateway | Gateway workload identity, composite authorization, service ownership checks | Tool-call attestation and stronger isolation |
+| Replayed approval/tool call | Stable action ID and side-effect-owner idempotency | Fleet-wide idempotency coverage and crash suite |
+| Two replicas execute one turn | Durable session lease | **Not yet implemented** |
+| Stolen delegated token | Short lifetime, vault encryption, audience/actor context, revocation/kill switch | DPoP or equivalent sender constraint |
+| Redis loss | Deny/stop in-flight work; durable session/transcript recovery | Durable approval/token-vault topology decision |
+| LLM provider outage | Bounded timeout, no tool execution without a completed proposal | Retry/cost SLO and fallback policy |
 
-- **Delegation rather than impersonation** — preserves attribution and lets an agent hold less authority than its user. Costs a token-exchange step and a second relationship to maintain per grant.
-- **A single tool boundary** — one place to validate, classify, and attach credentials, which makes the agent's reachable surface reviewable. It also makes the MCP Gateway a component agents cannot function without.
-- **Human approval for consequential tools** — stops an autonomous agent committing money or contracts. Costs latency and an approval interface.
-- **Reusing the human API Gateway** — guarantees agents cannot outrun platform policy, instead of relying on a parallel enforcement path staying in sync with the real one.
+## Failure behavior and recovery
 
-:::note Optional by construction
-The Agentic Plane deploys only where an operator enables it, and no control-plane or data-plane service depends on it.
-:::
+- Registry, grant, token-exchange, authorization, vault, or MCP bootstrap failure prevents session creation.
+- A planner or tool timeout ends the bounded turn and persists an error; it never assumes a side effect failed.
+- If execution outcome is uncertain, reconciliation queries the side-effect owner by idempotency key before retry.
+- Redis loss invalidates in-flight sessions/approvals according to the selected durability mode; high-risk actions default to not executed.
+- Broker delay may slow kill-switch propagation; Gateway restart rebuilds from durable agent state/denylist before accepting agent traffic.
+- SSE disconnect does not cancel an already accepted turn unless the API explicitly requests cancellation; the session remains queryable.
 
-See the [Agent Delegation flow](../flows/agent-delegation.mdx) to step through a request end to end, and [System Architecture](./architecture.mdx) for where this plane sits.
+## Audit trail
+
+Agent events include subject user, agent, runtime workload, MCP workload, delegation/grant, template version, model provider/model, session/turn, tool, normalized arguments hash, authorization decision, obligations, approval/action ID, approver, idempotency key, external side-effect reference, result classification, and timestamps. Prompt or result bodies are handled under retention and sensitivity policy rather than logged by default.
+
+See [Agent Delegation and Tool Execution](../flows/agent-delegation.mdx) for the end-to-end flow.

@@ -1,102 +1,91 @@
 ---
-sidebar_position: 4
-title: "Flow: Agent Delegation"
-description: How an AI agent is granted authority, uses it, and loses it — from the user's delegation through to revocation.
+sidebar_position: 8
+title: "Flow: Agent Delegation and Tool Execution"
+description: Agent registration, delegation, session assembly, token exchange, MCP controls, authorization, human approval, audit, and revocation.
 ---
 
 import StepFlow from '@site/src/components/Diagram/StepFlow';
 import DelegationSvg from '@site/src/components/Diagram/svg/flow-agent-delegation.svg';
 
-# Flow: Agent Delegation
+# Flow: Agent Delegation and Tool Execution
 
-How an agent is granted authority, how it uses it, and how it loses it. Step through the flow below; each step lights up the part of the system it touches.
+**Status:** the end-to-end path exists for local integration but is **Partially implemented** and not production deployable.
 
 <StepFlow
   svg={DelegationSvg}
-  label="agent_delegation · borrowed authority, never owned"
+  label="agent_execution · register, delegate, approve, revoke"
   legend={[
-    {color: 'orange', label: 'the human'},
-    {color: 'berry', label: 'agent plane'},
-    {color: 'navy', label: 'identity & decision'},
-    {color: 'teal', label: 'events'},
-    {color: 'green', label: 'the service'},
+    {color: 'orange', label: 'owner / approver'},
+    {color: 'berry', label: 'Agentic Plane'},
+    {color: 'navy', label: 'identity & authorization'},
+    {color: 'teal', label: 'events & audit'},
+    {color: 'green', label: 'tool execution'},
   ]}
   steps={[
     {
-      title: 'The user delegates',
-      body: 'A user grants an agent authority over specific resources and specific access types. This is an explicit act with a scope and an expiry — not a checkbox that hands over the account.',
-      lights: ['p-delegate', 'lbl-delegate', 'n-user', 'n-registry'],
+      title: 'Owner creates an agent from a template',
+      body: 'The Registry pins a reviewed template version, records ownership, and provisions a dedicated identity-provider client whose secret remains encrypted and internal.',
+      lights: ['p-register', 'lbl-register', 'n-user', 'n-registry'],
     },
     {
-      title: 'The grant becomes a record',
-      body: 'The registry records the delegation through the Policy Service, so an agent grant lives in the same durable, auditable store as every other access grant on the platform. There is no separate agent permission system to keep in sync.',
-      lights: ['p-record', 'lbl-record', 'n-registry', 'n-acl'],
+      title: 'Owner delegates narrow authority',
+      body: 'The owner grants exact operations/resources with expiry. The Registry forwards authoring to the Policy Service; the Registry does not own grant truth.',
+      lights: ['p-delegate', 'lbl-delegate', 'n-registry', 'n-acl'],
     },
     {
-      title: 'It is projected into the graph',
-      body: 'The grant is published transactionally and projected into the authorization graph as a delegated relationship — separate from the user’s own. Until it lands, the agent is denied, which is the safe direction.',
+      title: 'Delegation is projected',
+      body: 'The Policy Service publishes a durable delegation fact. The Authorization Service updates agent ownership and delegated-resource relationships; until projection succeeds, the agent is denied.',
       lights: ['p-project', 'lbl-project', 'n-acl', 'n-authz'],
     },
     {
-      title: 'The agent gets a token that names both',
-      body: 'When the agent acts, the runtime exchanges the user’s token for one naming the user as subject and the agent as actor. Two identities, one credential — and the runtime never holds a long-lived key.',
+      title: 'Runtime assembles a session',
+      body: 'The Runtime verifies owner, active agent, pinned template, and active grant. Session/transcript state is persisted and a turn must acquire a durable lease before execution.',
+      lights: ['p-session', 'lbl-session', 'n-user', 'n-runtime'],
+    },
+    {
+      title: 'Token exchange names user and agent',
+      body: 'Runtime exchanges the user token for a short-lived delegated token: subject is the user, actor is the agent. Runtime workload identity remains distinct from both.',
       lights: ['p-exchange', 'lbl-exchange', 'n-runtime', 'n-idp'],
     },
     {
-      title: 'The model proposes; it does not call',
-      body: 'The planning loop proposes a tool. It cannot reach the exchange directly — the proposal goes to the MCP Gateway, which validates arguments against the tool schema and checks the target falls inside the delegation.',
+      title: 'Model proposes a visible tool',
+      body: 'The model sees only tools in the template/delegation intersection. Its proposal is untrusted input and goes only to the MCP Gateway.',
       lights: ['p-tool', 'lbl-tool', 'n-runtime', 'n-mcp'],
     },
     {
-      title: 'High-risk actions stop for a human',
-      body: 'A tool classified as consequential — a purchase, a paid subscription — parks here and notifies the user. Approval executes it exactly once; silence lets it expire. No configuration makes it self-approve.',
+      title: 'Semantic firewall and authorization evaluate',
+      body: 'Schema, scope, resource, user right, agent delegated right, OPA context/risk, active grant, workload trust, and obligation support must all pass.',
+      lights: ['p-check', 'lbl-check', 'n-mcp', 'n-authz'],
+    },
+    {
+      title: 'High-risk action waits for a human',
+      body: 'The exact action is parked with expiry and idempotency key. Only an authorized human can approve; reject or timeout executes nothing.',
       lights: ['p-approve', 'lbl-approve', 'n-mcp', 'n-user'],
     },
     {
-      title: 'The request enters at the normal edge',
-      body: 'The MCP Gateway attaches the delegated token and calls the same API Gateway that serves human traffic. There is no agent-only entrance, so there is no agent-only way to miss a control.',
-      lights: ['p-gate', 'lbl-gate', 'n-mcp', 'n-gw'],
+      title: 'Approved call uses the normal gateway',
+      body: 'The MCP Gateway attaches credentials at sole egress. The API Gateway and target service enforce the same operation policy and carried decision as any other caller.',
+      lights: ['p-gate', 'lbl-gate', 'n-mcp', 'n-gw', 'n-svc'],
     },
     {
-      title: 'Both permissions are checked',
-      body: 'Authorization checks the user’s own permission and the agent’s delegated permission on the same resource. Both must pass — which is what keeps an agent strictly narrower than the person behind it.',
-      lights: ['p-check', 'lbl-check', 'n-gw', 'n-authz'],
+      title: 'Audit names every accountable party',
+      body: 'The audit chain records user, agent, runtime/MCP workloads, delegation, template, session, tool, decision, approval, idempotency key, and outcome. Tool output returns as bounded untrusted data.',
+      lights: ['p-audit', 'lbl-audit', 'n-svc', 'n-audit'],
     },
     {
-      title: 'The service answers, and the audit names both',
-      body: 'The service serves the request and records both identities, the delegation, the tool, and any approval. The action is never logged as though the user performed it by hand.',
-      lights: ['p-serve', 'lbl-serve', 'n-gw', 'n-svc'],
-    },
-    {
-      title: 'Authority can be taken back immediately',
-      body: 'Revoking the delegation removes the agent’s relationship and leaves the user’s intact. The kill switch goes further: the gateway rejects the agent outright, without waiting for a token to expire.',
+      title: 'Owner revokes or suspends',
+      body: 'Grant revocation removes selected authority; suspension activates the platform-wide kill switch. New calls deny even when a previous token has not expired.',
       lights: ['p-kill', 'lbl-kill', 'n-registry', 'n-gw'],
     },
   ]}
 />
 
-## Why two checks instead of one
+## Recovery rules
 
-A single check — "does this agent have access?" — would let an agent outlive the authority it borrowed. If the user loses access to a dataset, an agent holding its own independent grant would keep working.
+- A session does not start if registry, grant, token exchange, authorization, or vault setup fails.
+- A crash after a side effect is reconciled by idempotency key before retry; absence of a response is not proof of failure.
+- Two replicas may not execute one turn without a durable owner lease; this gate is not yet complete.
+- Lost approval state defaults to not executed. No recovery path auto-approves.
+- Tool output is data, not instruction; full provenance/content-policy enforcement remains in development.
 
-Requiring the user's permission *and* the delegated permission makes the agent's authority genuinely derivative:
-
-| Change | Effect on the agent |
-| --- | --- |
-| The user loses access to the resource | The agent loses it too, immediately — the user's check now fails |
-| The delegation is revoked | The agent loses it; the user is unaffected |
-| The agent is granted a new resource | Nothing happens unless the user also has it |
-| The agent is suspended | Everything stops, regardless of tokens or grants |
-
-## What the agent never holds
-
-- **Credentials** — attached at the MCP Gateway boundary, after the plan is fixed.
-- **An open API surface** — only declared tools, with validated arguments.
-- **Authority to spend** — consequential operations require a human.
-- **Its own standing** — every permission is borrowed and independently revocable.
-
-## Prompt injection and untrusted data
-
-Data returned from the exchange is wrapped and marked as untrusted before it reaches the model. A dataset description, a discussion comment, or a file's contents are things the agent may *summarise* — never instructions it may follow. Without this boundary, any provider who can write a resource description could steer any agent that reads it.
-
-See the [Agentic Plane](../technical/agentic-plane.mdx) for the architecture, and the [Authentication flow](./authentication.mdx) for how ordinary identity reaches the same edge.
+See [Agentic Plane](../technical/agentic-plane.mdx) for the threat model and status.

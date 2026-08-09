@@ -1,137 +1,61 @@
-<svg viewBox="0 0 760 740" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="System architecture: clients enter through the API Gateway at the edge; control-side services decide who may access what; data-side services serve the content; the messaging backbone connects policy changes to enforcement; and an optional agent plane lets AI agents reach the same edge under delegation.">
+<svg viewBox="0 0 760 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sa-title sa-desc">
+  <title id="sa-title">Complete CDPG platform context</title>
+  <desc id="sa-desc">People, applications, agents, and external providers enter through identity and gateway boundaries. Control Plane services govern identity, catalogues, policies, commerce, and platform records. Data Plane services serve NGSI-LD, OGC, file, and subscription data. Agentic Plane services govern delegated execution. Shared infrastructure provides stores, events, and observability. Cards show implementation status.</desc>
   <defs>
-    <marker id="sa-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="sa-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="sa-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="sa-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/>
-    </marker>
+    <marker id="sa-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker>
+    <marker id="sa-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker>
+    <marker id="sa-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker>
+    <marker id="sa-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker>
   </defs>
 
-  <!-- zones -->
-  <text class="dxz-lbl" x="40" y="28">clients</text>
-  <rect class="dxz plain" x="150" y="120" width="460" height="86" rx="14"/>
-  <text class="dxz-lbl navy" x="170" y="141">edge · identity once</text>
-  <rect class="dxz navy" x="20" y="260" width="350" height="220" rx="16"/>
-  <text class="dxz-lbl navy" x="40" y="284">control side · who may access what</text>
-  <rect class="dxz green" x="390" y="260" width="350" height="220" rx="16"/>
-  <text class="dxz-lbl green" x="410" y="284">data side · the content itself</text>
-  <rect class="dxz berry" x="20" y="628" width="350" height="96" rx="16"/>
-  <text class="dxz-lbl berry" x="40" y="652">agent plane · optional</text>
+  <text class="dxz-lbl" x="28" y="25">external actors &amp; dependencies</text>
+  <rect class="dxz navy" x="20" y="108" width="720" height="92" rx="16"/>
+  <text class="dxz-lbl navy" x="38" y="130">public trust boundary</text>
+  <rect class="dxz navy" x="20" y="232" width="350" height="248" rx="16"/>
+  <text class="dxz-lbl navy" x="38" y="255">control plane</text>
+  <rect class="dxz green" x="390" y="232" width="350" height="248" rx="16"/>
+  <text class="dxz-lbl green" x="408" y="255">data plane</text>
+  <rect class="dxz berry" x="20" y="506" width="720" height="88" rx="16"/>
+  <text class="dxz-lbl berry" x="38" y="529">agentic plane · in development</text>
+  <rect class="dxz teal" x="20" y="620" width="720" height="64" rx="16"/>
+  <text class="dxz-lbl teal" x="38" y="643">shared infrastructure &amp; platform operations</text>
 
-  <!-- flows -->
-  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M225,84 C235,110 235,125 240,148"/>
-  <text class="dxe" x="176" y="112">oidc login</text>
-  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M290,84 C380,105 440,120 478,148"/>
-  <text class="dxe" x="342" y="106">bearer jwt</text>
-  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M515,84 C518,110 518,125 520,148"/>
-  <text class="dxe" x="530" y="112">app credentials</text>
-  <path class="dxf navy dashed calm" d="M312,172 H448"/>
-  <text class="dxe" x="362" y="165">jwks · cached</text>
-  <path class="dxf navy calm" marker-end="url(#sa-n)" d="M470,196 C400,225 310,235 250,258"/>
-  <path class="dxf navy calm" marker-end="url(#sa-n)" d="M545,196 C555,220 558,235 560,258"/>
-  <text class="dxe" x="386" y="243">signed identity headers</text>
+  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M118 80V145H250"/>
+  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M316 80V145"/>
+  <path class="dxf orange calm" marker-end="url(#sa-o)" d="M608 80V145H510"/>
+  <path class="dxf navy calm" marker-end="url(#sa-n)" d="M440 182C360 214 310 220 262 252"/>
+  <path class="dxf green calm" marker-end="url(#sa-g)" d="M500 182C560 214 576 220 586 252"/>
+  <path class="dxf teal dashed calm" marker-end="url(#sa-t)" d="M278 455C350 492 418 492 486 455"/>
+  <path class="dxf navy calm" marker-end="url(#sa-n)" d="M560 530C610 460 610 270 520 184"/>
+  <path class="dxf teal calm" marker-end="url(#sa-t)" d="M380 594V628"/>
+  <text class="dxe" x="145" y="101">OIDC / HTTPS</text>
+  <text class="dxe" x="508" y="101">callbacks / providers</text>
+  <text class="dxe" x="323" y="480">events + carried decisions</text>
 
-  <path class="dxf teal calm" marker-end="url(#sa-t)" d="M150,440 C160,510 220,565 288,578"/>
-  <text class="dxe" x="128" y="530">policy · membership events</text>
-  <path class="dxf teal calm" marker-end="url(#sa-t)" d="M440,562 C400,520 330,470 292,442"/>
-  <text class="dxe" x="408" y="512">graph writes</text>
-  <path class="dxf navy dashed calm" d="M408,414 C390,415 372,415 355,415"/>
-  <text class="dxe" x="352" y="404">allowed?</text>
+  <g class="dxn orange"><rect class="dxn-box" x="38" y="38" width="160" height="44" rx="11"/><text class="dxn-t" x="118" y="57">People &amp; applications</text><text class="dxn-s" x="118" y="72">provider · consumer · admin</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="238" y="38" width="156" height="44" rx="11"/><text class="dxn-t" x="316" y="57">Agent clients</text><text class="dxn-s" x="316" y="72">owner · approver</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="522" y="38" width="174" height="44" rx="11"/><text class="dxn-t" x="609" y="57">External systems</text><text class="dxn-s" x="609" y="72">data · payment · email · llm</text></g>
 
-  <!-- clients -->
-  <g id="n-users" class="dxn orange">
-    <rect class="dxn-box" x="160" y="34" width="150" height="50" rx="12"/>
-    <text class="dxn-t" x="235" y="56">Users / Web apps</text>
-    <text class="dxn-s" x="235" y="71">oidc · pkce</text>
-  </g>
-  <g id="n-apps" class="dxn orange">
-    <rect class="dxn-box" x="440" y="34" width="150" height="50" rx="12"/>
-    <text class="dxn-t" x="515" y="56">Applications</text>
-    <text class="dxn-s" x="515" y="71">m2m · delegation</text>
-  </g>
+  <g class="dxn navy"><rect class="dxn-box" x="42" y="142" width="180" height="44" rx="11"/><text class="dxn-t" x="132" y="161">Identity Provider</text><text class="dxn-s" x="132" y="176">users · workloads · agents</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="274" y="142" width="208" height="44" rx="11"/><text class="dxn-t" x="378" y="161">API Gateway · PEP</text><text class="dxn-s" x="378" y="176">authenticate · authorize · route</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="534" y="142" width="178" height="44" rx="11"/><text class="dxn-t" x="623" y="161">Provider boundaries</text><text class="dxn-s" x="623" y="176">verified callbacks / sources</text></g>
 
-  <!-- edge -->
-  <g id="n-idp" class="dxn navy">
-    <rect class="dxn-box" x="170" y="150" width="142" height="44" rx="12"/>
-    <text class="dxn-t" x="241" y="169">Identity Provider</text>
-    <text class="dxn-s" x="241" y="183">keycloak</text>
-  </g>
-  <g id="n-gw" class="dxn navy">
-    <rect class="dxn-box" x="448" y="150" width="142" height="44" rx="12"/>
-    <text class="dxn-t" x="519" y="169">API Gateway</text>
-    <text class="dxn-s" x="519" y="183">validate · sign · route</text>
-  </g>
+  <g class="dxn navy"><rect class="dxn-box" x="38" y="274" width="145" height="52" rx="11"/><text class="dxn-t" x="110" y="294">User &amp; Org</text><text class="dxn-s" x="110" y="308">identity-domain records</text><text class="dx-status partial" x="110" y="321">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="204" y="274" width="145" height="52" rx="11"/><text class="dxn-t" x="276" y="294">Catalogue</text><text class="dxn-s" x="276" y="308">metadata · discovery</text><text class="dx-status partial" x="276" y="321">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="38" y="344" width="145" height="52" rx="11"/><text class="dxn-t" x="110" y="364">Policy · PAP</text><text class="dxn-s" x="110" y="378">grants · lifecycle</text><text class="dx-status impl" x="110" y="391">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="204" y="344" width="145" height="52" rx="11"/><text class="dxn-t" x="276" y="364">Authz · PDP</text><text class="dxn-s" x="276" y="378">OpenFGA + planned OPA</text><text class="dx-status partial" x="276" y="391">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="38" y="414" width="145" height="48" rx="11"/><text class="dxn-t" x="110" y="434">Marketplace</text><text class="dxn-s" x="110" y="449">products · entitlement</text><text class="dx-status partial" x="110" y="459">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="204" y="414" width="145" height="48" rx="11"/><text class="dxn-t" x="276" y="434">Platform services</text><text class="dxn-s" x="276" y="449">supporting domains</text><text class="dx-status impl" x="276" y="459">IMPLEMENTED</text></g>
 
-  <!-- control side -->
-  <g id="n-cat" class="dxn navy">
-    <rect class="dxn-box" x="40" y="300" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="112" y="321">Catalogue</text>
-    <text class="dxn-s" x="112" y="336">resource metadata</text>
-  </g>
-  <g id="n-usr" class="dxn navy">
-    <rect class="dxn-box" x="205" y="300" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="277" y="321">User Service</text>
-    <text class="dxn-s" x="277" y="336">accounts · orgs</text>
-  </g>
-  <g id="n-acl" class="dxn navy">
-    <rect class="dxn-box" x="40" y="392" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="112" y="413">Policy Service</text>
-    <text class="dxn-s" x="112" y="428">grant · revoke</text>
-  </g>
-  <g id="n-az" class="dxn navy">
-    <rect class="dxn-box" x="205" y="392" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="277" y="413">Authorization</text>
-    <text class="dxn-s" x="277" y="428">rebac · openfga</text>
-  </g>
+  <g class="dxn green"><rect class="dxn-box" x="408" y="274" width="145" height="52" rx="11"/><text class="dxn-t" x="480" y="294">NGSI-LD</text><text class="dxn-s" x="480" y="308">entity · temporal · search</text><text class="dx-status partial" x="480" y="321">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="575" y="274" width="145" height="52" rx="11"/><text class="dxn-t" x="647" y="294">OGC APIs</text><text class="dxn-s" x="647" y="308">features · tiles · processes</text><text class="dx-status partial" x="647" y="321">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="408" y="344" width="145" height="52" rx="11"/><text class="dxn-t" x="480" y="364">File Exchange</text><text class="dxn-s" x="480" y="378">objects · processing</text><text class="dx-status partial" x="480" y="391">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="575" y="344" width="145" height="52" rx="11"/><text class="dxn-t" x="647" y="364">Subscriptions</text><text class="dxn-s" x="647" y="378">definitions · delivery</text><text class="dx-status impl" x="647" y="391">IMPLEMENTED</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="408" y="414" width="312" height="48" rx="11"/><text class="dxn-t" x="564" y="434">Enforcement at execution</text><text class="dxn-s" x="564" y="449">verify carried decision · filter · mask · meter · deliver</text><text class="dx-status planned" x="564" y="459">TARGET CONTRACT PLANNED</text></g>
 
-  <!-- data side -->
-  <g id="n-dp" class="dxn green">
-    <rect class="dxn-box" x="410" y="300" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="482" y="321">Data Plane</text>
-    <text class="dxn-s" x="482" y="336">ngsi-ld · ogc · subs</text>
-  </g>
-  <g id="n-fx" class="dxn green">
-    <rect class="dxn-box" x="575" y="300" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="647" y="321">File Exchange</text>
-    <text class="dxn-s" x="647" y="336">upload · download</text>
-  </g>
-  <g id="n-cl" class="dxn green">
-    <rect class="dxn-box" x="410" y="392" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="482" y="413">Community</text>
-    <text class="dxn-s" x="482" y="428">discussions · challenges</text>
-  </g>
-  <g id="n-mp" class="dxn green">
-    <rect class="dxn-box" x="575" y="392" width="145" height="48" rx="12"/>
-    <text class="dxn-t" x="647" y="413">Marketplace</text>
-    <text class="dxn-s" x="647" y="428">products · orders</text>
-  </g>
+  <g class="dxn berry"><rect class="dxn-box" x="44" y="542" width="190" height="40" rx="11"/><text class="dxn-t" x="139" y="560">Agent Registry</text><text class="dx-status planned" x="139" y="575">IN DEVELOPMENT</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="285" y="542" width="190" height="40" rx="11"/><text class="dxn-t" x="380" y="560">Agent Runtime</text><text class="dx-status planned" x="380" y="575">IN DEVELOPMENT</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="526" y="542" width="190" height="40" rx="11"/><text class="dxn-t" x="621" y="560">MCP Gateway</text><text class="dx-status planned" x="621" y="575">IN DEVELOPMENT</text></g>
 
-  <!-- backbone -->
-  <g id="n-mq" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="290" y="558" width="180" height="50" rx="14"/>
-    <text class="dxn-t" x="380" y="580">Messaging Backbone</text>
-    <text class="dxn-s" x="380" y="595">rabbitmq · events</text>
-  </g>
-
-  <!-- agent plane (optional) -->
-  <g id="n-agrt" class="dxn berry">
-    <rect class="dxn-box" x="40" y="664" width="150" height="46" rx="12"/>
-    <text class="dxn-t" x="115" y="684">Agent Runtime</text>
-    <text class="dxn-s" x="115" y="699">sessions · planning</text>
-  </g>
-  <g id="n-amcp" class="dxn berry">
-    <rect class="dxn-box" x="205" y="664" width="150" height="46" rx="12"/>
-    <text class="dxn-t" x="280" y="684">MCP Gateway</text>
-    <text class="dxn-s" x="280" y="699">tools · risk · credential</text>
-  </g>
-  <path class="dxf berry calm" marker-end="url(#sa-b)" d="M355,676 C470,660 560,420 540,200"/>
-  <text class="dxe" x="452" y="500">delegated · same edge</text>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="176" y="646" width="408" height="28" rx="9"/><text class="dxn-t" x="380" y="664">PostgreSQL/PostGIS · Search · Redis · RabbitMQ · S3 · Telemetry</text></g>
 </svg>

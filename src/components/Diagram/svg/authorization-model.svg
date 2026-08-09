@@ -1,87 +1,30 @@
-<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Authorization model: a provider authors a grant in the policy service, which is the durable record; the grant is published transactionally and projected into the relationship graph; the authorization service decides using the relationship plus the grant's own conditions; and the decision is enforced at the gateway, in the service, or inside the data plane, wherever there is enough context.">
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="am-title am-desc">
+  <title id="am-title">OPA and OpenFGA responsibility and decision flow</title>
+  <desc id="am-desc">Policy and identity authorities distribute grants, memberships, and contextual policy. OpenFGA evaluates relationships; planned OPA evaluates trusted attributes and obligations. The authorization service composes both results. Enforcement points deny errors and apply every obligation.</desc>
   <defs>
-    <marker id="am-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="am-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="am-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
+    <marker id="am-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker>
+    <marker id="am-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker>
+    <marker id="am-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker>
+    <marker id="am-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker>
+    <marker id="am-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker>
   </defs>
+  <text class="dxz-lbl orange" x="32" y="30">authoritative administration</text><text class="dxz-lbl teal" x="300" y="30">evaluation engines</text><text class="dxz-lbl green" x="580" y="30">enforcement</text>
+  <path class="dxf teal calm" marker-end="url(#am-t)" d="M180 100H292"/><path class="dxf teal calm" marker-end="url(#am-t)" d="M180 192H292"/><path class="dxf teal calm" marker-end="url(#am-t)" d="M180 284H292"/>
+  <path class="dxf navy calm" marker-end="url(#am-n)" d="M428 99H488V205H442"/><path class="dxf navy calm" marker-end="url(#am-n)" d="M428 284H488V229H442"/>
+  <path class="dxf orange calm" marker-end="url(#am-o)" d="M608 164C560 164 522 180 442 205"/><text class="dxe" x="486" y="153">decision input</text>
+  <path class="dxf green calm" marker-end="url(#am-g)" d="M442 236C520 250 558 280 608 280"/><text class="dxe" x="486" y="274">allow + obligations</text>
+  <path class="dxf berry dashed calm" marker-end="url(#am-b)" d="M362 250V354H608"/><text class="dxe" x="398" y="343">deny / error · fail closed</text>
+  <text class="dxe" x="194" y="88">policy + membership events</text><text class="dxe" x="194" y="180">trusted resource facts</text><text class="dxe" x="194" y="272">versioned policy bundle</text>
 
-  <!-- zones -->
-  <rect class="dxz navy" x="16" y="112" width="172" height="200" rx="16"/>
-  <text class="dxz-lbl navy" x="32" y="134">pap · the record</text>
-  <rect class="dxz navy" x="234" y="112" width="232" height="200" rx="16"/>
-  <text class="dxz-lbl navy" x="250" y="134">pdp · the decision</text>
-  <rect class="dxz green" x="514" y="30" width="232" height="282" rx="16"/>
-  <text class="dxz-lbl green" x="530" y="52">pep · the enforcement</text>
+  <g class="dxn orange"><rect class="dxn-box" x="28" y="70" width="152" height="56" rx="11"/><text class="dxn-t" x="104" y="91">Policy Service</text><text class="dxn-s" x="104" y="107">grants · revoke · expiry</text><text class="dx-status impl" x="104" y="121">IMPLEMENTED</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="28" y="162" width="152" height="56" rx="11"/><text class="dxn-t" x="104" y="183">User / Catalogue</text><text class="dxn-s" x="104" y="199">org · membership · resource</text><text class="dx-status partial" x="104" y="213">PARTIAL</text></g>
+  <g class="dxn orange planned"><rect class="dxn-box" x="28" y="254" width="152" height="56" rx="11"/><text class="dxn-t" x="104" y="275">Policy pipeline</text><text class="dxn-s" x="104" y="291">review · sign · distribute</text><text class="dx-status planned" x="104" y="305">PLANNED</text></g>
 
-  <!-- flows -->
-  <path class="dxf orange calm" marker-end="url(#am-o)" d="M100,94 V144"/>
-  <text class="dxe" x="110" y="124">grants access</text>
+  <g class="dxn teal dxn-store"><rect class="dxn-box" x="292" y="68" width="136" height="62" rx="11"/><text class="dxn-t" x="360" y="91">OpenFGA</text><text class="dxn-s" x="360" y="107">ReBAC graph</text><text class="dx-status impl" x="360" y="123">IMPLEMENTED</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="282" y="184" width="160" height="68" rx="11"/><text class="dxn-t" x="362" y="206">dx-authz-go</text><text class="dxn-s" x="362" y="222">validate · compose · version</text><text class="dx-status partial" x="362" y="242">PARTIAL</text></g>
+  <g class="dxn teal planned"><rect class="dxn-box" x="292" y="254" width="136" height="62" rx="11"/><text class="dxn-t" x="360" y="277">OPA</text><text class="dxn-s" x="360" y="293">ABAC · obligations</text><text class="dx-status planned" x="360" y="309">PLANNED</text></g>
 
-  <path class="dxf teal calm" marker-end="url(#am-t)" d="M100,206 V246"/>
-  <text class="dxe" x="110" y="230">outbox · one tx</text>
-
-  <path class="dxf teal calm" marker-end="url(#am-t)" d="M172,276 H246"/>
-  <text class="dxe" x="180" y="266">projected</text>
-
-  <path class="dxf navy dashed calm" marker-end="url(#am-n)" d="M350,246 V216"/>
-  <text class="dxe" x="360" y="236">relationships</text>
-
-  <path class="dxf navy calm" marker-end="url(#am-n)" d="M452,180 H526"/>
-  <text class="dxe" x="452" y="170">+ obligations</text>
-
-  <!-- author -->
-  <g id="n-provider" class="dxn orange">
-    <rect class="dxn-box" x="30" y="40" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="62">Provider</text>
-    <text class="dxn-s" x="101" y="78">or org admin</text>
-  </g>
-
-  <!-- pap -->
-  <g id="n-pap" class="dxn navy">
-    <rect class="dxn-box" x="30" y="148" width="142" height="58" rx="12"/>
-    <text class="dxn-t" x="101" y="171">Policy Service</text>
-    <text class="dxn-s" x="101" y="187">expiry · constraints</text>
-  </g>
-  <g id="n-mq" class="dxn teal dxn-store">
-    <rect class="dxn-box" x="30" y="250" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="271">Messaging</text>
-    <text class="dxn-s" x="101" y="287">at-least-once</text>
-  </g>
-
-  <!-- pdp -->
-  <g id="n-pdp" class="dxn navy">
-    <rect class="dxn-box" x="250" y="148" width="200" height="68" rx="12"/>
-    <text class="dxn-t" x="350" y="173">Authorization</text>
-    <text class="dxn-s" x="350" y="189">relationship + conditions</text>
-    <text class="dxn-s" x="350" y="203">expiry on its own clock</text>
-  </g>
-  <g id="n-graph" class="dxn navy dxn-store">
-    <rect class="dxn-box" x="250" y="250" width="200" height="52" rx="12"/>
-    <text class="dxn-t" x="350" y="271">Relationship graph</text>
-    <text class="dxn-s" x="350" y="287">users · orgs · groups · agents</text>
-  </g>
-
-  <!-- peps -->
-  <g id="n-gw" class="dxn green">
-    <rect class="dxn-box" x="530" y="64" width="200" height="52" rx="12"/>
-    <text class="dxn-t" x="630" y="85">API Gateway</text>
-    <text class="dxn-s" x="630" y="101">coarse · early rejection</text>
-  </g>
-  <g id="n-svc" class="dxn green">
-    <rect class="dxn-box" x="530" y="150" width="200" height="52" rx="12"/>
-    <text class="dxn-t" x="630" y="171">Service</text>
-    <text class="dxn-s" x="630" y="187">resolves the real resource</text>
-  </g>
-  <g id="n-dp" class="dxn green">
-    <rect class="dxn-box" x="530" y="236" width="200" height="52" rx="12"/>
-    <text class="dxn-t" x="630" y="257">Data plane</text>
-    <text class="dxn-s" x="630" y="273">rows · fields · volume</text>
-  </g>
+  <g class="dxn green"><rect class="dxn-box" x="608" y="138" width="126" height="52" rx="11"/><text class="dxn-t" x="671" y="159">PEP context</text><text class="dxn-s" x="671" y="175">gateway · service · MCP</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="608" y="254" width="126" height="52" rx="11"/><text class="dxn-t" x="671" y="275">PEP enforce</text><text class="dxn-s" x="671" y="291">filter · mask · approve</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="608" y="330" width="126" height="48" rx="11"/><text class="dxn-t" x="671" y="350">Deny</text><text class="dxn-s" x="671" y="365">no partial allow</text></g>
 </svg>

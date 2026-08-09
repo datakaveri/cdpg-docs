@@ -1,63 +1,45 @@
 ---
-title: Authentication Flow
-description: The two authentication paths — user JWTs and machine app credentials — and the identity the platform derives from them.
+title: Authentication and Authorization Contract
+description: External token, workload identity, subject context, and decision-response contracts.
 ---
 
-# Authentication Flow
+# Authentication and Authorization Contract
 
-The platform supports two authentication paths, both terminating at the gateway.
+## External request
 
-## 1. User authentication (JWT via Keycloak)
+Clients send an OIDC access token to the gateway:
 
-```mermaid
-sequenceDiagram
-    participant B as Browser/App
-    participant K as Keycloak
-    participant G as Gateway
-    participant S as Backend Service
-
-    B->>K: OIDC login (PKCE)
-    K-->>B: JWT (iss, sub, roles, organisation_id)
-    B->>G: Request + Authorization: Bearer JWT
-    G->>G: validate signature (JWKS), iss, aud, exp
-    G->>S: forward + HMAC-signed identity headers
-    S->>S: verify identity headers (shared secret)
+```http
+Authorization: Bearer <access-token>
+X-Request-ID: <optional-client-correlation-id>
 ```
 
-Key claims the platform uses:
+The gateway validates signature, issuer, audience, expiry, issue time, subject, and the claims required by the route. Invalid or absent credentials return `401`. Authentication alone never grants access.
 
-| Claim | Purpose |
-| --- | --- |
-| `sub` | User UUID (used as `owner_id` / `consumer_id`) |
-| `roles` | `consumer`, `provider`, `org_admin`, `cos_admin`, `delegate` |
-| `organisation_id` | Org-scoped authorization (org-admin checks) |
-| `did` | Delegation: delegator's `sub` when acting on behalf of someone |
+## Internal request
 
-## Identity headers (what services actually see)
+The immediate caller presents a short-lived Keycloak client-credentials token whose audience names the destination service. The destination validates the token and checks the caller's client ID against its operation allowlist. When a user or agent is represented, the subject/actor context is carried separately and is accepted only from an authorised subject asserter.
 
-After validating the token, the gateway **strips** `Authorization` and forwards signed headers:
+The final serialized subject-context and request-binding fields are not yet fixed. Implementations must preserve these semantics: immutable subject, optional actor and delegation identifier, organisation, authentication time, original request/trace IDs, destination audience, short expiry, and integrity binding to the workload call.
 
-| Header | Content |
-| --- | --- |
-| `X-Subject-Id` | User UUID (`sub`) |
-| `X-Subject-Email` | Email |
-| `X-Subject-Roles` | Comma-separated roles |
-| `X-Subject-Org-Id` | Organisation UUID |
-| `X-Subject-Issued-At` | Timestamp — bounds replay |
-| `X-Subject-Sig` | HMAC-SHA256 over all of the above (shared secret) |
+## Authorization decision
 
-Services verify the signature; an invalid signature is a hard `401` with no fallback.
+```json
+{
+  "principal": {
+    "subject": "user:<id>",
+    "actor": "agent:<id>",
+    "organisation": "org:<id>"
+  },
+  "action": "dataset.query",
+  "resource": {"type": "dataset", "id": "dataset:<id>"},
+  "context": {"purpose": "research", "request_id": "<id>"},
+  "profile": "data-query"
+}
+```
 
-## 2. Machine authentication (app credentials)
+The composite PDP response is versioned and includes `allow`, stable reason codes, decision ID, expiry, relationship/policy versions, cache instructions, and typed obligations. A deny or error response contains no usable obligations. PEPs deny if the decision is expired, bound to different inputs, or contains an obligation they cannot enforce.
 
-Applications authenticate with `Authorization: Basic base64(appId:appSecret)`. The gateway verifies the credential against the [User Service](../components/user-service.md) and builds the **same identity headers** as the JWT path — internal services cannot tell (and don't care) how a caller authenticated.
+OpenFGA relationship evaluation is **Implemented**. OPA contextual evaluation and the complete typed response contract are **Planned** and require an approved interface specification before clients depend on the example shape.
 
-## Service-to-service authentication
-
-Internal services calling each other's gRPC interfaces use Keycloak **client-credentials tokens** (service accounts) scoped to the target service; the caller's client ID must be on the target's allowlist.
-
-## See also
-
-- [Error Responses](error-responses.md) — the `401`/`403` contract
-- [JWT Validation guide](../guides/jwt-validation.md) — debugging 401s
-- [Flow: Authentication & Identity](../flows/authentication.mdx) — the conceptual walkthrough
+See [Security Architecture](../technical/security-architecture.mdx) and [Error Responses](./error-responses.md).

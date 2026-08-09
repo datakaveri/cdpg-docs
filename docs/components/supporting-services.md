@@ -1,36 +1,29 @@
 ---
 sidebar_position: 11
 title: Supporting Services
-description: The registry, credits ledger, audit trail, and notification services that round out the platform.
+description: Registry, credits, audit, notification, and subscription responsibilities.
 ---
 
 # Supporting Services
 
-Four smaller services provide platform-wide capabilities that every other component relies on.
+## Registry — **Implemented**
 
-## Registry
+`dx-registry-go` owns resource-server and policy-server registrations, advertised endpoints, health/capability metadata, and administrative lifecycle. Public discovery and privileged mutation use separate authorization profiles.
 
-The registry of **data servers** participating in the exchange — resource servers (data planes) and policy servers, including federated ones operated by third parties. Records each server's endpoints and capabilities so the rest of the platform (and clients) can resolve *where* a resource is served. Writes are platform-admin-gated.
+## Credits — **Implemented**
 
-## Credits
+`dx-credits-go` owns balances, immutable ledger entries, atomic debit/credit operations, and approval state. A business operation that consumes credits must use idempotency keys and an explicit consistency boundary so a retry cannot double-charge.
 
-A **credit ledger** for usage-based consumption: balances per user/organisation, atomic add/deduct operations, and a request/approval workflow for topping up. Services that meter usage deduct credits; administrators review and approve credit requests.
+## Audit — **Implemented**, hardening ongoing
 
-## Audit
+`dx-audit-go` consumes versioned audit events into an append-only store and exposes role- and organisation-scoped query and CSV export. Producers emit request, subject, actor, workload, resource, action, decision, outcome, and trace correlation without credentials or protected payloads. Delivery is asynchronous; business requests do not report success based on audit-consumer availability.
 
-The platform's **immutable audit trail**. Every mutating endpoint across the platform publishes an audit event to the [messaging backbone](./messaging-backbone.md); the audit service consumes them into an append-only log and exposes a read API with filtering, pagination, and **CSV export**. Consumers can see their own activity; administrators can see everything.
+## Notifications — **Implemented**, provider recovery varies
 
-Auditing is asynchronous by design — it never blocks or slows the request that generated the event.
+`dx-notification-go` owns templates, recipient resolution, dispatch attempts, bounded retries, and terminal failure records. Business services publish intent rather than sending email directly. Notification failure never rolls back an already committed business operation.
 
-## Notifications
+## Subscriptions — **Implemented**
 
-The platform's **single outbound-email pipeline**. Components never send email themselves; they publish a notification event (grant issued, access requested, submission received…), and the notification service resolves the recipient's address, renders the template, and sends — with retry and a dead-letter queue for failures, so a flaky mail server never breaks a business operation.
+`dx-subscription-go` owns subscription definitions and delivery state. Provisioning and delivery are scoped by the access decision, resource, organisation, expiry, and delivery endpoint. Revocation or policy expiry stops future delivery and is auditable.
 
-## Interactions
-
-| Service | Consumes | Provides |
-| --- | --- | --- |
-| Registry | — | Server resolution API |
-| Credits | Deduction calls from metering services | Balance & request APIs |
-| Audit | Audit events from all services | Query API + CSV export |
-| Notifications | Notification events from all services | Outbound email |
+See [Control Plane](../technical/control-plane.mdx), [Audit Event Delivery](../flows/audit-events.md), and [Shared Platform Architecture](../technical/shared-platform.md).

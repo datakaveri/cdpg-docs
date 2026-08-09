@@ -1,92 +1,29 @@
-<svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="Agentic plane: a user asks an agent; the agent runtime proposes a tool, the MCP gateway validates and attaches a delegated credential, and the request enters the platform through the same API gateway as human traffic, where authorization checks the user's permission and the agent's delegated permission together. The agent registry records delegations in the policy service and operates the kill switch.">
-  <defs>
-    <marker id="ap-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/>
-    </marker>
-    <marker id="ap-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/>
-    </marker>
-    <marker id="ap-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/>
-    </marker>
-    <marker id="ap-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-      <path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/>
-    </marker>
-  </defs>
+<svg viewBox="0 0 760 570" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ap-title ap-desc">
+  <title id="ap-title">Agentic Plane lifecycle and governed execution</title>
+  <desc id="ap-desc">An owner registers an agent and delegates narrow authority. Runtime creates sessions and obtains a delegated token. MCP Gateway validates tools, runs semantic and authorization checks, and waits for human approval where required. Approved actions use the normal API gateway and services. Audit and kill-switch events span the lifecycle.</desc>
+  <defs><marker id="ap-o" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-orange"/></marker><marker id="ap-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-navy"/></marker><marker id="ap-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-green"/></marker><marker id="ap-t" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-teal"/></marker><marker id="ap-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M1 1l5 2.5-5 2.5z" class="dx-arr-berry"/></marker></defs>
+  <rect class="dxz orange" x="20" y="24" width="168" height="518" rx="16"/><text class="dxz-lbl orange" x="38" y="47">human control</text>
+  <rect class="dxz berry" x="212" y="24" width="330" height="518" rx="16"/><text class="dxz-lbl berry" x="232" y="47">agentic plane · in development</text>
+  <rect class="dxz navy" x="566" y="24" width="174" height="518" rx="16"/><text class="dxz-lbl navy" x="586" y="47">platform boundary</text>
+  <path class="dxf orange calm" marker-end="url(#ap-o)" d="M166 92H238"/><path class="dxf orange calm" marker-end="url(#ap-o)" d="M166 208H238"/>
+  <path class="dxf berry calm" marker-end="url(#ap-b)" d="M320 124V184"/><path class="dxf navy calm" marker-end="url(#ap-n)" d="M424 218H590"/>
+  <path class="dxf berry calm" marker-end="url(#ap-b)" d="M320 252V316"/><path class="dxf navy calm" marker-end="url(#ap-n)" d="M424 350H590"/>
+  <path class="dxf orange dashed calm" marker-end="url(#ap-o)" d="M320 380C260 412 210 438 166 452"/><path class="dxf green calm" marker-end="url(#ap-g)" d="M424 420H590"/>
+  <path class="dxf teal dashed calm" marker-end="url(#ap-t)" d="M590 480H424"/><path class="dxf berry dashed calm" marker-end="url(#ap-b)" d="M238 106C206 280 234 428 278 488"/>
+  <text class="dxe" x="177" y="82">register / delegate</text><text class="dxe" x="438" y="207">identity + composite check</text><text class="dxe" x="432" y="339">tool decision</text><text class="dxe" x="190" y="431">HITL exact action</text><text class="dxe" x="454" y="409">approved sole egress</text><text class="dxe" x="447" y="500">audit outcome</text><text class="dxe" x="210" y="310">kill switch</text>
 
-  <!-- zones -->
-  <rect class="dxz berry" x="210" y="24" width="250" height="252" rx="16"/>
-  <text class="dxz-lbl berry" x="228" y="46">agent plane · optional</text>
+  <g class="dxn orange"><rect class="dxn-box" x="40" y="70" width="126" height="50" rx="11"/><text class="dxn-t" x="103" y="91">Owner</text><text class="dxn-s" x="103" y="107">register · revoke</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="40" y="186" width="126" height="50" rx="11"/><text class="dxn-t" x="103" y="207">Approver</text><text class="dxn-s" x="103" y="223">approve · reject</text></g>
+  <g class="dxn orange"><rect class="dxn-box" x="40" y="430" width="126" height="50" rx="11"/><text class="dxn-t" x="103" y="451">Human control</text><text class="dxn-s" x="103" y="467">exact action · expiry</text></g>
 
-  <!-- flows -->
-  <path class="dxf orange calm" marker-end="url(#ap-o)" d="M172,72 C196,74 206,80 224,84"/>
-  <text class="dxe" x="180" y="64">asks</text>
+  <g class="dxn berry"><rect class="dxn-box" x="238" y="70" width="186" height="54" rx="11"/><text class="dxn-t" x="331" y="91">Agent Registry</text><text class="dxn-s" x="331" y="106">identity · template · lifecycle</text><text class="dx-status planned" x="331" y="120">IN DEVELOPMENT</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="238" y="184" width="186" height="68" rx="11"/><text class="dxn-t" x="331" y="205">Agent Runtime</text><text class="dxn-s" x="331" y="220">session · lease · plan · SSE</text><text class="dxn-s" x="331" y="234">delegated token exchange</text><text class="dx-status planned" x="331" y="248">IN DEVELOPMENT</text></g>
+  <g class="dxn berry"><rect class="dxn-box" x="238" y="316" width="186" height="68" rx="11"/><text class="dxn-t" x="331" y="337">MCP Gateway</text><text class="dxn-s" x="331" y="352">schema · scope · semantic firewall</text><text class="dxn-s" x="331" y="366">risk · approval · credential</text><text class="dx-status planned" x="331" y="380">IN DEVELOPMENT</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="238" y="456" width="186" height="54" rx="11"/><text class="dxn-t" x="331" y="477">Activity / audit chain</text><text class="dxn-s" x="331" y="492">subject · actor · tool · outcome</text><text class="dx-status partial" x="331" y="506">PARTIAL</text></g>
 
-  <path class="dxf navy calm" marker-end="url(#ap-n)" d="M335,118 V138"/>
-  <text class="dxe" x="345" y="132">proposed tool</text>
-
-  <path class="dxf navy calm" marker-end="url(#ap-n)" d="M445,168 H506"/>
-  <text class="dxe" x="452" y="160">delegated</text>
-
-  <path class="dxf navy calm" marker-end="url(#ap-n)" d="M615,140 V116"/>
-  <text class="dxe" x="625" y="130">authorized call</text>
-
-  <path class="dxf navy calm" marker-end="url(#ap-n)" d="M600,200 C598,220 601,234 605,246"/>
-  <text class="dxe" x="516" y="228">user ∧ agent</text>
-
-  <path class="dxf teal calm" marker-end="url(#ap-t)" d="M615,328 V306"/>
-  <text class="dxe" x="625" y="320">delegation grants</text>
-
-  <path class="dxf teal calm" marker-end="url(#ap-t)" d="M445,250 C480,272 490,302 506,338"/>
-  <text class="dxe" x="440" y="316">records delegation</text>
-
-  <path class="dxf berry calm" marker-end="url(#ap-b)" d="M445,232 C470,220 482,212 506,202"/>
-  <text class="dxe" x="446" y="214">kill switch</text>
-
-  <!-- caller -->
-  <g id="n-user" class="dxn orange">
-    <rect class="dxn-box" x="30" y="40" width="142" height="52" rx="12"/>
-    <text class="dxn-t" x="101" y="62">User</text>
-    <text class="dxn-s" x="101" y="78">delegates · approves</text>
-  </g>
-
-  <!-- agent plane -->
-  <g id="n-runtime" class="dxn berry">
-    <rect class="dxn-box" x="228" y="60" width="215" height="56" rx="12"/>
-    <text class="dxn-t" x="335" y="83">Agent Runtime</text>
-    <text class="dxn-s" x="335" y="99">sessions · plan loop · streaming</text>
-  </g>
-  <g id="n-mcp" class="dxn berry">
-    <rect class="dxn-box" x="228" y="140" width="215" height="56" rx="12"/>
-    <text class="dxn-t" x="335" y="163">MCP Gateway</text>
-    <text class="dxn-s" x="335" y="179">schema · scope · risk · credential</text>
-  </g>
-  <g id="n-registry" class="dxn berry">
-    <rect class="dxn-box" x="228" y="220" width="215" height="50" rx="12"/>
-    <text class="dxn-t" x="335" y="241">Agent Registry</text>
-    <text class="dxn-s" x="335" y="257">records · templates · kill switch</text>
-  </g>
-
-  <!-- platform -->
-  <g id="n-svc" class="dxn green">
-    <rect class="dxn-box" x="510" y="60" width="210" height="54" rx="12"/>
-    <text class="dxn-t" x="615" y="82">Platform services</text>
-    <text class="dxn-s" x="615" y="98">data plane · catalogue · market</text>
-  </g>
-  <g id="n-gw" class="dxn navy">
-    <rect class="dxn-box" x="510" y="140" width="210" height="58" rx="12"/>
-    <text class="dxn-t" x="615" y="164">API Gateway</text>
-    <text class="dxn-s" x="615" y="180">the same edge as human traffic</text>
-  </g>
-  <g id="n-authz" class="dxn navy">
-    <rect class="dxn-box" x="510" y="248" width="210" height="54" rx="12"/>
-    <text class="dxn-t" x="615" y="270">Authorization</text>
-    <text class="dxn-s" x="615" y="286">both checks must pass</text>
-  </g>
-  <g id="n-acl" class="dxn navy">
-    <rect class="dxn-box" x="510" y="330" width="210" height="54" rx="12"/>
-    <text class="dxn-t" x="615" y="352">Policy Service</text>
-    <text class="dxn-s" x="615" y="368">delegations live with grants</text>
-  </g>
+  <g class="dxn navy"><rect class="dxn-box" x="590" y="70" width="126" height="54" rx="11"/><text class="dxn-t" x="653" y="91">Keycloak</text><text class="dxn-s" x="653" y="106">agent/workload identity</text><text class="dx-status partial" x="653" y="120">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="590" y="184" width="126" height="54" rx="11"/><text class="dxn-t" x="653" y="205">Policy + PDP</text><text class="dxn-s" x="653" y="220">user ∩ agent ∩ context</text><text class="dx-status partial" x="653" y="234">PARTIAL</text></g>
+  <g class="dxn navy"><rect class="dxn-box" x="590" y="316" width="126" height="54" rx="11"/><text class="dxn-t" x="653" y="337">API Gateway</text><text class="dxn-s" x="653" y="352">normal PEP + kill switch</text><text class="dx-status partial" x="653" y="366">PARTIAL</text></g>
+  <g class="dxn green"><rect class="dxn-box" x="590" y="398" width="126" height="54" rx="11"/><text class="dxn-t" x="653" y="419">Platform service</text><text class="dxn-s" x="653" y="434">enforce · side effect</text><text class="dx-status partial" x="653" y="448">VARIES</text></g>
+  <g class="dxn teal"><rect class="dxn-box" x="590" y="472" width="126" height="42" rx="11"/><text class="dxn-t" x="653" y="492">Audit Service</text><text class="dx-status impl" x="653" y="508">IMPLEMENTED</text></g>
 </svg>

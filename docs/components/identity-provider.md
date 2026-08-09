@@ -1,32 +1,26 @@
 ---
 sidebar_position: 2
 title: Identity Provider
-description: Keycloak — all user and machine identity for the platform, delivered over OpenID Connect.
+description: Keycloak-based user, application, workload, and agent authentication.
 ---
 
 # Identity Provider
 
-**Keycloak** provides all identity for the Data Exchange — the platform itself never stores passwords.
+Keycloak is the platform identity provider. User OIDC flows and service accounts are **Implemented**; fine-grained audience, caller-allowlist, subject-asserter, and agent token-exchange adoption is **Partially implemented**.
 
-## Responsibilities
+## Identity classes
 
-- **User identity** — registration, login (OIDC Authorization Code flow with **PKCE**), and token issuance for the web portals and APIs.
-- **Roles** — every user carries platform roles in their token: `consumer`, `provider`, `org_admin` (manages access for an organisation), `cos_admin` (operates the platform), `delegate` (acts on behalf of another user).
-- **Organisation membership** — tokens carry the user's organisation, which downstream components use for organisation-scoped decisions (e.g. an org admin may only manage resources belonging to their own organisation).
-- **Service identity** — internal components authenticate to each other using service accounts (client-credentials tokens), so machine-to-machine calls are just as accountable as user calls.
+- **People** authenticate using OIDC Authorization Code with PKCE and receive a short-lived access token.
+- **External applications** use registered confidential or public clients appropriate to their environment.
+- **Platform workloads** use client credentials to obtain short-lived tokens targeted to a specific service audience.
+- **Agents** are distinct principals. Delegated execution carries the user as subject and the agent as actor; the runtime exchanges credentials rather than sharing the user's token.
 
-## How the rest of the platform uses it
+Keycloak proves identity and issues claims. It does not decide dataset access, own organisation membership records, or evaluate access policies. Those authorization responsibilities belong to the User Service, Policy Service, `dx-authz-go`, OpenFGA, OPA, and the relevant enforcement point.
 
-Components never call the Identity Provider on the request path. The [API Gateway](./api-gateway.md) validates tokens locally using published signing keys (JWKS, cached and refreshed periodically), which keeps authentication fast and keeps Keycloak out of the hot path. Internal services receive the gateway's signed identity headers instead of raw tokens.
+## Validation
 
-## Roles at a glance
+Every receiving boundary validates the token signature against cached JWKS keys and checks `iss`, `aud`, `sub`, `exp`, `iat`, and the expected token type. Workload calls also validate the caller client against an operation-specific allowlist. Key rotation uses overlapping JWKS validity and bounded cache refresh; a token that cannot be validated fails closed.
 
-| Role | Powers |
-| --- | --- |
-| `consumer` | Discover resources, request and use granted access |
-| `provider` | Publish resources, grant/revoke access to own resources |
-| `org_admin` | Everything a provider can do, for **all** resources of their organisation |
-| `cos_admin` | Platform-wide visibility and administration |
-| `delegate` | Act on behalf of another user within a recorded delegation |
+Subject and workload identity remain separate. A service accepts forwarded subject or actor context only from an authorised subject asserter and records both identities in audit events.
 
-See [Flow: Authentication](../flows/authentication.mdx) for the full login and token journey, and the [JWT Validation guide](../guides/jwt-validation.md) for debugging.
+See [Authentication and Identity Propagation](../flows/authentication.mdx), [JWT Validation](../guides/jwt-validation.md), and [Security Architecture](../technical/security-architecture.mdx).

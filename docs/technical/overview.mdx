@@ -1,60 +1,83 @@
 ---
 id: overview
-title: Architecture Overview & Interfaces
+title: Architecture Overview and Interfaces
 sidebar_label: Overview & Interfaces
-description: What the Data Exchange does, its control and data planes, and the standard interfaces (IS 18003) that connect them.
+description: The actors, boundaries, interfaces, and relationship between the Control, Data, and Agentic Planes.
 ---
 
 import DiagramFrame from '@site/src/components/Diagram/DiagramFrame';
 import PlanesSvg from '@site/src/components/Diagram/svg/planes-interfaces.svg';
 
-# Architecture Overview & Interfaces
+# Architecture Overview and Interfaces
 
-The Data Exchange facilitates controlled and secure **any-to-any exchange** of all forms of public and privately owned data. It provides a set of services that enable providers to publish data and data sources, and consumers to consume resources from one or more data servers — based on explicit access grants from the provider.
+CDPG separates governance, data movement, and governed autonomous execution into three cooperating planes. The separation is about responsibility, not deployment: planes may share a cluster, but they do not share business ownership.
 
-The platform addresses two key stakeholders: **Data Providers** and **Data Consumers**. A provider makes data resources available through the exchange and retains full authority and ownership to control access and authorize consumers. A consumer uses those resources for purposes such as application development. The high-level objective is to enable seamless, secure access of data to consumers while respecting the access-control policies set by the provider.
-
-## Control Plane and Data Plane
+**Status:** **Partially implemented.** Control and Data Plane services are available with named gaps; the Agentic Plane is implemented for local integration but not deployable through GitOps. See [Current & Target](./current-and-target.mdx).
 
 <DiagramFrame
   svg={PlanesSvg}
-  label="planes_and_interfaces · discover, grant, serve"
+  label="planes_and_interfaces · govern, serve, act"
   legend={[
-    {color: 'orange', label: 'actor traffic'},
-    {color: 'navy', label: 'control plane'},
-    {color: 'green', label: 'data plane'},
+    {color: 'orange', label: 'actors'},
+    {color: 'navy', label: 'Control Plane'},
+    {color: 'green', label: 'Data Plane'},
+    {color: 'berry', label: 'Agentic Plane'},
+    {color: 'teal', label: 'shared contracts & events'},
   ]}
 />
 
-The platform separates responsibilities across two planes:
+## Platform goals
 
-- The **Control Plane** manages user registration, data-access management, policy enforcement decisions, metadata management, and data discovery.
-    - **Catalogue service** — hosts the structured, human- and machine-readable meta-information (formats, units, resource type, etc.) for each data resource; providers manage it via management APIs and consumers discover resources via search APIs. See the [Catalogue](../components/catalogue.md).
-    - **Identity, policy & authorization services** — user and organisation management, explicit access policies, and real-time permission checks. See the [Control Plane](./control-plane.mdx).
-- The **Data Plane** focuses on data delivery, auditing, and metering.
-    - **Data access & ingestion services** — data resources owned by a provider are hosted here and accessed via open, standard data-access APIs (NGSI-LD, OGC); the plane also serves bulk files and streaming subscriptions. See the [Data Plane](./data-plane.md).
+- Enable providers to publish discoverable resources and control how they are used.
+- Enable consumers and applications to discover, obtain entitlement, and access data through standard APIs.
+- Preserve organization boundaries, provider ownership, auditability, and revocation across synchronous and asynchronous paths.
+- Support real-time, temporal, spatial, file, subscription, and standards-native access models.
+- Let agents act under narrow, time-bound, reviewable authority without turning model output into policy.
+- Run the same service images under centrally operated or configuration-selected federated topologies.
 
-Data is sourced from providers through data-ingestion adapters or fetched on demand. Provider-set access policies are enforced by the platform before any data is delivered to a consumer.
+## Actors and personas
 
-These services are designed against a consistent set of [Design Principles](./design-principles.md).
+| Actor | Primary goals | Principal type |
+| --- | --- | --- |
+| Consumer | Discover, request, purchase, query, download, or subscribe | User or application |
+| Provider | Onboard resources, upload data, publish products, grant and revoke access | User within an organization |
+| Organization administrator | Manage membership and govern organization-owned resources | Privileged user scoped to an organization |
+| Platform operator | Operate infrastructure, registries, policy distribution, incidents, and audit | Privileged workload/user with narrowly scoped operations |
+| Client application | Integrate programmatically without a human session | Application/workload principal |
+| Agent owner | Register an agent, delegate authority, approve risk, review activity, revoke | User |
+| AI agent | Propose tools within a delegation and template | Agent actor plus runtime workload |
+| External provider | Supply identity, payments, email, object storage, source data, or LLM capability | External system with protocol-specific trust |
+
+## Plane responsibilities
+
+| Plane | Owns | Does not own |
+| --- | --- | --- |
+| **Control Plane** | Identity-linked profiles and organizations, resource metadata, grants, authorization decisions, commerce, registries, credits, audit, notifications, governance | Resource payload delivery and model reasoning |
+| **Data Plane** | Ingestion, storage, query, spatial/temporal processing, files, subscriptions, data filtering and delivery | Grant authoring, identity issuance, global policy evaluation |
+| **Agentic Plane** | Agent/template lifecycle, sessions, token exchange, tool mediation, HITL, kill switch, agent audit context | Independent standing authority or direct datastore access |
+| **Shared platform** | Cross-cutting service runtime, contracts, identity plumbing, events, persistence, cache, health, observability, resilience | Business rules or service-owned data |
 
 ## Standard interfaces
 
-The platform is defined by a small set of interfaces: **Resource/Data access (R)**, **Discover (D)**, **Management (M)**, **Authorization and access control (A)**, **Consent (C)**, and **Identity (I)**. The data-access, discovery, management, and authorization interfaces are based on the published **IS 18003 Unified Data Exchange BIS standard**; the identity service is based on the **OIDC** protocol, and the consent interface is out-of-band.
+| Interface | Purpose | Primary owners | Status |
+| --- | --- | --- | --- |
+| **Identity (OIDC/OAuth 2.0)** | Authenticate users, applications, agents, and workloads; publish keys; exchange tokens | Keycloak, Gateway, Agent Runtime | **Implemented** / **Partially implemented** |
+| **Discovery (JSON-LD/search)** | Register and find resource metadata and access capabilities | Catalogue | **Implemented** |
+| **Policy administration** | Create, validate, list, expire, and revoke grants and access requests | Policy Service | **Implemented** with projection gaps |
+| **Authorization** | `Authorize(subject, actor, operation, resource, context)` → decision + obligations | Gateway/application PEP, `dx-authz-go`, OpenFGA, OPA | **Planned composite target** |
+| **Resource access** | NGSI-LD entity/temporal queries and subscriptions | Data Plane | **Partially implemented** |
+| **Geospatial access** | OGC Features, Tiles, Coverages, Processes, Records | OGC Data Plane | **Partially implemented** |
+| **File exchange** | Multipart upload, processing, listing, preview, download, object access | File Exchange | **Partially implemented** |
+| **Internal service API** | Typed, workload-authenticated calls between Go services | gRPC platform surface and service protobufs | **In development** |
+| **Domain events** | Versioned facts and durable projections | RabbitMQ, platform event bus, outboxes | **Partially implemented** |
+| **Agent tools** | Discover and invoke schema-bound operations under delegation and risk policy | MCP Gateway | **Partially implemented** |
 
-A consumer uses the **Discovery (D)** interface to identify available resources, obtains access for a resource via the **Consent (C)** interface, authenticates via the **Authorization (A)** interface, and calls the **Resource (R)** interface to access the data. Providers maintain resource metadata and access-control policies via the **Management (M)** interface, and register with the platform via **Identity (I)**.
+## Deployment models and configuration
 
-### Interface definitions
+- **Central:** the full fleet runs behind one gateway in a Kubernetes cluster or local Compose environment.
+- **Federated:** selected data and trust components run in an independently operated network; this shape is **Deferred** until its trust and conformance gates close.
+- **Feature gates:** Agentic Plane and federation components are absent or disabled unless deliberately selected.
+- **Persistence:** new deployments provision service-owned databases/schemas through versioned Go migrations. Schema execution is an explicit deployment mode with one migration actor.
+- **Environment:** configuration is typed and environment-driven; secrets are injected by a secret manager and never committed.
 
-| Interface | Functionality | Users |
-| --- | --- | --- |
-| **Management (M)** | Create, update, and delete catalogue items; create, update, and deactivate policies for non-personal datasets | Data Providers and their delegates |
-| **Consent (C)** | Upload, revoke, and audit consent artefacts for a resource, purpose, and data principal | Data Providers, Data Consumers, and delegates |
-| **Discovery (D)** | List and search metadata in the catalogue | Data Providers, Data Consumers, and delegates |
-| **Authorization (A)** | Authenticate and obtain an access token | Data Providers, Data Consumers, and delegates |
-| **Resource (R)** | Obtain data for a resource from the data plane | Data Consumers and their delegates |
-| **Identity (I)** | Register with the platform | Data Providers, Data Consumers, and delegates |
-
-:::tip Explore the planes
-See the [Control Plane](./control-plane.mdx) (discovery, identity, policy) and the [Data Plane](./data-plane.md) (data access) for the services behind these interfaces, and the [System Architecture](./architecture.mdx) for how they fit together.
-:::
+Continue with [System Architecture](./architecture.mdx), then the [Control Plane](./control-plane.mdx), [Data Plane](./data-plane.md), [Agentic Plane](./agentic-plane.mdx), and [Security Architecture](./security-architecture.mdx).

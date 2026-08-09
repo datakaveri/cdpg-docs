@@ -1,29 +1,33 @@
 ---
 sidebar_position: 7
-title: Data Plane
-description: The services that serve the actual data — NGSI-LD queries, OGC standard interfaces, and streaming subscriptions.
+title: Data Plane Services
+description: NGSI-LD, OGC, subscription, and file services that ingest, query, filter, and deliver governed data.
 ---
 
-# Data Plane
+# Data Plane Services
 
-Serves the **actual data** of the exchange. Once a consumer holds a valid grant, the Data Plane is where they exercise it.
+The Data Plane executes governed data operations. It is not one service and it is not a policy authority.
 
-## Capabilities
+| Service | Capability | Status |
+| --- | --- | --- |
+| `dx-dataplane-rs-go` | NGSI-LD entity, temporal, spatial, aggregation, and search paths | **Partially implemented** |
+| `dx-dataplane-ogc-go` | OGC Features, Tiles, Coverages, Processes/jobs, Records-lite, CQL2, CRS | **Partially implemented** |
+| `dx-subscription-go` | Subscription definitions and asynchronous delivery | **Implemented** |
+| `dx-files-connect-api-go` | Multipart upload, object access, metadata, and processing jobs | **Partially implemented** |
 
-- **Resource queries (NGSI-LD)** — fetch the latest records of published datasets, with attribute filtering and the full comparison operator set (`==`, `!=`, `<`, `>`, `<=`, `>=`).
-- **Temporal queries** — "give me observations `between` these timestamps" (also `before`, `after`, `during`), with CSV export for bulk retrieval and aggregation support (histograms, metric aggregations).
-- **Geospatial queries** — bounding box, polygon, circle, and line-string searches over location-tagged data (`within`, `intersects`, `contains`, and more).
-- **Subscriptions** — consumers with `sub` access receive a stream of new data as it arrives rather than polling; each subscription is provisioned its own queue on the [messaging backbone](./messaging-backbone.md).
-- **OGC standard interfaces** — a dedicated **OGC API Features** service exposes geospatial data through open OGC standards (collections, GeoJSON features, datetime/bbox filters), so standard GIS tooling can connect directly. Backed by PostGIS.
+## Authorization model
 
-## How access is enforced
+The gateway or owning control-plane service obtains a decision before dispatch and carries a signed, short-lived decision artifact or equivalent verified context. Data services validate that artifact and enforce typed obligations such as filters, field masks, limits, purpose, or expiry while compiling the query or issuing an object-store capability.
 
-The Data Plane never interprets policies itself. On each request it asks the [Authorization Service](./authorization-service.md) one question — *may this subject perform this access type on this resource?* — and serves or refuses accordingly. This keeps enforcement consistent platform-wide: the Data Plane, File Exchange, and any future component all enforce exactly the same grants.
+Data-plane executors **do not synchronously call the PDP**. A missing, expired, mismatched, or unsupported carried decision is denied. This keeps policy availability out of high-volume query execution without moving policy interpretation into each data service.
 
-## Interactions
+## Data ownership
 
-| Talks to | Why |
-| --- | --- |
-| Authorization Service | Per-request permission checks |
-| Elasticsearch / PostGIS | Query execution over published data |
-| Messaging Backbone | Ingests live data streams; provisions subscription queues |
+- Elasticsearch stores indexed NGSI-LD entity and temporal data.
+- PostGIS stores geospatial feature, coverage, process, and records data.
+- S3-compatible storage holds file payloads; service-owned PostgreSQL records hold metadata and job state.
+- RabbitMQ carries ingestion, subscription, processing, audit, and notification events.
+
+Each service owns its schema/index/bucket namespace, query compilation, consistency checks, retry rules, and recovery procedure. Catalogue metadata, policy records, and relationship tuples remain Control Plane data.
+
+See [Data Plane Architecture](../technical/data-plane.md), [Data Consumption](../flows/data-consumption.mdx), and [File Processing](../flows/file-processing.md).
